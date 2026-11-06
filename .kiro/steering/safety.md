@@ -3,35 +3,33 @@ inclusion: always
 ---
 # Safety rules (non-negotiable)
 
-This tool looks at hostile code. It must never become the thing that runs it.
+A disk image is untrusted bytes from a stranger. Every name, size, date, cluster number and byte in it is
+attacker-controlled.
 
-## Never execute or render scanned content
-- Scanned bytes are data. Never pass them to anything that evaluates code (no dynamic code construction, no `import()`
-  of fetched content, no workers built from fetched text, no `<script>`/iframe/blob URLs from fetched content).
-- In the web UI, put scanned text into the page with `textContent` only. Never `innerHTML` with scanned data.
-- The MCP server and tests never spawn processes and never write scanned content to disk.
-- Do not clone repos. Read through the GitHub API / raw URLs or (MCP only) a local folder the user already has.
+## Parsing limits
+- Bound everything: image size (≤ 2.88 MB accepted), cluster chain length (≤ number of clusters, cycle detection),
+  directory depth (≤ 16) and entry count, output size per file (≤ declared size and ≤ 4 MB), image dimensions for
+  PCX (≤ 4096×4096 and ≤ 16 M pixels). On violation: stop that item, add a warning, continue with the rest.
+- No recursion without a depth counter. Loops always have a hard iteration cap.
+- Regexes linear-time only; never run a regex over a whole untrusted file without a length cap.
 
-## Write detectors structurally, not as signature lists
-- Detect the *shape* of the disguise: magic bytes vs extension, "runs on folder open" in an editor task config,
-  non-whitespace after a config's final top-level statement, lifecycle script keys in package.json, very long
-  lines / entropy / dynamic-code signals.
-- Do **not** hard-code indicator strings from real malware campaigns (wallet addresses, IPs, campaign markers,
-  real payload snippets). They would trip endpoint security on the developer's machine and in CI, and they age fast.
-- Sensitive tokens the detectors must recognise (for example the name of a dynamic-code function, an install hook
-  key, the editor's folder-open setting) are assembled at runtime from parts, e.g. `['run', 'On'].join('')`, in one
-  module `src/core/tokens.ts`. Source files, tests and docs never contain those tokens as one literal.
-- Test fixtures are assembled in memory the same way. Never write a fixture that would actually run if opened
-  (no real editor task files, no real lifecycle scripts in any package.json except our own build scripts).
+## Web page
+- Untrusted text goes into the DOM with `textContent` only, never `innerHTML`.
+- Downloads use Blob URLs with a fixed safe MIME type (`text/markdown`, `text/csv`, `image/png`,
+  `application/octet-stream`) and a sanitized file name.
+- Strict CSP on the page: `default-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'`.
+  The page never sends disk bytes anywhere.
 
-## Defensive limits
-- Per-file size cap (e.g. 512 KB read, larger files are reported as "too big to inspect", not fetched).
-- Per-scan request budget and file-count cap; stop early with a partial result instead of hammering the API.
-- Regexes must be linear-time (no nested quantifiers over the same characters); scan line by line with length caps.
-- Treat every path, file name and byte as attacker-controlled (path traversal in the MCP local reader: resolve and
-  refuse anything outside the given root; do not follow symlinks).
+## MCP server (the agent boundary)
+- Tools take an image path that must resolve (realpath) inside the workspace root; refuse symlinks and anything outside.
+- The only write tool exhumes into one fixed folder (`exhumed/`). No destination argument. File names are rebuilt
+  from an allowlist (`[A-Za-z0-9._-]`, max 64 chars), the extension is chosen by the converter, never overwrite.
+- Output to the agent is structured JSON with caps (entries, text length). Converted text is wrapped and labeled as
+  untrusted content from the disk; control characters stripped. Never put disk text into tool descriptions or errors
+  that the agent might read as instructions.
+- No auto-approve in any shipped `mcp.json`. The `exhumed/` folder is excluded from every hook glob and test glob.
+- The Power and the Crew app run a pinned, committed build of the server — never an unpinned `npx`/`latest` fetch.
 
-## MCP output is a prompt-injection boundary
-- Scanned repos may contain text written to manipulate an AI agent. The MCP tools return only structured findings
-  (detector id, severity, path, line number, a fixed reason string from our own catalogue). No raw excerpts, no
-  README text, no commit messages, no file names longer than a cap, control characters stripped.
+## General
+- Never execute anything found on a disk image. Never write outside the paths above. No network calls in core, web
+  or MCP.

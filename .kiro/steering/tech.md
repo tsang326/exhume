@@ -3,22 +3,26 @@ inclusion: always
 ---
 # Tech rules
 
-- TypeScript, strict, no `any`. Vite for the web page. No UI framework. Node 20+ for the MCP server.
+- TypeScript, strict, no `any`. Vite for the web page, no UI framework. Node 22+ for the MCP server.
 - Layout:
-  - `src/core/` — the detector core. Pure functions over `{ path, bytes: Uint8Array }` and repo metadata.
-    No DOM, no `fs`, no network, no Node-only APIs. Shared by the web page and the MCP server.
-  - `src/fetch/` — GitHub tree/blob fetching with size caps, a request budget and rate-limit handling.
-    Injectable `fetch` so tests never touch the network.
-  - `src/web/` — the page (unmasking UI, effects). Talks to `core` and `fetch` only.
-  - `src/mcp/` — stdio MCP server built on the official `@modelcontextprotocol/sdk`. Reuses `core` and `fetch`
-    (plus a local-folder reader for already-cloned repos, read-only).
-  - `power/` — the Kiro Power packaging (plugin manifest, MCP config, skill docs).
-- Findings have one shape everywhere: `{ detector, severity: 'high'|'medium'|'low', path, line?, reason, evidence? }`.
-  `evidence` is a short, escaped excerpt for the web UI only. The MCP response never includes file contents.
-- Tests: Vitest + fast-check, `src/**/*.test.ts`. Every detector gets property-based tests for both directions:
-  "real files of this type are never flagged" and "the disguise is always flagged, wherever it is placed".
-  A fast-check property callback must return nothing or a boolean, never `expect(...)`.
-- Fixtures are built in memory inside the tests (byte arrays, strings assembled at runtime). No fixture files that
-  look like the real attack on disk.
-- No new runtime dependency without a reason in the commit message. Prefer zero runtime deps in `core`.
-- Hosting: static build on Vercel or GitHub Pages. No backend, no secrets.
+  - `src/core/` — pure, dependency-free: FAT12 reader (boot sector/BPB, FAT, root dir, subdirs, cluster chains),
+    undelete grading, format converters (`wordstar`, `dbase`, `pcx`), PNG encoder (stored/deflate via
+    `CompressionStream` or a tiny pure encoder). Input is `Uint8Array`. No DOM, no Node APIs, no I/O.
+  - `src/web/` — the graveyard page. Uses `core` only.
+  - `src/mcp/` — stdio MCP server on the official `@modelcontextprotocol/sdk`; thin wrapper over `core` + a
+    workspace-confined file reader/writer.
+  - `power/` — Kiro Power packaging (manifest, `mcp.json`, skill docs).
+  - `scripts/make-demo-disks.ts` — deterministic generator for the demo floppy images (with deleted files and
+    sample WordStar/dBase/PCX files we author ourselves).
+  - The Crew app lives in a separate repo and depends on a pinned build of this MCP server.
+- One result shape: `DiskReport { volume, files: Grave[], warnings[] }`, `Grave { path, size, date, state:
+  'alive'|'recovered'|'partial'|'lost', kind, reason? }`. Web, MCP and Crew all use it.
+- Tests: Vitest + fast-check in `src/**/*.test.ts`.
+  - Round-trip property: generate random file sets → build a FAT12 image (test-only image writer) → read back →
+    same names/sizes/bytes.
+  - Hostile-input properties: random bytes, cyclic FAT chains, out-of-range clusters, self-referencing directories,
+    absurd sizes → the reader returns a report with warnings and never throws, hangs or allocates without bound.
+  - Converter properties: never throw on random bytes; known fixtures convert to known output.
+  - A fast-check property callback returns nothing or a boolean, never `expect(...)`.
+- No new runtime dependency without a reason in the commit message; `core` has zero runtime deps.
+- Hosting: static build (GitHub Pages or Vercel). No backend, no secrets, no analytics.

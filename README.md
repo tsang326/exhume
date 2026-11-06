@@ -1,12 +1,18 @@
-# Possessed?
+# Exhume
 
-Check a repo before it checks you. Paste a GitHub URL and see which files are wearing a costume:
-fonts that are really scripts, editor tasks that run when you open the folder, code hidden after the last line of a
-build config, install scripts that phone home. Nothing is cloned and nothing is executed.
+Your old disks aren't dead. They're buried.
 
-Also ships as an MCP server / Kiro Power so your agent can ask before it clones.
+Drop a DOS floppy image into the page and its files appear as a graveyard. Deleted files are open graves you can
+dig up. WordStar documents rise as Markdown, dBase tables as CSV, PCX pictures as PNG. Everything runs in your
+browser; nothing is uploaded.
 
-Kiroween 2026, Costume Contest category. Built with [Kiro](https://kiro.dev) (see `/.kiro` and `docs/KIRO_LOG.md`).
+Also ships as an MCP server / Kiro Power and a Kiro Crew app, so an agent can open a floppy image and exhume files
+into your project.
+
+Prior art: [disk-peek](https://github.com/andete/disk-peek) already browses FAT12 images and recovers deleted
+entries in the browser.
+
+Kiroween 2026, Resurrection category. Built with [Kiro](https://kiro.dev) (see `/.kiro` and `docs/KIRO_LOG.md`).
 
 ## Run
 ```bash

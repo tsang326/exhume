@@ -1,70 +1,54 @@
 # Spec briefs (paste into Kiro, one spec at a time)
 
-Kiro writes requirements/design/tasks and the code. These briefs only state intent and constraints.
-Steering (`product.md`, `tech.md`, `safety.md`) applies to all of them.
+Kiro writes requirements/design/tasks and the code. These briefs state intent and constraints only.
+Steering (`product.md`, `tech.md`, `safety.md`) applies to all.
 
-## Spec 1 — detector-core
-Build `src/core/`: the pure detector engine.
-- Input: a list of `{ path, bytes }` plus optional repo metadata; output: `Finding[]` (shape in `tech.md`) and a
-  verdict (`clean | suspicious | possessed`).
-- Detectors (one module each, a shared registry):
-  1. **mismatched-bytes** — known binary extensions (fonts, images, archives, wasm) checked against their magic bytes;
-     text/script content in a binary extension is high severity. Unknown extensions are ignored.
-  2. **autorun-task** — editor task configs (VS Code tasks file under `.vscode/`, and similar) with a task set to run
-     when the folder opens; severity high, higher if the command invokes a runtime on a non-code file.
-     Must parse JSON-with-comments safely.
-  3. **appended-config** — for build configs (`vite|webpack|rollup|next|nuxt|eslint|tailwind|postcss` config files),
-     find the end of the last top-level statement; any non-whitespace, non-comment code after it is flagged.
-     Use a small tokenizer that understands strings, template literals and comments; no full JS parser.
-  4. **lifecycle-scripts** — package.json install lifecycle hooks; medium by default, high when they call a
-     runtime on a non-code file, fetch from the network, or decode data.
-  5. **obfuscation** — very long lines, high-entropy string literals, dynamic-code construction signals.
-     Low/medium only, never high on its own.
-- `src/core/tokens.ts` assembles sensitive tokens at runtime (see `safety.md`).
-- PBT (fast-check) for each detector, both directions. Examples:
-  real WOFF2/PNG/ZIP magic + random tail is never flagged; random printable text under a font extension is always
-  flagged; any config with payload after the final statement is flagged, wherever comments/whitespace are inserted;
-  clean configs with strings that *contain* `});` are not flagged; the engine never throws on random bytes.
-- Acceptance: `npm test` green; a test that runs the engine over a snapshot of a real clean repo tree (stored as
-  a small JSON of paths + hashes, no contents) yields zero high findings.
+## Spec 1 — fat12-core
+`src/core/fat12/`: read a FAT12 floppy image into a `DiskReport`.
+- Boot sector/BPB validation (with fallbacks for common DOS geometries when the BPB is junk), FAT12 12-bit entry
+  decoding, root directory + subdirectories, 8.3 names (+ VFAT long names if cheap), dates/times, attributes.
+- Undelete grading for deleted entries: first-character recovery placeholder, contiguous-unallocated heuristic →
+  `recovered`; partially overwritten → `partial`; start cluster reused → `lost`; always with a reason.
+- A test-only FAT12 **image writer** (also used later by the demo-disk generator) so properties can round-trip.
+- PBT: round-trip random file trees; hostile inputs (random bytes, cyclic chains, out-of-range clusters,
+  self-referencing dirs, huge sizes) → never throws, terminates fast, bounded memory, warnings present.
 
-## Spec 2 — github-fetch
-Build `src/fetch/`: read a public repo without cloning.
-- Parse GitHub URLs (repo, branch, subpath, PR head). Get the tree (recursive) via the REST API, pick only the files
-  detectors care about (by path rules from the detector registry), fetch them from raw.githubusercontent.com.
-- Caps: file size, file count, request budget; partial results are marked partial. Handles 403/429 rate limits with
-  a clear error carrying the reset time. Optional token held in memory only.
-- `fetch` is injected; tests use a fake. PBT: URL parser round-trips; budget is never exceeded for random trees.
+## Spec 2 — format-resurrection
+`src/core/formats/`: `wordstar` → Markdown (high-bit stripping, dot commands, control codes for bold/underline,
+soft vs hard returns), `dbase` (dBase III `.dbf` header + fields → CSV, RFC 4180 quoting, code page 437 → UTF-8),
+`pcx` (RLE decode, 1/4/8/24-bit, palette) → RGBA → PNG encoder.
+- Type detection by content first, extension second.
+- PBT: never throws on random bytes; CSV round-trips through a CSV parser; PCX encode→decode round-trip (test-only
+  encoder); WordStar: plain ASCII input passes through unchanged.
 
-## Spec 3 — unmasking-ui (the costume)
-Build `src/web/`: the haunted scanner page.
-- Flow: URL input → "summoning" while fetching (progress per file) → result.
-- Each finding is a "costume card": the file as it pretends to be (icon/name/claimed type), then an unmasking
-  animation reveals the real bytes (hex/text view, offending lines highlighted). Clean result: calm, short.
-- Effects code-drawn (CSS/canvas): flicker, fog, a mask peeling off. Translucent, never blocking the text.
-  `prefers-reduced-motion` turns the theatre off. Keyboard accessible. Works on mobile width.
-- Scanned text via `textContent` only (`safety.md`).
-- Demo buttons: a known-clean repo and our inert bait repo (spec 5).
+## Spec 3 — graveyard-ui (the web page)
+`src/web/`: drop zone → graveyard. Tombstones for files, open graves for deleted entries, a lantern/fog look,
+code-drawn effects (CSS/canvas), translucent, never covering text. Click → "rising" animation → preview
+(Markdown rendered safely as text-with-formatting via DOM nodes, CSV table, PNG image) + download.
+- Demo disks one click away (from spec 5). `prefers-reduced-motion` respected; keyboard accessible; mobile width.
+- CSP and `textContent` rules from `safety.md`.
 
 ## Spec 4 — mcp-server + Kiro Power
-Build `src/mcp/` and `power/`.
-- stdio MCP server (official TypeScript SDK) with tools:
-  - `scan_github_repo { url }` → verdict + findings (no file contents).
-  - `scan_local_folder { path }` → same, read-only, refuses paths outside the given root, no symlink following.
-  - `explain_finding { detector }` → fixed text from our catalogue (what it is, why it is dangerous, what to do).
-- Output sanitised per `safety.md` (prompt-injection boundary). Tests drive the server in-process.
-- `power/`: Kiro Power manifest + `mcp.json` + a skill doc ("before cloning or opening a repo from a stranger,
-  call scan_github_repo"). Installable from the GitHub URL. Document install steps for judges in README.
-- Also add a workspace `.kiro/settings/mcp.json` so this repo's own Kiro uses it.
+`src/mcp/` + `power/`:
+- Tools: `open_disk {image}` → DiskReport (capped); `read_grave {image, path}` → converted text/CSV preview
+  (capped, labeled untrusted) or image metadata; `exhume {image, path}` → writes the converted file into
+  `exhumed/` and returns its workspace path; `explain_state {state}` → fixed catalogue text.
+- Workspace confinement, naming, caps and labeling exactly per `safety.md`. Tests drive the server in-process,
+  including hostile file names and images.
+- `power/`: manifest, `mcp.json` (pinned committed build, no auto-approve), a skill doc ("when the user mentions an
+  old floppy image, open it with open_disk before guessing"). Also `.kiro/settings/mcp.json` for this workspace.
 
-## Spec 5 — bait repo (separate public repo, needs owner approval before creating)
-An inert demo target: files that *look* like each disguise but do nothing (commands only echo a message, the fake
-font is a short text file saying it is a demo). README and SECURITY.md say it is a harmless test fixture for
-Possessed?. Built last, reviewed by hand before publishing.
+## Spec 5 — demo disks
+`scripts/make-demo-disks.ts`: deterministic generator producing 2–3 images in `public/disks/`:
+a writer's disk (WordStar chapters, one deleted draft that is recoverable, one partially overwritten),
+a small-business disk (dBase customer table, a PCX logo), and a damaged disk (bad BPB, a cyclic chain) to show
+warnings. All content written by us; README states it.
 
-## Hooks (create them in Kiro's hook UI, then commit `.kiro/hooks/`)
-1. On save of `src/**/*.ts` → run `npm test`.
-2. On save of `src/**` → run `npm run check:tokens` (a script that fails if any sensitive token from `tokens.ts`
-   appears as a literal anywhere in `src/`, `docs/` or tests).
-3. Agent stop → append a 2–3 line entry to `docs/KIRO_LOG.md` (what was done, which spec/steering helped,
-   what was fixed by hand).
+## Spec 6 — Crew app (separate repo `exhume-crew`, after spec 4)
+Crew app manifest (`app.json`), an "undertaker" agent, a skill, the Exhume MCP server (pinned build), and a
+dashboard page showing the graveyard for disks in a watched folder. Follow kiro.dev/docs/crew/apps.
+
+## Hooks (create in Kiro's hook UI, commit `.kiro/hooks/`)
+1. On save of `src/**/*.ts` → `npm test`.
+2. On save of `src/core/**` → run the hostile-input property suite with a higher run count (`npm run test:fuzz`).
+3. Agent stop → append 2–3 lines to `docs/KIRO_LOG.md` (what was done, which spec/steering helped, what was fixed by hand).

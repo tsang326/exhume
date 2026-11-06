@@ -15,3 +15,7 @@ what had to be fixed by hand. Be honest — the write-up is built from this.
 - Dropped the game after re-reading the rules (impact criterion). The game code Kiro wrote is kept on branch
   `archive/revenant-game`, not used. Steering (`product.md`, `tech.md`, `safety.md`) and `docs/SPEC_BRIEFS.md`
   rewritten by hand outside Kiro for the scanner; all scanner code is to be written in Kiro. (Disclose.)
+## 2026-11-07 — pivot to Exhume
+- Possessed? dropped before any code (overlapped an earlier project of mine). New topic: Exhume (FAT12 floppy
+  graveyard + undelete + WordStar/dBase/PCX resurrection, MCP/Power, Crew app). Steering and briefs rewritten by hand
+  outside Kiro; all application code is to be written in Kiro. (Disclose.)

@@ -84,21 +84,37 @@ export type DamageSpec =
         | 'sectorsPerFat'
         | 'totalSectors';
     }
-  | { type: 'size-exceeds-chain'; path: string; extraBytes: number };
+  | { type: 'size-exceeds-chain'; path: string; extraBytes: number }
+  | {
+      type: 'lfn';
+      /** Node with a long name. */
+      path: string;
+      mode: 'corrupt-checksum' | 'swap-order' | 'drop-last';
+    };
 
 export interface WriteOptions {
   damage?: DamageSpec[];
-  /** Long-name corruption hook for LFN tests. */
-  lfn?: 'corrupt-checksum' | 'swap-order' | 'drop-last';
+  /** Volume serial number; a fixed constant when omitted. Long-name corruption uses the 'lfn' damage variant. */
+  serial?: number;
 }
 
 export interface Measure {
+  /** Root directory records used, incl. long-name records and the volume label entry. */
   rootEntries: number;
+  /** Data clusters used, incl. directory clusters. */
   clusters: number;
+  /** Live (not deleted, not under a deleted directory) files. */
+  fileCount: number;
+  /** Deepest directory nesting (0 = no directories; a root-level directory is 1). */
+  maxDepth: number;
+  /** Human-readable name-format problems the writer would reject (empty when clean). */
+  nameProblems: string[];
 }
 
 export interface Capacity {
   rootEntries: number;
   dataClusters: number;
   clusterBytes: number;
+  /** dataClusters * clusterBytes. */
+  dataBytes: number;
 }

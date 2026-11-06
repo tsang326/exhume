@@ -11,6 +11,18 @@
     "4.6 Write property test for FAT value classification": {
       "status": "passed",
       "lastRunTimestamp": 1793994620655
+    },
+    "12.6 Write property test for writer layout and determinism": {
+      "status": "passed",
+      "lastRunTimestamp": 1793996613706
+    },
+    "13.2 Write property test for single-file content round trip up to capacity": {
+      "status": "passed",
+      "lastRunTimestamp": 1793997148508
+    },
+    "13.5 Write property test for grading against a reference model": {
+      "status": "passed",
+      "lastRunTimestamp": 1793997209759
     }
   },
   "executionHistory": {
@@ -404,6 +416,200 @@
         "executionId": "1357eac3-b5cc-497f-a0a2-b3a00473a0af",
         "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
         "timestamp": 1793995862626
+      }
+    ],
+    "12.1 Create `src/test-support/fat12/measure.ts`": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793995940305
+      },
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996042926
+      }
+    ],
+    "12.2 Create `src/test-support/fat12/layout.ts`": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996049888
+      },
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996279996
+      }
+    ],
+    "12.3 Create `src/test-support/fat12/damage.ts`": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996287138
+      },
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996415027
+      }
+    ],
+    "12.4 Create `src/test-support/fat12/index.ts`": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996422002
+      },
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996510010
+      }
+    ],
+    "12.5 Create `src/test-support/fat12/arbitraries.ts` (not exported from `index.ts`)": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996517092
+      },
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996636309
+      }
+    ],
+    "12.6 Write property test for writer layout and determinism": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996523154
+      },
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996642916
+      }
+    ],
+    "12. Test-only image writer, part 2 (layout, damage, public API, arbitraries)": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996636355
+      }
+    ],
+    "12.7 Write property test for fit errors": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996644176
+      },
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997014725
+      }
+    ],
+    "13.1 Write property test for the file tree round trip": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996645745
+      },
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997021546
+      }
+    ],
+    "13.4 Write property test for long-name handling": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996646683
+      },
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997027493
+      }
+    ],
+    "13.6 Write reader example tests in `src/core/fat12/reader.examples.test.ts`": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996647683
+      },
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997066553
+      }
+    ],
+    "13.7 Write grading example tests in `src/core/fat12/grade.test.ts`": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793996656548
+      },
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997072269
+      }
+    ],
+    "13.2 Write property test for single-file content round trip up to capacity": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997085232
+      },
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997226999
+      }
+    ],
+    "13.5 Write property test for grading against a reference model": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997092979
+      },
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997233469
+      }
+    ],
+    "13.3 Write property test for undelete of contiguous deleted files": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997239316
+      },
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997299042
+      }
+    ],
+    "13. Round-trip and undelete properties": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997299085
+      }
+    ],
+    "14. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997305408
+      },
+      {
+        "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997422547
       }
     ]
   }

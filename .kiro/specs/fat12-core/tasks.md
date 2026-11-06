@@ -175,75 +175,75 @@ Design decisions 1 to 11 in `design.md` are approved and are followed as written
 - [x] 11. Checkpoint - Ensure all tests pass
   - Run `npm test` and `npm run typecheck`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12. Test-only image writer, part 2 (layout, damage, public API, arbitraries)
-  - [ ] 12.1 Create `src/test-support/fat12/measure.ts`
+- [x] 12. Test-only image writer, part 2 (layout, damage, public API, arbitraries)
+  - [x] 12.1 Create `src/test-support/fat12/measure.ts`
     - `standardGeometry(name)` (independent literal table), `capacityOf`, `measureTree` (root entries, clusters including directory clusters and long-name records), `pickGeometry(tree)` (smallest standard geometry that fits, or `undefined`), `fitTree(tree)` (halve file sizes until the tree fits `2880K`)
     - _Requirements: 9.1, 9.7, 11.2_
 
-  - [ ] 12.2 Create `src/test-support/fat12/layout.ts`
+  - [x] 12.2 Create `src/test-support/fat12/layout.ts`
     - Deterministic bump allocation from cluster 2 in depth-first pre-order, directory sizing with `.` and `..`, boot sector (OEM `EXHUME  `, BPB, label at offset 43, signature), two identical FAT copies, root directory, data area, FAT[0] / FAT[1]
     - Deleted nodes keep their clusters reserved, write `0xE5`, clear FAT entries in both copies; `placement.startCluster` support with deleted data written first
     - Dates come only from the tree (default 1980-01-01 00:00:00); no clock or random values
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.10_
 
-  - [ ] 12.3 Create `src/test-support/fat12/damage.ts`
+  - [x] 12.3 Create `src/test-support/fat12/damage.ts`
     - One function per `DamageSpec` variant (`cyclic-chain`, `cluster-out-of-range`, `self-referencing-directory`, `invalid-bpb`, `size-exceeds-chain`), each producing only its own defect; long-name corruption hooks (`corrupt-checksum`, `swap-order`, `drop-last`); a damage spec naming a missing path throws a plain `Error` naming the path
     - _Requirements: 9.6_
 
-  - [ ] 12.4 Create `src/test-support/fat12/index.ts`
+  - [x] 12.4 Create `src/test-support/fat12/index.ts`
     - `writeFat12Image`, `measureTree`, `capacityOf`, `pickGeometry`, `fitTree`, `standardGeometry`, `FitError`, and the public types. All checks run before any byte is written. No imports of `vitest`, `fast-check` or Node.
     - _Requirements: 9.1, 9.2, 9.7, 9.8, 9.9, 9.10_
 
-  - [ ] 12.5 Create `src/test-support/fat12/arbitraries.ts` (not exported from `index.ts`)
+  - [x] 12.5 Create `src/test-support/fat12/arbitraries.ts` (not exported from `index.ts`)
     - File-tree arbitrary: 0 to 64 files, nesting 0 to 4, at most 32 directories, unique 8.3 names per directory (`fc.uniqueArray`), sizes 0 to 65,536, valid dates, random attribute flags, optional volume label; file contents expanded from a `{ seed, length }` pair by a small deterministic PRNG
     - Helper that applies `pickGeometry` and `fitTree` so the writer never throws during the round-trip property, and returns the tree after fitting
     - _Requirements: 11.2_
 
-  - [ ]* 12.6 Write property test for writer layout and determinism
+  - [x]* 12.6 Write property test for writer layout and determinism
     - **Property 20: Writer layout is valid and deterministic**
     - In `src/test-support/fat12/writer.test.ts`
     - **Validates: Requirements 9.1, 9.3, 9.4, 9.10**
 
-  - [ ]* 12.7 Write property test for fit errors
+  - [x]* 12.7 Write property test for fit errors
     - **Property 21: The writer refuses trees that do not fit**
     - Add to `writer.test.ts`; also an example test for 17-level nesting (9.2)
     - **Validates: Requirements 9.7, 9.2**
 
-- [ ] 13. Round-trip and undelete properties
-  - [ ] 13.1 Write property test for the file tree round trip
+- [x] 13. Round-trip and undelete properties
+  - [x] 13.1 Write property test for the file tree round trip
     - **Property 8: File tree round trip**
     - In `src/core/fat12/reader.roundtrip.test.ts`; compare against the tree after `fitTree`; check path, size, bytes, ISO date, attributes, `state: 'alive'`, file count, directory kinds, no `.`, `..` or label entries, depth-first order, `volume.label` and geometry
     - **Validates: Requirements 1.7, 3.10, 6.1, 6.2, 6.4, 6.10, 6.11, 7.1, 7.8, 7.10, 7.11, 8.2, 11.2**
 
-  - [ ] 13.2 Write property test for single-file content round trip up to capacity
+  - [x] 13.2 Write property test for single-file content round trip up to capacity
     - **Property 9: Single file content round trip up to capacity**
     - Add to `reader.roundtrip.test.ts`; weight cluster-multiple boundaries and the capacity itself
     - **Validates: Requirements 5.11**
 
-  - [ ] 13.3 Write property test for undelete of contiguous deleted files
+  - [x] 13.3 Write property test for undelete of contiguous deleted files
     - **Property 13: Undelete restores contiguous deleted files**
     - Add to `reader.roundtrip.test.ts`
     - **Validates: Requirements 8.1, 8.14, 9.5**
 
-  - [ ]* 13.4 Write property test for long-name handling
+  - [x]* 13.4 Write property test for long-name handling
     - **Property 12: Valid VFAT names are used and invalid ones fall back**
     - Add to `names.test.ts`, using the writer's `longName` and `lfn` corruption options
     - **Validates: Requirements 7.5, 7.6, 7.7**
 
-  - [ ]* 13.5 Write property test for grading against a reference model
+  - [x]* 13.5 Write property test for grading against a reference model
     - **Property 14: Grading matches the reference model and is deterministic**
     - Add to `grade.test.ts`; build occupancy patterns with the writer's `placement` option; independent reference model; run twice and compare
     - **Validates: Requirements 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.11, 8.12**
 
-  - [ ] 13.6 Write reader example tests in `src/core/fat12/reader.examples.test.ts`
+  - [x] 13.6 Write reader example tests in `src/core/fat12/reader.examples.test.ts`
     - `image-empty`, `fat-copies-differ`, truncated FAT, `chain-bad-cluster`, `chain-truncated`, `chain-short`, `output-capped` (declared size `0xFFFFFFFF`), `size-exceeds-disk`, entries after a `0x00` terminator ignored, `directory-duplicate`, directory start cluster 0 or above maximum, volume label entry omitted, `date-invalid` with `date: null`, 17-level nesting
     - _Requirements: 2.3, 4.4, 5.4, 5.5, 5.6, 5.8, 5.9, 6.3, 6.7, 6.9, 6.11, 7.9, 9.2, 11.10_
 
-  - [ ] 13.7 Write grading example tests in `src/core/fat12/grade.test.ts`
+  - [x] 13.7 Write grading example tests in `src/core/fat12/grade.test.ts`
     - One fixture per case using the image writer: `recovered` (contiguous), `partial` (run cut by a live file, with the free count in the reason), `lost` (start cluster reused), empty deleted file, invalid start cluster, run beyond the disk, deleted directory, overlap with an earlier deleted file
     - _Requirements: 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.12, 8.13, 11.10_
 
-- [ ] 14. Checkpoint - Ensure all tests pass
+- [x] 14. Checkpoint - Ensure all tests pass
   - Run `npm test` and `npm run typecheck`. Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 15. Hostile-input properties (`src/core/fat12/reader.hostile.test.ts`)

@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { numRuns } from '../../test-support/runs';
 import { decodeCp437 } from './cp437';
+import { openDisk } from './index';
+import { shortNameArb } from '../../test-support/fat12/arbitraries';
+import { writeFat12Image } from '../../test-support/fat12';
+import type { DamageSpec, FileTree } from '../../test-support/fat12';
 import {
   decodeShortName,
   lfnChecksum,
@@ -310,6 +314,97 @@ describe('short-name decoding properties', () => {
           !/^\.+$/.test(once) &&
           once === oracleSanitize(s)
         );
+      }),
+      { numRuns: numRuns(100) },
+    );
+  });
+});
+
+describe('VFAT long names on written images', () => {
+  /**
+   * One code point: printable ASCII (no '/' or '\\'), BMP non-ASCII outside the surrogate
+   * range, or an astral character (a surrogate pair in UTF-16).
+   */
+  const codePointArb: fc.Arbitrary<string> = fc.oneof(
+    { arbitrary: fc.integer({ min: 0x20, max: 0x7e }).filter((c) => c !== 0x2f && c !== 0x5c), weight: 4 },
+    { arbitrary: fc.integer({ min: 0xa0, max: 0xd7ff }), weight: 2 },
+    { arbitrary: fc.integer({ min: 0xe000, max: 0xfffd }), weight: 1 },
+    { arbitrary: fc.integer({ min: 0x10000, max: 0x10ffff }), weight: 2 },
+  ).map((c) => String.fromCodePoint(c));
+
+  /** Long name of `minChars`..255 UTF-16 units, never splitting a surrogate pair, never dots-only. */
+  const longNameArb = (minChars: number): fc.Arbitrary<string> =>
+    fc
+      .array(codePointArb, { minLength: minChars, maxLength: 255 })
+      .map((chars) => {
+        let out = '';
+        for (const ch of chars) {
+          if (out.length + ch.length > 255) break;
+          out += ch;
+        }
+        return out;
+      })
+      .filter((s) => s.length >= minChars && [...s].some((ch) => ch !== '.'));
+
+  const modeArb = fc.constantFrom('valid', 'corrupt-checksum', 'swap-order', 'drop-last');
+
+  const scenarioArb = modeArb.chain((mode) =>
+    fc.record({
+      mode: fc.constant(mode),
+      // swap-order needs at least two records, i.e. more than 13 units (14 chars is at least 14 units).
+      longName: longNameArb(mode === 'swap-order' ? 14 : 1),
+      fileName: shortNameArb,
+      dirName: shortNameArb,
+      inSubdir: fc.boolean(),
+      seed: fc.integer({ min: 0, max: 255 }),
+      size: fc.integer({ min: 0, max: 1500 }),
+    }),
+  );
+
+  // Feature: fat12-core, Property 12: Valid VFAT names are used and invalid ones fall back
+  // Validates: Requirements 7.5, 7.6, 7.7
+  //
+  // Documented behaviour checked here: every damage mode leaves the long-name records in
+  // front of a real 8.3 entry, so directory.ts reports exactly one lfn-invalid warning whose
+  // path is the entry's 8.3 path (corrupt-checksum fails the checksum test, swap-order and
+  // drop-last break the "first record has 0x40 and sequence order" rule). The orphan case
+  // (warning carries the directory path) only happens when no 8.3 entry follows the records,
+  // which these images never produce.
+  it('Property 12: Valid VFAT names are used and invalid ones fall back', () => {
+    fc.assert(
+      fc.property(scenarioArb, (s) => {
+        const content = new Uint8Array(s.size).map((_, i) => (s.seed + i * 7) & 0xff);
+        const file = { kind: 'file' as const, name: s.fileName, longName: s.longName, content };
+        const tree: FileTree = {
+          children: s.inSubdir ? [{ kind: 'directory', name: s.dirName, children: [file] }] : [file],
+        };
+        const shortPath = s.inSubdir ? `/${s.dirName}/${s.fileName}` : `/${s.fileName}`;
+        const longPath = s.inSubdir ? `/${s.dirName}/${s.longName}` : `/${s.longName}`;
+        const damage: DamageSpec[] =
+          s.mode === 'valid' ? [] : [{ type: 'lfn', path: shortPath, mode: s.mode }];
+
+        const image = writeFat12Image(tree, '360K', { damage });
+        const handle = openDisk(image);
+        const report = handle.report;
+
+        const expectedPath = s.mode === 'valid' ? longPath : shortPath;
+        const grave = report.files.find((g) => g.kind === 'file');
+        if (grave === undefined || grave.path !== expectedPath) return false;
+
+        const lfnWarnings = report.warnings.filter((w) => w.code === 'lfn-invalid');
+        if (s.mode === 'valid') {
+          if (report.warnings.length !== 0) return false;
+        } else {
+          if (lfnWarnings.length !== 1 || lfnWarnings[0]?.path !== shortPath) return false;
+          if (report.warnings.length !== 1) return false;
+        }
+
+        // The file is still listed once, alive, and its bytes read back.
+        if (report.files.filter((g) => g.kind === 'file').length !== 1) return false;
+        if (grave.state !== 'alive') return false;
+        const read = handle.readBytes(grave);
+        if (!read.ok || read.bytes.length !== content.length) return false;
+        return read.bytes.every((b, i) => b === content[i]);
       }),
       { numRuns: numRuns(100) },
     );

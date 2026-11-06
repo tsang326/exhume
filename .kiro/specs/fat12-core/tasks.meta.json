@@ -1,0 +1,317 @@
+{
+  "pbtResults": {
+    "6.4 Write property test for DOS date decoding": {
+      "status": "passed",
+      "lastRunTimestamp": 1793994228988
+    },
+    "6.5 Write property test for short-name decoding": {
+      "status": "passed",
+      "lastRunTimestamp": 1793994466482
+    },
+    "4.6 Write property test for FAT value classification": {
+      "status": "passed",
+      "lastRunTimestamp": 1793994620655
+    }
+  },
+  "executionHistory": {
+    "1.1 Edit `package.json` (the ONLY task that edits it) and wait for approval before installing": [
+      {
+        "executionId": "5628c7d3-42d1-4220-8697-16149d8127e8",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993289700
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993416623
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993514608
+      }
+    ],
+    "1.2 Add TypeScript, Vitest and shared test-support configuration (no `package.json` edits)": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993520253
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993653896
+      }
+    ],
+    "1. Project setup and package.json review": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993653926
+      }
+    ],
+    "2.1 Create `src/core/fat12/limits.ts` and `src/core/fat12/types.ts`": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993662208
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993764513
+      }
+    ],
+    "3.1 Create `src/test-support/fat12/types.ts` and `src/test-support/fat12/errors.ts`": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993663029
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993765319
+      }
+    ],
+    "2.2 Create `src/core/fat12/bytes.ts` and `src/core/fat12/warnings.ts`": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993772230
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993864907
+      }
+    ],
+    "3.2 Create `src/test-support/fat12/encode.ts` with independent encoders": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993772473
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993865001
+      }
+    ],
+    "2. Core foundations": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993864942
+      }
+    ],
+    "3. Test-only image writer, part 1 (types and independent encoders)": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993865031
+      }
+    ],
+    "2.3 Write unit tests for `ByteView` and `WarningSink`": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993875080
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994022031
+      }
+    ],
+    "4.1 Create `src/core/fat12/geometry.ts`": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993875619
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994022049
+      }
+    ],
+    "6.1 Create `src/core/fat12/cp437.ts` and `src/core/fat12/names.ts`": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993876635
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994022089
+      }
+    ],
+    "6.2 Create `src/core/fat12/dates.ts`": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793993877206
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994022113
+      }
+    ],
+    "4.2 Write example tests in `src/core/fat12/geometry.test.ts`": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994055496
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994241386
+      }
+    ],
+    "4.4 Create `src/core/fat12/fat.ts`": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994061338
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994254336
+      }
+    ],
+    "6.3 Write example tests in `src/core/fat12/names.test.ts`": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994066842
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994260065
+      }
+    ],
+    "6.4 Write property test for DOS date decoding": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994072877
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994266039
+      }
+    ],
+    "4. Geometry and FAT decoding": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994254383
+      }
+    ],
+    "6. Text decoding: CP437, names, long names, dates": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994260103
+      }
+    ],
+    "4.3 Write property test for BPB validation and geometry selection": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994271867
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994490105
+      }
+    ],
+    "4.5 Write property test for the FAT12 entry codec round trip": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994277911
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994495661
+      }
+    ],
+    "5.1 Create `src/core/fat12/chain.ts`": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994283486
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994505069
+      }
+    ],
+    "6.5 Write property test for short-name decoding": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994288601
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994510609
+      }
+    ],
+    "4.6 Write property test for FAT value classification": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994522157
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994688119
+      }
+    ],
+    "5.2 Write unit tests in `src/core/fat12/chain.test.ts`": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994556526
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994693754
+      }
+    ],
+    "5. Cluster chain walker": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994693786
+      }
+    ],
+    "7. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994700471
+      },
+      {
+        "executionId": "1eaa7e6b-7e01-4b4b-bfb0-7f197aa87c90",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994828311
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+:root {
+  color-scheme: dark;
+  --phosphor: #7dff9a;
+  --bg: #050806;
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--phosphor); }
+#app { height: 100%; display: grid; place-items: center; }
+.boot { font-size: 1.25rem; text-shadow: 0 0 6px var(--phosphor); }

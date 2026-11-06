@@ -3,13 +3,22 @@ inclusion: always
 ---
 # Tech rules
 
-- Vanilla TypeScript + Vite, DOM + canvas. No UI framework. Strict TypeScript, no `any`.
-- Game logic (dialogue state machine, trust/suspicion, beats, endings) is pure, framework-free TypeScript in `src/game/`,
-  with no DOM access, so it can be unit- and property-tested.
-- UI in `src/ui/`, effects in `src/fx/`, LLM client in `src/ghost/`. One serverless function `api/ghost.ts` on Vercel
-  calls the Gemma model (Google AI Studio) with the key from `GEMINI_API_KEY`. The key never reaches the browser.
-- Every LLM call has: a timeout, per-IP rate limit, output length cap, and a fallback to scripted lines from
-  `src/ghost/fallback/*.json` keyed by game state. With the API off, the whole game must still be playable to an ending.
-- Tests: Vitest + fast-check in `src/**/*.test.ts`. State-machine invariants are property-based tests.
-- No new runtime dependencies without a reason written in the PR/commit message.
-- All audio and art are made in code or are CC0 with the source noted in `docs/CREDITS.md`. No copyrighted music.
+- TypeScript, strict, no `any`. Vite for the web page. No UI framework. Node 20+ for the MCP server.
+- Layout:
+  - `src/core/` — the detector core. Pure functions over `{ path, bytes: Uint8Array }` and repo metadata.
+    No DOM, no `fs`, no network, no Node-only APIs. Shared by the web page and the MCP server.
+  - `src/fetch/` — GitHub tree/blob fetching with size caps, a request budget and rate-limit handling.
+    Injectable `fetch` so tests never touch the network.
+  - `src/web/` — the page (unmasking UI, effects). Talks to `core` and `fetch` only.
+  - `src/mcp/` — stdio MCP server built on the official `@modelcontextprotocol/sdk`. Reuses `core` and `fetch`
+    (plus a local-folder reader for already-cloned repos, read-only).
+  - `power/` — the Kiro Power packaging (plugin manifest, MCP config, skill docs).
+- Findings have one shape everywhere: `{ detector, severity: 'high'|'medium'|'low', path, line?, reason, evidence? }`.
+  `evidence` is a short, escaped excerpt for the web UI only. The MCP response never includes file contents.
+- Tests: Vitest + fast-check, `src/**/*.test.ts`. Every detector gets property-based tests for both directions:
+  "real files of this type are never flagged" and "the disguise is always flagged, wherever it is placed".
+  A fast-check property callback must return nothing or a boolean, never `expect(...)`.
+- Fixtures are built in memory inside the tests (byte arrays, strings assembled at runtime). No fixture files that
+  look like the real attack on disk.
+- No new runtime dependency without a reason in the commit message. Prefer zero runtime deps in `core`.
+- Hosting: static build on Vercel or GitHub Pages. No backend, no secrets.

@@ -312,6 +312,99 @@
         "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
         "timestamp": 1793994828311
       }
+    ],
+    "8.1 Create `src/core/fat12/grade.ts`": [
+      {
+        "executionId": "1357eac3-b5cc-497f-a0a2-b3a00473a0af",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994951068
+      },
+      {
+        "executionId": "1357eac3-b5cc-497f-a0a2-b3a00473a0af",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793995083483
+      }
+    ],
+    "10.1 Create `src/core/fat12/guard.ts` and `src/core/fat12/guard.test.ts`": [
+      {
+        "executionId": "1357eac3-b5cc-497f-a0a2-b3a00473a0af",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793994970039
+      },
+      {
+        "executionId": "1357eac3-b5cc-497f-a0a2-b3a00473a0af",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793995089776
+      }
+    ],
+    "8. Undelete grader": [
+      {
+        "executionId": "1357eac3-b5cc-497f-a0a2-b3a00473a0af",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793995083524
+      }
+    ],
+    "9.1 Create `src/core/fat12/directory.ts`": [
+      {
+        "executionId": "1357eac3-b5cc-497f-a0a2-b3a00473a0af",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793995095714
+      },
+      {
+        "executionId": "1357eac3-b5cc-497f-a0a2-b3a00473a0af",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793995391297
+      }
+    ],
+    "9. Directory walker": [
+      {
+        "executionId": "1357eac3-b5cc-497f-a0a2-b3a00473a0af",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793995391329
+      }
+    ],
+    "10.2 Create `src/core/fat12/disk.ts`": [
+      {
+        "executionId": "1357eac3-b5cc-497f-a0a2-b3a00473a0af",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793995397602
+      },
+      {
+        "executionId": "1357eac3-b5cc-497f-a0a2-b3a00473a0af",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793995626609
+      }
+    ],
+    "10.3 Create `src/core/fat12/index.ts` and `src/core/fat12/index.test.ts`": [
+      {
+        "executionId": "1357eac3-b5cc-497f-a0a2-b3a00473a0af",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793995635157
+      },
+      {
+        "executionId": "1357eac3-b5cc-497f-a0a2-b3a00473a0af",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793995738339
+      }
+    ],
+    "10. Public API": [
+      {
+        "executionId": "1357eac3-b5cc-497f-a0a2-b3a00473a0af",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793995738384
+      }
+    ],
+    "11. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "1357eac3-b5cc-497f-a0a2-b3a00473a0af",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793995766463
+      },
+      {
+        "executionId": "1357eac3-b5cc-497f-a0a2-b3a00473a0af",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793995862626
+      }
     ]
   }
 }

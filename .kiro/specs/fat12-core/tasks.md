@@ -141,38 +141,38 @@ Design decisions 1 to 11 in `design.md` are approved and are followed as written
 - [x] 7. Checkpoint - Ensure all tests pass
   - Run `npm test` and `npm run typecheck`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Undelete grader
-  - [ ] 8.1 Create `src/core/fat12/grade.ts`
+- [x] 8. Undelete grader
+  - [x] 8.1 Create `src/core/fat12/grade.ts`
     - `gradeDeleted(ctx, claimed, entry, path)` implementing the grading flow in the design in this order: directory (`lost`, contents not listed), size 0 (`recovered`, empty), invalid start (`lost`), start allocated / unreadable / claimed (`lost`), then the free-run scan bounded by `min(N, maxCluster - start + 1)` giving `partial` or `recovered`. Mark the usable run in the `claimed` bitmap. Never allocate from `N`.
     - `gradeLive(chain, size, ctx)` per decision 2 (damaged live entries become `partial` when at least one cluster was read, `lost` otherwise; zero-length files are never damaged)
     - Reasons are templates with numbers only and at most `MAX_REASON_CHARS` characters
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.11, 8.12, 8.13, 1.6_
 
-- [ ] 9. Directory walker
-  - [ ] 9.1 Create `src/core/fat12/directory.ts`
+- [x] 9. Directory walker
+  - [x] 9.1 Create `src/core/fat12/directory.ts`
     - `walkDirectories(ctx)` with an explicit `DirFrame` stack, depth counter and global `recordsRead` counter (decision 5: every examined 32-byte record counts; the warning fires when a 4,097th read is attempted)
     - Per-record order from the design: budget, fetch, end marker, long-name record, volume label, `.` / `..`, build entry (decision 8: deleted entries use the 8.3 name with `_`), grade and descend
     - Descent order: invalid start (`cluster-out-of-range`, `lost`), depth (decision 4, `depth-exceeded`), loop (`directory-loop`), duplicate (`directory-duplicate`) using a `readDirs` set, otherwise `walkChain` with `Infinity` and push a frame. Orphan long-name records give one `lfn-invalid` (decision 10).
     - Build `Grave` objects (path join, `date`, attributes, `startCluster`, `id`) and the internal `EntryRecord[]` with read plans
     - _Requirements: 2.4, 2.6, 2.11, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10, 6.11, 6.12, 7.1, 7.4, 7.5, 7.6, 7.8, 7.9, 7.10, 8.1, 8.2_
 
-- [ ] 10. Public API
-  - [ ] 10.1 Create `src/core/fat12/guard.ts` and `src/core/fat12/guard.test.ts`
+- [x] 10. Public API
+  - [x] 10.1 Create `src/core/fat12/guard.ts` and `src/core/fat12/guard.test.ts`
     - `guarded(label, fn, onError)` is the documented last-resort catch; the test calls it with a function that throws and checks that an `internal-error` warning is produced and earlier results are kept
     - _Requirements: 2.1, 2.4_
 
-  - [ ] 10.2 Create `src/core/fat12/disk.ts`
+  - [x] 10.2 Create `src/core/fat12/disk.ts`
     - `openDisk(image)`: `TypeError` check via `Object.prototype.toString.call(x) === "[object Uint8Array]"` before any state; length checks (empty, too large, below 512) in the order shown in the scan flow, before parsing; geometry selection; `ScanContext`; directory walk inside `guarded`; volume label (CP437, trailing spaces removed, control chars to `_`); `DiskHandle`
     - `readBytes(grave)`: look up `grave.id` and check `path`, `size`, `startCluster`; return the three fixed failure strings; recovered / partial deleted reads copy only the stored run; live reads re-run `walkChain` with a local sink; apply the 4 MB and declared-size caps and `size-exceeds-disk` / `output-capped` warnings (decision 7); allocate the output only after the minimum is known
     - `readDisk` and `readGraveBytes` convenience functions
     - _Requirements: 1.1, 1.7, 1.8, 1.9, 2.1, 2.2, 2.3, 2.5, 2.8, 2.9, 3.6, 3.7, 3.9, 3.10, 5.6, 5.7, 5.8, 5.9, 5.10, 8.9, 8.10, 10.3, 10.4, 10.5, 10.9_
 
-  - [ ] 10.3 Create `src/core/fat12/index.ts` and `src/core/fat12/index.test.ts`
+  - [x] 10.3 Create `src/core/fat12/index.ts` and `src/core/fat12/index.test.ts`
     - Re-export `openDisk`, `readDisk`, `readGraveBytes`, `FALLBACK_GEOMETRIES`, all limits and all public types
     - The test imports every public name (fails to compile if one is missing) and checks that `openDisk`, `readDisk` and `readGraveBytes` throw `TypeError` for `null`, `undefined`, a string, a number, a plain array, an `ArrayBuffer` and a `DataView`, and accept a `Buffer`
     - _Requirements: 10.6, 10.7, 10.9_
 
-- [ ] 11. Checkpoint - Ensure all tests pass
+- [x] 11. Checkpoint - Ensure all tests pass
   - Run `npm test` and `npm run typecheck`. Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 12. Test-only image writer, part 2 (layout, damage, public API, arbitraries)

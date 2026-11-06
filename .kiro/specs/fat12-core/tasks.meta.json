@@ -23,6 +23,10 @@
     "13.5 Write property test for grading against a reference model": {
       "status": "passed",
       "lastRunTimestamp": 1793997209759
+    },
+    "16.2 Write property test for failed reads": {
+      "status": "passed",
+      "lastRunTimestamp": 1793998088358
     }
   },
   "executionHistory": {
@@ -610,6 +614,183 @@
         "executionId": "333bec27-d982-41c0-9a77-2ba651518058",
         "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
         "timestamp": 1793997422547
+      }
+    ],
+    "15.1 Create `src/test-support/hostile.ts` with hostile-input generators": [
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997500758
+      },
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997661356
+      }
+    ],
+    "17.1 Create `src/test-support/purity.test.ts`": [
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997506538
+      },
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997667852
+      }
+    ],
+    "17.2 Create `src/test-support/meta.test.ts`": [
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997512808
+      },
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997674491
+      }
+    ],
+    "17. Purity, dependency and configuration checks": [
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997674527
+      }
+    ],
+    "15.2 Write property test for totality on hostile input": [
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997681403
+      },
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997986678
+      }
+    ],
+    "16.1 Write property test for bounded reads": [
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997687372
+      },
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997992629
+      }
+    ],
+    "16. File-read properties (`src/core/fat12/reader.reads.test.ts`)": [
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793997992673
+      }
+    ],
+    "15.3 Write property test for report invariants": [
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998000767
+      },
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998116265
+      }
+    ],
+    "16.2 Write property test for failed reads": [
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998007261
+      },
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998122314
+      }
+    ],
+    "15.4 Write property test for oversized images": [
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998132318
+      },
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998285429
+      }
+    ],
+    "16.3 Write property test for input immutability and `Buffer` equivalence": [
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998138364
+      },
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998291846
+      }
+    ],
+    "15.5 Write property test for damaged-file isolation": [
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998298492
+      },
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998448328
+      }
+    ],
+    "15.6 Write property test for directory structure limits": [
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998454150
+      },
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998609069
+      }
+    ],
+    "15.7 Write property test for the entry limit": [
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998615423
+      },
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998814114
+      }
+    ],
+    "15. Hostile-input properties (`src/core/fat12/reader.hostile.test.ts`)": [
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998814160
+      }
+    ],
+    "18. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998820344
+      },
+      {
+        "executionId": "3ba4bebf-86e0-4acc-a8b0-d3c055524294",
+        "chatSessionId": "sess_6069565b-2784-4377-8bf3-245d0d1d57f9",
+        "timestamp": 1793998938382
       }
     ]
   }

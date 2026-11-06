@@ -246,73 +246,73 @@ Design decisions 1 to 11 in `design.md` are approved and are followed as written
 - [x] 14. Checkpoint - Ensure all tests pass
   - Run `npm test` and `npm run typecheck`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 15. Hostile-input properties (`src/core/fat12/reader.hostile.test.ts`)
-  - [ ] 15.1 Create `src/test-support/hostile.ts` with hostile-input generators
+- [x] 15. Hostile-input properties (`src/core/fat12/reader.hostile.test.ts`)
+  - [x] 15.1 Create `src/test-support/hostile.ts` with hostile-input generators
     - Families from the design: random bytes (length 0 to 2,097,152, plus lengths just above and below each fallback size), writer-built images with 1 to 64 random byte writes, images with a randomized FAT region, images with a randomized directory region, and targeted-defect images from the writer's `damage` option
     - Large inputs are `{ seed, length }` pairs expanded by a deterministic PRNG, not `fc.uint8Array` of 2 MB
     - Generators only produce inputs. They never call the reader and never use `timed()`.
     - _Requirements: 11.3, 11.4_
 
-  - [ ] 15.2 Write property test for totality on hostile input
+  - [x] 15.2 Write property test for totality on hostile input
     - **Property 1: Totality on hostile input**
     - Create `reader.hostile.test.ts`. In each case, generate the input and build any image first, outside the timer. Then wrap ONLY the `readDisk` call in `timed(() => readDisk(image))` so the timer starts immediately before the reader call and stops immediately after it. Do not include generation, writer calls, mutation or shrinking in the timed closure. Assert no throw, a `DiskReport` result and no `internal-error` warning. Use `numRuns(100)` so `test:fuzz` gives at least 1,000 runs.
     - **Validates: Requirements 2.1, 2.5, 2.10, 5.1, 11.3, 11.5**
 
-  - [ ] 15.3 Write property test for report invariants
+  - [x] 15.3 Write property test for report invariants
     - **Property 2: Report invariants**
     - Add to `reader.hostile.test.ts`. Build the image first; time only the `readDisk` call with `timed()`; run the invariant checks (path shape, depth at most 16, sizes, unions, reasons 1 to 200 characters, at most 4,096 files, JSON round trip) after the timer has stopped.
     - **Validates: Requirements 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.9, 6.8, 6.10, 6.12, 7.4, 11.7, 11.8**
 
-  - [ ] 15.4 Write property test for oversized images
+  - [x] 15.4 Write property test for oversized images
     - **Property 4: Oversized images are rejected unparsed**
     - Add to `reader.hostile.test.ts`. Generate the oversized array first, outside the timer; wrap only the `readDisk` call in `timed()`.
     - **Validates: Requirements 2.2**
 
-  - [ ] 15.5 Write property test for damaged-file isolation
+  - [x] 15.5 Write property test for damaged-file isolation
     - **Property 17: A damaged file is isolated**
     - Add to `reader.hostile.test.ts`. Build the undamaged and the damaged image with the writer first. Time only the reader calls (`readDisk` and `readGraveBytes` on the damaged image) with `timed()`. Compare states and bytes of the other files outside the timer.
     - **Validates: Requirements 2.4, 2.11, 5.2, 5.3, 5.6, 5.8, 5.9, 5.10, 9.6, 11.4**
 
-  - [ ] 15.6 Write property test for directory structure limits
+  - [x] 15.6 Write property test for directory structure limits
     - **Property 18: Directory structure limits hold**
     - Add to `reader.hostile.test.ts`. Depth 1 to 24, `directory-loop` and `directory-duplicate` images are built first; only the `readDisk` call is timed.
     - **Validates: Requirements 2.6, 6.5, 6.6, 6.7, 9.6, 11.4**
 
-  - [ ] 15.7 Write property test for the entry limit
+  - [x] 15.7 Write property test for the entry limit
     - **Property 19: Entry limit**
     - Add to `reader.hostile.test.ts`. Build images with N records around 4,096 first; only the `readDisk` call is timed. Check exactly one `entry-limit` warning iff N is above 4,096.
     - **Validates: Requirements 6.8, 11.8**
 
-- [ ] 16. File-read properties (`src/core/fat12/reader.reads.test.ts`)
-  - [ ] 16.1 Write property test for bounded reads
+- [x] 16. File-read properties (`src/core/fat12/reader.reads.test.ts`)
+  - [x] 16.1 Write property test for bounded reads
     - **Property 15: File reads are bounded**
     - Create `reader.reads.test.ts`. For any image and any Grave in its report, `readGraveBytes` does not throw and, on success, returns at most `min(size, 4,194,304)` bytes. Time only the `readGraveBytes` call with `timed()`; generate and build the image, and run `readDisk` to get the Graves, outside the timer.
     - **Validates: Requirements 1.7, 5.7, 8.9, 11.6**
 
-  - [ ]* 16.2 Write property test for failed reads
+  - [x]* 16.2 Write property test for failed reads
     - **Property 16: Failed reads are failures, not exceptions**
     - Add to `reader.reads.test.ts`; directory Graves, `lost` Graves and forged Graves return `{ ok: false, error }` with one of the three fixed strings and leave the report and the image unchanged
     - **Validates: Requirements 1.8, 8.10, 8.13**
 
-  - [ ]* 16.3 Write property test for input immutability and `Buffer` equivalence
+  - [x]* 16.3 Write property test for input immutability and `Buffer` equivalence
     - **Property 3: Input is not modified and `Buffer` is equivalent**
     - Add to `reader.reads.test.ts`
     - **Validates: Requirements 2.8, 10.3, 10.4**
 
-- [ ] 17. Purity, dependency and configuration checks
-  - [ ] 17.1 Create `src/test-support/purity.test.ts`
+- [x] 17. Purity, dependency and configuration checks
+  - [x] 17.1 Create `src/test-support/purity.test.ts`
     - Parse sources with the `typescript` compiler API. Walk `src/core/`, skipping `exhumed/` and `node_modules/`.
     - Fail on imports of Node built-ins (with or without `node:`), identifiers `document`, `window`, `fetch`, `eval`, `new Function`; non-relative imports in non-test core files; any type `any` in non-test files under `src/core/fat12/`; the literals `2949120` and `4194304` outside `limits.ts`; any `RegExp` literal or construction in `names.ts`; any import from `src/test-support/` inside `src/core/`; any transitive import of `vitest` or `fast-check` from `src/test-support/fat12/index.ts` (arbitraries excluded); any package imported under `src/core/` that is listed in `package.json` `dependencies`
     - _Requirements: 2.7, 2.9, 9.8, 9.9, 10.1, 10.2, 10.5, 10.8, 11.11, 11.12_
 
-  - [ ] 17.2 Create `src/test-support/meta.test.ts`
+  - [x] 17.2 Create `src/test-support/meta.test.ts`
     - Import the Vitest config and assert `exclude` contains `**/exhumed/**` and `include` is `src/**/*.test.ts`
     - Check `numRuns` for multiplier values undefined, `'abc'`, `'0'`, `'10'` and `'1000'`
     - Run a deliberately failing `fc.assert` inside a `try`/`catch` and check that the message contains the seed and the counterexample
     - Check that `timed()` throws when the closure exceeds the budget and does not count time spent outside the closure
     - _Requirements: 11.1, 11.5, 11.13, 11.14, 11.15_
 
-- [ ] 18. Final checkpoint - Ensure all tests pass
+- [x] 18. Final checkpoint - Ensure all tests pass
   - Run `npm test` and `npm run typecheck`. Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

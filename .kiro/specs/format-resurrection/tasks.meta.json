@@ -43,6 +43,10 @@
     "10.9 Write property test for record count arithmetic": {
       "status": "passed",
       "lastRunTimestamp": 1794020424024
+    },
+    "12.8 Write property test for the RLE decoder": {
+      "status": "passed",
+      "lastRunTimestamp": 1794020915175
     }
   },
   "executionHistory": {
@@ -748,6 +752,200 @@
         "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
         "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
         "timestamp": 1794020478473
+      }
+    ],
+    "12.1 Create `pcx-header.ts`": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020581361
+      },
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020723324
+      }
+    ],
+    "12.2 Create `pcx-rle.ts`": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020586121
+      },
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020735187
+      }
+    ],
+    "12.3 Create `pcx-palette.ts`": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020742902
+      },
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020946290
+      }
+    ],
+    "12.4 Create `pcx-pixels.ts`": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020748072
+      },
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020951577
+      }
+    ],
+    "12.7 Write property test for header acceptance": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020752901
+      },
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020957079
+      }
+    ],
+    "12.8 Write property test for the RLE decoder": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020757633
+      },
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020962828
+      }
+    ],
+    "12.5 Create `pcx.ts` with `convertPcx`": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021011888
+      },
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021127710
+      }
+    ],
+    "12.6 Write PCX example tests": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021133114
+      },
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021314537
+      }
+    ],
+    "12.9 Write property test for the PCX to PNG round trip": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021138261
+      },
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021319743
+      }
+    ],
+    "13.1 Create `auto.ts` and `index.ts`": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021143290
+      },
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021324997
+      }
+    ],
+    "12.10 Write property test for palette selection and truncation": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021330317
+      },
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021593001
+      }
+    ],
+    "13.2 Write the public API test": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021335849
+      },
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021598038
+      }
+    ],
+    "13.3 Write property test for the result contract": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021349391
+      },
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021606894
+      }
+    ],
+    "13.5 Write `convertAuto` example tests": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021355453
+      },
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021611675
+      }
+    ],
+    "12. PCX converter": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021593037
+      }
+    ],
+    "13.4 Write property test for determinism and Buffer equivalence": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021616423
+      },
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021706041
+      }
+    ],
+    "13. Auto conversion and public API": [
+      {
+        "executionId": "acc0e17e-9ab8-494b-9bc5-c9357b43457d",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021706074
       }
     ]
   }

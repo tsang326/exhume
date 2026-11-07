@@ -302,74 +302,74 @@ Every task in this plan is required, including all test and property sub-tasks. 
 - [x] 11. Checkpoint - Ensure all tests pass
   - Run `npm test` and `npm run typecheck`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12. PCX converter
-  - [ ] 12.1 Create `pcx-header.ts`
+- [x] 12. PCX converter
+  - [x] 12.1 Create `pcx-header.ts`
     - `parsePcxHeader` evaluating the ten conditions of Requirement 9 criterion 2 in order, mapping each failure to its template (`too short`, `too large`, `not supported`, `header invalid` with the condition number), adding `limit-exceeded` for limit-caused failures, and never reading DPI or screen-size fields
     - Compute sizes only from validated 16-bit values; allocate nothing before all ten conditions pass
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 10.15_
 
-  - [ ] 12.2 Create `pcx-rle.ts`
+  - [x] 12.2 Create `pcx-rle.ts`
     - `decodeRle(input, start, limit, totalBytes)` into a zero-filled buffer: literal below `0xC0`, run of `byte & 0x3F`, runs may cross scanlines but never the total, a lone final run byte discarded, returning the data, the filled count and the consumed position
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 12.3_
 
-  - [ ] 12.3 Create `pcx-palette.ts`
+  - [x] 12.3 Create `pcx-palette.ts`
     - `choosePalette`: monochrome black and white, version 3 fixed EGA palette versus the header palette for 16-colour images, the 769-byte VGA trailer test using the decoder's consumed position, and the grayscale fallback with `missing`
     - _Requirements: 10.6, 10.7, 10.8, 10.9, 10.10, 10.12_
 
-  - [ ] 12.4 Create `pcx-pixels.ts`
+  - [x] 12.4 Create `pcx-pixels.ts`
     - `expandToRgba` with one tight loop per pixel format (1-bit, 4-plane 1-bit, 4-bit with high nibble first, 8-bit indexed, 24-bit planar), alpha 255, padding ignored, no per-pixel allocation
     - _Requirements: 10.6, 10.7, 10.8, 10.9, 10.11, 10.13_
 
-  - [ ] 12.5 Create `pcx.ts` with `convertPcx`
+  - [x] 12.5 Create `pcx.ts` with `convertPcx`
     - Order: type check, `limitInput`, header parse, then a helper that runs the RLE decode, adds `pcx-data-truncated` with the number of complete rows, picks the palette, adds `pcx-palette-missing`, and returns the RGBA array so the decoded planes are unreachable before the PNG buffer is allocated
     - Encode with `encodePng` and return `image/png` and `.png`
     - _Requirements: 9.7, 10.4, 10.14, 10.15, 1.6, 12.12_
 
-  - [ ] 12.6 Write PCX example tests
+  - [x] 12.6 Write PCX example tests
     - `pcx.examples.test.ts`: each of the five modes once with a known small image, version 3 EGA, input lengths 0 to 127 give `too short`
     - _Requirements: 9.3, 10.6, 10.7, 10.8, 10.11, 10.12, 14.10_
 
-  - [ ] 12.7 Write property test for header acceptance
+  - [x] 12.7 Write property test for header acceptance
     - **Property 26: PCX header acceptance matches the oracle**
     - In `src/core/formats/pcx.header.test.ts`
     - **Validates: Requirements 9.1, 9.2, 9.4, 9.5, 9.6, 9.7, 10.15**
 
-  - [ ] 12.8 Write property test for the RLE decoder
+  - [x] 12.8 Write property test for the RLE decoder
     - **Property 27: The RLE decoder agrees with a reference model**
     - In `src/core/formats/pcx.rle.test.ts`; target lengths 1 to 4,096
     - **Validates: Requirements 10.1, 10.2, 10.3, 10.4, 10.5**
 
-  - [ ] 12.9 Write property test for the PCX to PNG round trip
+  - [x] 12.9 Write property test for the PCX to PNG round trip
     - **Property 28: PCX to PNG round trip**
     - In `src/core/formats/pcx.roundtrip.test.ts`; all five modes, padding, random DPI bytes, runs across scanlines
     - **Validates: Requirements 9.9, 10.6, 10.7, 10.8, 10.11, 10.13, 10.16, 13.3**
 
-  - [ ] 12.10 Write property test for palette selection and truncation
+  - [x] 12.10 Write property test for palette selection and truncation
     - **Property 29: Palette selection**
     - Add to `pcx.roundtrip.test.ts`
     - **Validates: Requirements 10.4, 10.9, 10.10, 10.12**
 
-- [ ] 13. Auto conversion and public API
-  - [ ] 13.1 Create `auto.ts` and `index.ts`
+- [x] 13. Auto conversion and public API
+  - [x] 13.1 Create `auto.ts` and `index.ts`
     - `convertAuto(input, fileName?)`: detector, then the matching converter; for `unknown` return `no converter for this format` with an empty `warnings` array
     - `index.ts` exports `convertWordStar`, `convertDBase`, `convertPcx`, `encodePng`, `detectFormat`, `convertAuto`, all Limits, `ConversionWarningCode` and the public types; `runWordStar` and `runDBase` stay internal
     - _Requirements: 1.3, 2.11_
 
-  - [ ] 13.2 Write the public API test
+  - [x] 13.2 Write the public API test
     - `src/core/formats/index.test.ts`: import every public name; each public function except `encodePng` throws the exact `TypeError` for `null`, `undefined`, a string, a number, an array, an `ArrayBuffer` and a `DataView`, and accepts a `Buffer`; `encodePng` returns a failure for bad objects instead of throwing
     - _Requirements: 1.3, 1.8, 11.8_
 
-  - [ ] 13.3 Write property test for the result contract
+  - [x] 13.3 Write property test for the result contract
     - **Property 1: Result contract**
     - In `src/core/formats/contract.test.ts`, using `checkResultInvariants`; the callback throws a plain `Error` joining the violations
     - **Validates: Requirements 1.4, 1.5, 1.13, 1.14, 8.7, 10.14, 12.7, 14.7, 14.8**
 
-  - [ ] 13.4 Write property test for determinism and Buffer equivalence
+  - [x] 13.4 Write property test for determinism and Buffer equivalence
     - **Property 3: Determinism and Buffer equivalence**
     - Add to `contract.test.ts`
     - **Validates: Requirements 1.10, 1.11, 11.11**
 
-  - [ ] 13.5 Write `convertAuto` example tests
+  - [x] 13.5 Write `convertAuto` example tests
     - `auto.test.ts`: one valid sample of each format converts through `convertAuto`, an unknown input returns the fixed failure with an empty `warnings` array, and the extension fallback routes a headerless sample
     - _Requirements: 2.11, 14.10_
 

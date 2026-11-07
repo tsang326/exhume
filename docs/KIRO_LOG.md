@@ -37,3 +37,14 @@ what had to be fixed by hand. Be honest — the write-up is built from this.
   Review fixes: blob URL ownership check in `h.ts`, Markdown preview limits written into design as known limitations.
 - Kiro found and removed `innerHTML` uses in its own DOM tests (source scans skip test files). Manual browser check
   (task 19: CSP console, 320px layout, keyboard, reduced motion) is still open.
+## 2026-11-07 — mcp-server (spec 4)
+- Kiro wrote requirements/design/tasks and the whole MCP server in `src/mcp/` (hand-written JSON-RPC 2.0 over stdio,
+  no SDK), the Power files in `power/`, the test helpers in `src/test-support/mcp/` and the tests (1324 tests total,
+  stdio, stale-build and source-scan tests included). Est. 141 credits for implementation.
+- By hand in review: optional `id` in `read_grave`, protocol version negotiation, CSV CR/LF sanitising, Windows refused
+  (no `O_NOFOLLOW`), `O_NONBLOCK` reads, in-memory stale-build test, package rename, all property tests required.
+- Build: the Vite SSR build dropped `output.banner` (esbuild renderChunk strips comments); I picked Kiro's option of a
+  small inline `generateBundle` plugin. Every `build:mcp` run was approved only after checking the config hash.
+- Denied: a `sed -i` edit and a heredoc that wrote an unreviewed file to /tmp (Kiro redid both with its edit tool).
+  Allowed web fetches of public docs during spec writing. Kiro's permission rule blocked it from writing
+  `.kiro/settings/mcp.json`; I created that file by hand with the content from the design (no autoApprove).

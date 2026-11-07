@@ -19,3 +19,12 @@ what had to be fixed by hand. Be honest — the write-up is built from this.
 - Possessed? dropped before any code (overlapped an earlier project of mine). New topic: Exhume (FAT12 floppy
   graveyard + undelete + WordStar/dBase/PCX resurrection, MCP/Power, Crew app). Steering and briefs rewritten by hand
   outside Kiro; all application code is to be written in Kiro. (Disclose.)
+## 2026-11-07 — fat12-core (spec 1)
+- Kiro wrote requirements/design/tasks and all of `src/core/fat12/` plus the test-only image writer in Spec mode, task by
+  task with review between phases. 18 task groups, 323 tests, hostile-input suite under `test:fuzz`.
+- Review changes requested by hand: named limits, warnings instead of throws, explicit-stack directory walk.
+## 2026-11-07/08 — format-resurrection (spec 2)
+- Kiro wrote WordStar→Markdown, dBase→CSV (formula guard), PCX→PNG (own stored-deflate encoder, CRC/Adler) and the
+  test-only writers/oracles. 803 tests + fuzz suite. Kiro ran parallel sub-agents per task wave.
+- By hand: tightened image memory limits in requirements before design (4 Mpx, 16 MiB decoded, exact max PNG size);
+  denied two shell commands I could not read in full; sub-agents sometimes wrote files via heredoc despite instructions.

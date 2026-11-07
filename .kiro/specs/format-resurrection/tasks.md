@@ -222,84 +222,84 @@ Every task in this plan is required, including all test and property sub-tasks. 
 - [x] 9. Checkpoint - Ensure all tests pass
   - Run `npm test` and `npm run typecheck`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. dBase converter and CSV
-  - [ ] 10.1 Create `csv.ts`
+- [x] 10. dBase converter and CSV
+  - [x] 10.1 Create `csv.ts`
     - `formulaGuard`, `csvCell`, `csvRow` (CRLF on every row) and `utf8Length`; the guard runs first and quoting second so the `'` sits inside the quotes
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-  - [ ] 10.2 Create `dbase-header.ts`
+  - [x] 10.2 Create `dbase-header.ts`
     - `parseDbfHeader` with the checks in the order of Requirement 6 criterion 3: input under 32 bytes first, then version, then conditions 2 to 5 (header length, descriptor walk capped at `MAX_DBF_FIELDS + 1`, field lengths, record length), reporting the lowest failed condition and adding `limit-exceeded` when a Limit caused it
     - Field names via the shared `decodeCp437`, controls replaced by `_`; unknown type letters read as `C` and flagged
     - Allocate nothing from a header field before conditions 1 to 5 pass
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.8, 6.9, 6.10, 6.14, 12.3_
 
-  - [ ] 10.3 Create `dbase-cells.ts`
+  - [x] 10.3 Create `dbase-cells.ts`
     - Per-type formatters for `C`, `N`/`F` (four-state character machine), `D` (real Gregorian date, year 0001 to 9999), `L` and `M`, returning the text and the formula-guard flag
     - `field-value-invalid` through `addOnce` keyed by field number; `memo-not-available` once
     - _Requirements: 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 7.11, 7.12, 7.13, 7.14, 8.6, 12.4_
 
-  - [ ] 10.4 Create `dbase.ts` with `convertDBase` and the internal `runDBase`
+  - [x] 10.4 Create `dbase.ts` with `convertDBase` and the internal `runDBase`
     - Record count as the smaller of the declared count, `MAX_DBF_RECORDS` and the whole records that fit; `records-truncated`, `record-limit` and `record-length-mismatch` warnings; stride equal to the record length
     - Header row first, active records in file order, deleted records skipped and counted, unknown flags read as active with one warning
     - UTF-8 byte cap checked per row, ending after the last complete row with one `output-capped`
     - `runDBase(input, cap)` is a test seam and is not exported from `index.ts`
     - _Requirements: 6.7, 6.11, 6.12, 6.13, 7.1, 7.2, 7.3, 7.4, 7.15, 7.16, 8.1, 8.7, 8.8, 8.11, 1.6_
 
-  - [ ] 10.5 Write dBase example tests
+  - [x] 10.5 Write dBase example tests
     - `dbase.examples.test.ts`: each field type once including a negative number, a date, a logical value and a memo field; the `warnings-capped` path with a table of more than 100 distinct problems; the under-32-byte case reports condition 2; the large-table case drives the real CSV cap
     - _Requirements: 6.4, 7.5, 7.6, 7.8, 7.11, 7.13, 7.15, 1.12, 14.10_
 
-  - [ ] 10.6 Write property test for CSV serialization
+  - [x] 10.6 Write property test for CSV serialization
     - **Property 24: CSV serialization round trip**
     - In `src/core/formats/csv.test.ts`
     - **Validates: Requirements 8.2, 8.3, 8.10**
 
-  - [ ] 10.7 Write property test for header acceptance
+  - [x] 10.7 Write property test for header acceptance
     - **Property 16: dBase header acceptance matches the oracle**
     - In `src/core/formats/dbase.header.test.ts`
     - **Validates: Requirements 6.3, 6.5, 6.6**
 
-  - [ ] 10.8 Write property test for the dBase to CSV round trip
+  - [x] 10.8 Write property test for the dBase to CSV round trip
     - **Property 17: dBase to CSV round trip**
     - In `src/core/formats/dbase.roundtrip.test.ts`
     - **Validates: Requirements 6.1, 6.2, 6.7, 6.8, 6.10, 7.1, 7.2, 7.3, 7.4, 7.16, 8.1, 8.8, 8.9, 13.2**
 
-  - [ ] 10.9 Write property test for record count arithmetic
+  - [x] 10.9 Write property test for record count arithmetic
     - **Property 18: Record count arithmetic**
     - Add to `dbase.roundtrip.test.ts`
     - **Validates: Requirements 6.11, 6.12, 8.11**
 
-  - [ ] 10.10 Write property test for the CSV output cap
+  - [x] 10.10 Write property test for the CSV output cap
     - **Property 23: CSV output cap**
     - In `src/core/formats/dbase.cap.test.ts`; caps through `runDBase`
     - **Validates: Requirements 7.15**
 
-  - [ ] 10.11 Write property test for formula neutralisation
+  - [x] 10.11 Write property test for formula neutralisation
     - **Property 25: Formula prefixes are neutralised**
     - In `src/core/formats/dbase.formula.test.ts`
     - **Validates: Requirements 8.4, 8.5, 8.6**
 
-  - [ ] 10.12 Write property test for character cells
+  - [x] 10.12 Write property test for character cells
     - **Property 19: Character cells follow the text rule**
     - In `src/core/formats/dbase.cells.text.test.ts`
     - **Validates: Requirements 7.5**
 
-  - [ ] 10.13 Write property test for numeric cells
+  - [x] 10.13 Write property test for numeric cells
     - **Property 20: Numeric cells are validated**
     - Add to `dbase.cells.text.test.ts`
     - **Validates: Requirements 7.6, 7.7, 7.14**
 
-  - [ ] 10.14 Write property test for date cells
+  - [x] 10.14 Write property test for date cells
     - **Property 21: Date cells are validated**
     - In `src/core/formats/dbase.cells.typed.test.ts`
     - **Validates: Requirements 7.8, 7.9, 7.10**
 
-  - [ ] 10.15 Write property test for logical cells
+  - [x] 10.15 Write property test for logical cells
     - **Property 22: Logical cells map as specified**
     - Add to `dbase.cells.typed.test.ts`; every byte value 0 to 255
     - **Validates: Requirements 7.11, 7.12**
 
-- [ ] 11. Checkpoint - Ensure all tests pass
+- [x] 11. Checkpoint - Ensure all tests pass
   - Run `npm test` and `npm run typecheck`. Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 12. PCX converter

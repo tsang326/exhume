@@ -27,6 +27,22 @@
     "8.9 Write property test for marker balance": {
       "status": "passed",
       "lastRunTimestamp": 1794019128806
+    },
+    "10.7 Write property test for header acceptance": {
+      "status": "passed",
+      "lastRunTimestamp": 1794019772228
+    },
+    "10.14 Write property test for date cells": {
+      "status": "passed",
+      "lastRunTimestamp": 1794020018194
+    },
+    "10.13 Write property test for numeric cells": {
+      "status": "passed",
+      "lastRunTimestamp": 1794020283680
+    },
+    "10.9 Write property test for record count arithmetic": {
+      "status": "passed",
+      "lastRunTimestamp": 1794020424024
     }
   },
   "executionHistory": {
@@ -538,6 +554,200 @@
         "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
         "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
         "timestamp": 1794019327181
+      }
+    ],
+    "10.1 Create `csv.ts`": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019465251
+      },
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019567972
+      }
+    ],
+    "10.2 Create `dbase-header.ts`": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019470269
+      },
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019572992
+      }
+    ],
+    "10.3 Create `dbase-cells.ts`": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019578745
+      },
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019789356
+      }
+    ],
+    "10.6 Write property test for CSV serialization": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019611856
+      },
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019794127
+      }
+    ],
+    "10.7 Write property test for header acceptance": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019617129
+      },
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019798828
+      }
+    ],
+    "10.4 Create `dbase.ts` with `convertDBase` and the internal `runDBase`": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019813499
+      },
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020056441
+      }
+    ],
+    "10.12 Write property test for character cells": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019818686
+      },
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020061184
+      }
+    ],
+    "10.14 Write property test for date cells": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019823970
+      },
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020065864
+      }
+    ],
+    "10.5 Write dBase example tests": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020071144
+      },
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020301068
+      }
+    ],
+    "10.8 Write property test for the dBase to CSV round trip": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020075834
+      },
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020305746
+      }
+    ],
+    "10.10 Write property test for the CSV output cap": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020080312
+      },
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020311112
+      }
+    ],
+    "10.11 Write property test for formula neutralisation": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020084972
+      },
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020315701
+      }
+    ],
+    "10.13 Write property test for numeric cells": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020089855
+      },
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020320471
+      }
+    ],
+    "10.9 Write property test for record count arithmetic": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020325521
+      },
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020449701
+      }
+    ],
+    "10.15 Write property test for logical cells": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020330043
+      },
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020455692
+      }
+    ],
+    "10. dBase converter and CSV": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020455726
+      }
+    ],
+    "11. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "f33dc8b9-070f-472f-ba60-6b1937d11e00",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794020478473
       }
     ]
   }

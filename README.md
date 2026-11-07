@@ -27,9 +27,10 @@ Exhume ships as a local stdio MCP server (`power/server/exhume-mcp.mjs`) wrapped
 hand-written JSON-RPC 2.0 server with no SDK and no runtime dependency. Disk content is untrusted data: every name,
 label and text it returns is sanitized and marked as untrusted.
 
-Status: the Power is PROVISIONAL. Its layout and format have not been installed or verified in Kiro yet, and nothing
-here should be read as confirmed until you have installed it and checked it yourself (see "Unconfirmed Power format
-points" below).
+Status: the workspace server (`.kiro/settings/mcp.json`) is verified by hand in Kiro and is the only supported way to
+run Exhume there. The Power in `power/` is not working yet: Kiro does not copy `server/` when it installs a power, so
+the server fails with "Connection Failed" (details below). Whether to convert it to the Agent Plugins format
+(`plugin.json`) with an `EXHUME_ROOT` setting is a later decision.
 
 ### Tools
 - `open_disk`: open a disk image inside the workspace and list its files with state (`alive`, `recovered`, `partial`,
@@ -57,38 +58,36 @@ node power/server/exhume-mcp.mjs [--root <dir>]
 Without `--root` the server uses its working directory as the workspace root. It reads one JSON-RPC message per line
 on standard input.
 
-### Install in Kiro (manual steps, for you)
-1. Build: `npm run build:mcp`.
-2. In Kiro open the Powers panel, choose "Add power from Local Path" and select the `power/` folder.
-3. For the workspace server, Kiro reads `.kiro/settings/mcp.json`. The intended content is a single `exhume` entry:
+### Install in Kiro
+1. Open the repository folder in Kiro as the workspace. Kiro reads the committed `.kiro/settings/mcp.json`, which has
+   a single `exhume` entry:
    ```json
    { "mcpServers": { "exhume": { "command": "node", "args": ["power/server/exhume-mcp.mjs"] } } }
    ```
-   That file may not exist in your checkout yet (writing it was blocked for the agent). If it is missing, create it
-   with this content. The Power's own `power/mcp.json` has the same single entry with the script path
-   `server/exhume-mcp.mjs`.
-4. If Kiro starts the server somewhere other than the workspace root, image calls fail closed with `PATH_REJECTED`
-   and expose nothing. Fix it by appending `"--root", "<absolute workspace path>"` to the `args` array of the single
-   `exhume` entry, in `power/mcp.json` or `.kiro/settings/mcp.json`. That `args` array is the only place `--root`
-   goes. Example:
-   ```json
-   { "mcpServers": { "exhume": { "command": "node", "args": ["power/server/exhume-mcp.mjs", "--root", "/absolute/path/to/workspace"] } } }
-   ```
+2. Check that the MCP Servers list shows `exhume` with its 4 tools. On a fresh clone it loads when the folder opens.
+   If you added the file while the window was already open, run "Developer: Reload Window" from the command palette.
+3. Check that the Kiro setting "Kiro Agent: Configure MCP" is Enabled (it is by default).
 
-### Power format points
-Confirmed only from public example powers: the `POWER.md` frontmatter fields (`name`, `displayName`, `description`,
-`keywords`, `version`, `author`) and the general layout of `POWER.md`, `mcp.json` and `steering/`.
+Kiro starts the server with the workspace root as its working directory, so `--root` is not needed. It is only an
+option for when a client starts the server somewhere else: image calls then fail closed with `PATH_REJECTED` and
+expose nothing, and you can append `"--root", "<absolute workspace path>"` to the `args` array of the `exhume` entry.
 
-Unconfirmed until you install `power/` and report what Kiro shows:
-1. Whether Kiro accepts this `POWER.md` frontmatter and shows the power.
-2. Whether Kiro loads `steering/floppy-images.md` from a `steering/` folder, or needs another name, location or
-   activation field.
-3. Whether a power-level `mcp.json` accepts a local stdio server (`command` and `args`) rather than only `url`
-   servers.
-4. How `server/exhume-mcp.mjs` is resolved in a power's `mcp.json`: relative to the power directory, the workspace
-   root or the process working directory.
-5. Which working directory Kiro gives the server, which decides whether `--root` is needed.
-6. Whether the current "Agent Plugins specification" changes any of the above.
+### Power and plugin results (verified by hand in Kiro)
+The Power in `power/` is not working yet. What was checked:
+1. Installed as a legacy Power (`POWER.md` format) from `power/`, Kiro accepts the frontmatter and shows "Exhume by
+   tsang326". The internal name comes from the folder name (`power`), so the server is named `power-power-exhume`.
+2. Kiro copies only `POWER.md`, `mcp.json` and `steering/` into `~/.kiro/powers/installed/power/`. `server/` is not
+   copied, so the server fails with "Connection Failed".
+3. Not verified: whether `steering/floppy-images.md` is used in chat.
+4. Agent Plugins format (a `plugin.json` with `$schema` `https://agent-plugins.org/schemas/1.0.0/plugin.schema.json`,
+   tried on a scratch copy only): Kiro copies the whole folder including `server/`, expands `${PLUGIN_ROOT}` in `args`
+   and the server connects. But its working directory is the installed plugin folder, so it cannot reach your
+   workspace. Kiro does not expand `${workspaceFolder}`, does not answer `roots/list`, and cancels elicitation
+   requests automatically. It does expand environment variables of the Kiro process in `args` and `env`.
+5. Using a power's tools from chat takes: activate the power, then a call through Kiro's power "use" tool, with three
+   approvals (Kiro Powers, the power, trust the tool).
+
+The plugin.json conversion and an `EXHUME_ROOT` setting are a later decision; neither is in the repo.
 
 ### Accepted residual risks
 Path checks confine image reads to the workspace (no `..` escape, no symlinks, regular files only, size cap). Two

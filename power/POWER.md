@@ -9,7 +9,7 @@ author: tsang326
 
 # Exhume
 
-> PROVISIONAL. The Power layout and frontmatter below follow public example powers only. They have not been confirmed in Kiro (see "Unconfirmed Power format points").
+> NOT WORKING YET. Kiro copies only `POWER.md`, `mcp.json` and `steering/` into `~/.kiro/powers/installed/`, not `server/`, so the server fails with "Connection Failed". Use the workspace server (`.kiro/settings/mcp.json`) instead. See "Verified Power format results" below.
 
 Exhume reads old FAT12 floppy disk images, lists live and deleted files, and converts WordStar, dBase and PCX files to Markdown, CSV and PNG. It runs as a local stdio MCP server (`server/exhume-mcp.mjs`, Node, no network). macOS and Linux only.
 
@@ -50,13 +50,14 @@ The shipped `mcp.json` does not pass `--root`, so the server uses its working di
 
 andete/disk-peek already browses FAT12 images and recovers deleted entries in the browser. Exhume adds format resurrection (WordStar, dBase, PCX), agent-facing MCP and Power packaging, and the recovered, partial and lost grading.
 
-## Unconfirmed Power format points
+## Verified Power format results
 
-These are not confirmed until the user installs `power/` through "Add power from Local Path" and reports what Kiro shows:
+Checked by hand in Kiro:
 
-1. Whether Kiro accepts this `POWER.md` frontmatter (`name`, `displayName`, `description`, `keywords`, `version`, `author`).
-2. Whether Kiro loads `steering/floppy-images.md` from a `steering/` folder, or needs another name, location or activation field.
-3. Whether a power-level `mcp.json` accepts a local stdio server (`command` and `args`) rather than only `url` servers.
-4. How `server/exhume-mcp.mjs` is resolved in a power's `mcp.json`: relative to the power directory, the workspace root or the process working directory.
-5. Which working directory Kiro gives the server, which decides whether `--root` is needed.
-6. Whether the current "Agent Plugins specification" changes any of the above.
+1. Kiro accepts this frontmatter and shows "Exhume by tsang326". The internal name comes from the folder name (`power`), so the server is named `power-power-exhume`.
+2. Only `POWER.md`, `mcp.json` and `steering/` are copied to `~/.kiro/powers/installed/power/`. `server/` is not, so the server fails with "Connection Failed".
+3. Not verified: whether `steering/floppy-images.md` is used in chat.
+4. Agent Plugins format (`plugin.json`, scratch copy only): Kiro copies `server/` and expands `${PLUGIN_ROOT}`, and the server connects, but its working directory is the install folder, so it cannot reach the user's workspace. `${workspaceFolder}` is not expanded, `roots/list` is not answered, and elicitation requests are cancelled. Environment variables of the Kiro process are expanded in `args` and `env`.
+5. From chat, a power's tools need: activate the power, then a call through Kiro's power "use" tool, with three approvals.
+
+Converting to `plugin.json` or adding an `EXHUME_ROOT` setting is a later decision.

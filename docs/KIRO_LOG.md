@@ -48,3 +48,9 @@ what had to be fixed by hand. Be honest — the write-up is built from this.
 - Denied: a `sed -i` edit and a heredoc that wrote an unreviewed file to /tmp (Kiro redid both with its edit tool).
   Allowed web fetches of public docs during spec writing. Kiro's permission rule blocked it from writing
   `.kiro/settings/mcp.json`; I created that file by hand with the content from the design (no autoApprove).
+## 2026-11-07 — mcp-server, manual check in Kiro
+- I verified by hand in Kiro: the committed workspace `.kiro/settings/mcp.json` connects `exhume` with 4 tools (reload window
+  if added while open). The Power does not work yet: Kiro copies only POWER.md, mcp.json and steering/, not `server/`, so
+  "Connection Failed". Agent Plugins format copies `server/`, but runs it with the install folder as working directory.
+- Kiro then updated README, POWER.md and this log; a sub-agent also edited the spec's requirements.md (verified Kiro results,
+  decision 8, Requirement 14/15/17 wording) and the tasks.md status was updated; no source code or tests changed. Steering use in chat is unverified.

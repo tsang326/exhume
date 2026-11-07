@@ -26,7 +26,7 @@ function isSafeChar(ch: string): boolean {
 }
 
 /** Pure. The safe base name (no suffix, no extension) for a Grave path. */
-export function exhumeBase(gravePath: string, extension: '.md' | '.csv' | '.png'): string {
+export function exhumeBase(gravePath: string, extension: '.md' | '.csv' | '.txt' | '.png'): string {
   let seg = gravePath.slice(gravePath.lastIndexOf(SLASH) + 1);
   const dot = seg.lastIndexOf(DOT);
   if (dot > 0) seg = seg.slice(0, dot);

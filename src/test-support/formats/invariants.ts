@@ -8,6 +8,7 @@ import {
   MAX_IMAGE_DIMENSION,
   MAX_MARKDOWN_OUTPUT_BYTES,
   MAX_PNG_BYTES,
+  MAX_TEXT_OUTPUT_BYTES,
   MAX_WARNINGS,
 } from '../../core/formats/limits';
 import { LIMIT_EXCEEDED_TEMPLATES, TEMPLATES } from '../../core/formats/templates';
@@ -15,6 +16,7 @@ import { LIMIT_EXCEEDED_TEMPLATES, TEMPLATES } from '../../core/formats/template
 const MIME_EXTENSION: Readonly<Record<string, string>> = {
   'text/markdown': '.md',
   'text/csv': '.csv',
+  'text/plain': '.txt',
   'image/png': '.png',
 };
 
@@ -205,7 +207,7 @@ export function checkResultInvariants(result: unknown): string[] {
   const mime = r.mime;
   const extension = r.extension;
   if (typeof mime !== 'string' || !(mime in MIME_EXTENSION)) {
-    out.push(`mime ${String(mime)} is not text/markdown, text/csv or image/png`);
+    out.push(`mime ${String(mime)} is not text/markdown, text/csv, text/plain or image/png`);
     return out;
   }
   if (extension !== MIME_EXTENSION[mime]) out.push(`extension ${String(extension)} does not match mime ${mime}`);
@@ -221,7 +223,17 @@ export function checkResultInvariants(result: unknown): string[] {
     return out;
   }
   if (output.includes('\u0000')) out.push(`${mime} output contains a NUL character`);
-  const cap = mime === 'text/markdown' ? MAX_MARKDOWN_OUTPUT_BYTES : MAX_CSV_OUTPUT_BYTES;
+  let cap: number;
+  switch (mime) {
+    case 'text/markdown':
+      cap = MAX_MARKDOWN_OUTPUT_BYTES;
+      break;
+    case 'text/plain':
+      cap = MAX_TEXT_OUTPUT_BYTES;
+      break;
+    default:
+      cap = MAX_CSV_OUTPUT_BYTES;
+  }
   const bytes = utf8ByteLength(output);
   if (bytes > cap) out.push(`${mime} output is ${bytes} UTF-8 bytes, above its cap`);
   return out;

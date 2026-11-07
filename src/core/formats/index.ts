@@ -3,6 +3,7 @@
 export { convertWordStar } from './wordstar';
 export { convertDBase } from './dbase';
 export { convertPcx } from './pcx';
+export { convertPlainText } from './plaintext';
 export { encodePng } from './png';
 export { detectFormat } from './detect';
 export { convertAuto } from './auto';
@@ -17,6 +18,7 @@ export type {
   ConversionFailure,
   MarkdownResult,
   CsvResult,
+  TextResult,
   PngResult,
   RgbaImage,
   DetectResult,

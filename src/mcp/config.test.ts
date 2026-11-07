@@ -135,6 +135,14 @@ describe('Power text', () => {
     }
   });
 
+  it('names plain text in the read_grave bullet of POWER.md', () => {
+    const bullet = readText(POWER_MD)
+      .split(/\r?\n/)
+      .find((line) => line.startsWith('- `read_grave`'));
+    expect(bullet).toBeDefined();
+    expect(bullet).toContain('Markdown, CSV or plain text, or PNG dimensions');
+  });
+
   it('credits andete/disk-peek', () => {
     expect(readText(POWER_MD)).toContain('andete/disk-peek');
   });

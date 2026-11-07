@@ -26,7 +26,8 @@ export const MESSAGES: Readonly<Record<ErrorCode, string>> = {
   GRAVE_NOT_FOUND: 'No grave on this disk matches that path and id.',
   GRAVE_NOT_READABLE:
     'This grave cannot be read. It is a directory, it is lost, or its data is unreadable.',
-  NO_CONVERTER: 'No converter matches this file. Supported formats are WordStar, dBase III and PCX.',
+  NO_CONVERTER:
+    'No converter matches this file. Supported formats are WordStar, dBase III, PCX and plain text.',
   CONVERSION_FAILED: 'The file was recognised but could not be converted.',
   EXHUME_FAILED: 'The converted file could not be written to the exhumed folder.',
 };

@@ -77,7 +77,7 @@ const reportArb = fc.record({
 
 const resultArb = fc.oneof(
   fc.record({
-    kind: fc.constantFrom('markdown' as const, 'csv' as const),
+    kind: fc.constantFrom('markdown' as const, 'csv' as const, 'text' as const),
     text: fc.string(),
     warnings: fc.array(convWarningArb, { maxLength: 3 }),
   }),
@@ -301,6 +301,32 @@ describe('validate: examples', () => {
     expect(parseResponse(msg({ ...grave, size: 1 })).ok).toBe(true);
   });
 
+  it('accepts a text result and rejects a non-string text', () => {
+    const msg = (result: unknown) => ({
+      type: 'exhumed',
+      id: 1,
+      graveId: 0,
+      raw: new Uint8Array([104, 105]),
+      readWarnings: [],
+      result,
+    });
+    const good: WorkerResponse = {
+      type: 'exhumed',
+      id: 1,
+      graveId: 0,
+      raw: new Uint8Array([104, 105]),
+      readWarnings: [],
+      result: { kind: 'text', text: 'hi', warnings: [] },
+    };
+    expect(parseResponse(msg({ kind: 'text', text: 'hi', warnings: [] }))).toEqual({
+      ok: true,
+      value: good,
+    });
+    for (const text of [undefined, null, 5, {}, [], new Uint8Array(2)]) {
+      expect(parseResponse(msg({ kind: 'text', text, warnings: [] })).ok).toBe(false);
+    }
+  });
+
   it('does not throw on a throwing getter', () => {
     const o = {};
     Object.defineProperty(o, 'type', {
@@ -377,5 +403,52 @@ describe('validate: properties', () => {
   it('Property 8: Valid messages survive validation and structured cloning', () => {
     fc.assert(fc.property(requestArb, (msg) => parseBoth(msg)), { numRuns: numRuns(200) });
     fc.assert(fc.property(responseArb, (msg) => parseBoth(msg)), { numRuns: numRuns(200) });
+  });
+
+  // Feature: plain-text, Property 15: Worker message validation for text
+  // **Validates: Requirements 4.10, 4.11**
+  it('Property 15: Worker message validation for text', () => {
+    const textExhumed = fc.record({
+      type: fc.constant('exhumed' as const),
+      id: idArb,
+      graveId: idArb,
+      raw: bytesArb,
+      readWarnings: fc.array(warningArb, { maxLength: 4 }),
+      result: fc.record({
+        kind: fc.constant('text' as const),
+        text: fc.string(),
+        warnings: fc.array(convWarningArb, { maxLength: 3 }),
+      }),
+    });
+    const nonStringArb = fc.anything().filter((v) => typeof v !== 'string');
+
+    // Accepted, equal to the input, and no mime or extension on the result or the message.
+    fc.assert(
+      fc.property(textExhumed, fc.string(), fc.string(), (msg, mime, extension) => {
+        const plain: WorkerResponse = structuredClone(msg);
+        const parsed = parseResponse(plain);
+        if (!parsed.ok || !isDeepStrictEqual(parsed.value, plain)) return false;
+        const polluted = {
+          ...plain,
+          mime,
+          extension,
+          result: { ...(plain as typeof msg).result, mime, extension },
+        };
+        const p2 = parseResponse(polluted);
+        if (!p2.ok || p2.value.type !== 'exhumed') return false;
+        const keys = [...Object.keys(p2.value), ...Object.keys(p2.value.result)];
+        return !keys.includes('mime') && !keys.includes('extension');
+      }),
+      { numRuns: numRuns(100) },
+    );
+
+    // A non-string text is rejected.
+    fc.assert(
+      fc.property(textExhumed, nonStringArb, (msg, text) => {
+        const plain = structuredClone(msg);
+        return rejected(parseResponse({ ...plain, result: { ...plain.result, text } }));
+      }),
+      { numRuns: numRuns(100) },
+    );
   });
 });

@@ -141,8 +141,18 @@ describe('read_grave failures', () => {
   });
 
   it('reports NO_CONVERTER for unknown content', () => {
-    const server = setup(diskWith([{ name: 'PLAIN.TXT', content: bytesOf('plain text, nothing to detect') }]));
-    expectCode(read(server, { path: '/PLAIN.TXT' }), 'NO_CONVERTER');
+    const server = setup(diskWith([{ name: 'DATA.BIN', content: Uint8Array.of(1, 2, 3, 0xfe, 0x80, 0x01) }]));
+    expectCode(read(server, { path: '/DATA.BIN' }), 'NO_CONVERTER');
+  });
+
+  it('converts a plain text file as untrusted text', () => {
+    const server = setup(diskWith([{ name: 'NOTE.TXT', content: bytesOf('plain text, nothing to detect\r\nline two') }]));
+    const out = ok(read(server, { path: '/NOTE.TXT' }));
+    expect(out.format).toBe('text');
+    expect(out.mime).toBe('text/plain');
+    expect(out.extension).toBe('.txt');
+    expect(String(out.text)).toContain('plain text, nothing to detect');
+    expect(String(out.text)).toContain('line two');
   });
 
   it('reports CONVERSION_FAILED for a recognised but damaged file', () => {
@@ -234,8 +244,12 @@ describe('read_grave selection', () => {
     const server = setup(duplicatePathDisk());
     const dup = entries(server).filter((e) => e.path === '/_EPORT.TXT');
     expect(dup).toHaveLength(2);
-    // Plain text has no converter, but the selection itself succeeds (not GRAVE_NOT_FOUND).
-    for (const e of dup) expectCode(read(server, { path: '/_EPORT.TXT', id: e.id }), 'NO_CONVERTER');
+    // Plain text converts, so the selection succeeds for both ids.
+    for (const e of dup) {
+      const out = ok(read(server, { path: '/_EPORT.TXT', id: e.id }));
+      expect(out.format).toBe('text');
+      expect(rec(out.grave).id).toBe(e.id);
+    }
   });
 
   it('selects a Grave by the shown path of a sanitized name', () => {

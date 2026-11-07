@@ -92,6 +92,13 @@ describe('Downloader', () => {
     expect(revoked).toEqual(['blob:test/0']);
   });
 
+  it('builds a text/plain Blob for a text/plain spec', () => {
+    const r = make().start({ ...spec, mime: 'text/plain', fileName: 'note.txt', data: 'hello' });
+    expect(r).toEqual({ ok: true });
+    expect(blobTypes).toEqual(['text/plain']);
+    expect(anchors[0]?.attrs).toEqual({ href: 'blob:test/0', download: 'note.txt' });
+  });
+
   it('accepts binary data', () => {
     const r = make().start({ ...spec, mime: 'image/png', fileName: 'a.png', data: new Uint8Array([1, 2]) });
     expect(r).toEqual({ ok: true });

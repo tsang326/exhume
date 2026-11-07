@@ -15,6 +15,7 @@ export const DOWNLOAD_FAILED_MESSAGE = 'The download could not be started.';
 const ALLOWED_MIME: ReadonlySet<string> = new Set([
   'text/markdown',
   'text/csv',
+  'text/plain',
   'image/png',
   'application/octet-stream',
 ]);

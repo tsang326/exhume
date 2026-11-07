@@ -10,8 +10,9 @@ import type { ItemViewModel } from './viewmodel';
 import { sanitizeFileName } from './filename';
 import { truncateForPreview } from './markdown';
 import { toLabel } from './text';
+import { MD_PREVIEW_CHARS } from './limits';
 
-const ALLOWED_MIMES = ['text/markdown', 'text/csv', 'image/png', 'application/octet-stream'];
+const ALLOWED_MIMES = ['text/markdown', 'text/csv', 'text/plain', 'image/png', 'application/octet-stream'];
 
 const itemArb: fc.Arbitrary<ItemViewModel> = fc
   .record({
@@ -54,6 +55,7 @@ const resultArb = (warnings: ConversionWarning[]): fc.Arbitrary<ExhumeResult> =>
   fc.oneof(
     textArb.map((text): ExhumeResult => ({ kind: 'markdown', text, warnings })),
     textArb.map((text): ExhumeResult => ({ kind: 'csv', text, warnings })),
+    textArb.map((text): ExhumeResult => ({ kind: 'text', text, warnings })),
     fc.uint8Array({ maxLength: 100 }).map((png): ExhumeResult => ({ kind: 'png', png, warnings })),
     fc.string({ minLength: 1, maxLength: 40 }).map((error): ExhumeResult => ({ kind: 'raw', error, warnings })),
   );
@@ -109,6 +111,9 @@ describe('buildPreviewModel', () => {
           checks.push(b.kind === 'markdown' && b.text === t.text && b.shortened === t.shortened);
         } else if (result.kind === 'csv') {
           checks.push(b.kind === 'csv');
+        } else if (result.kind === 'text') {
+          const t = truncateForPreview(result.text);
+          checks.push(b.kind === 'text' && b.text === t.text && b.shortened === t.shortened);
         } else if (result.kind === 'png') {
           checks.push(b.kind === 'png' && b.png === result.png && b.alt === sanitizeFileName(item.name, '.png'));
         } else {
@@ -131,8 +136,16 @@ describe('buildPreviewModel', () => {
           checks.push(m.downloads.length === 1);
         } else {
           const first = m.downloads[0];
-          const ext = result.kind === 'markdown' ? '.md' : result.kind === 'csv' ? '.csv' : '.png';
-          const mime = result.kind === 'markdown' ? 'text/markdown' : result.kind === 'csv' ? 'text/csv' : 'image/png';
+          const ext =
+            result.kind === 'markdown' ? '.md' : result.kind === 'csv' ? '.csv' : result.kind === 'text' ? '.txt' : '.png';
+          const mime =
+            result.kind === 'markdown'
+              ? 'text/markdown'
+              : result.kind === 'csv'
+                ? 'text/csv'
+                : result.kind === 'text'
+                  ? 'text/plain'
+                  : 'image/png';
           const data = result.kind === 'png' ? result.png : result.text;
           checks.push(
             m.downloads.length === 2 &&
@@ -150,6 +163,49 @@ describe('buildPreviewModel', () => {
       { numRuns: numRuns(200) },
     );
     expect(failures).toEqual([]);
+  });
+
+  // Feature: plain-text, Property 14: Text preview model
+  // **Validates: Requirements 4.3, 4.4, 4.5, 4.6**
+  it('Property 14: text preview model', () => {
+    const textBodyArb = fc.oneof(
+      fc.string({ maxLength: 200 }),
+      fc
+        .tuple(fc.constantFrom(MD_PREVIEW_CHARS - 1, MD_PREVIEW_CHARS, MD_PREVIEW_CHARS + 1, MD_PREVIEW_CHARS + 500), fc.string({ maxLength: 5 }))
+        .map(([len, head]) => (head + 'x'.repeat(len)).slice(0, len)),
+    );
+    fc.assert(
+      fc.property(
+        itemArb,
+        textBodyArb,
+        fc.array(convWarningArb, { maxLength: 4 }),
+        fc.uint8Array({ maxLength: 100 }),
+        (item, text, warnings, raw) => {
+          const m = buildPreviewModel(item, {
+            status: 'ok',
+            response: { type: 'exhumed', id: 1, graveId: 1, raw, readWarnings: [], result: { kind: 'text', text, warnings } },
+          });
+          const t = truncateForPreview(text);
+          const first = m.downloads[0];
+          const last = m.downloads[m.downloads.length - 1];
+          return (
+            m.body.kind === 'text' &&
+            m.body.text === t.text &&
+            m.body.shortened === text.length > MD_PREVIEW_CHARS &&
+            first !== undefined &&
+            first.mime === 'text/plain' &&
+            first.fileName.endsWith('.txt') &&
+            first.fileName === sanitizeFileName(item.name, '.txt') &&
+            first.data === text &&
+            last !== undefined &&
+            last.mime === 'application/octet-stream' &&
+            last.fileName.endsWith('.bin') &&
+            m.downloads.every((d) => ALLOWED_MIMES.includes(d.mime))
+          );
+        },
+      ),
+      { numRuns: numRuns(100) },
+    );
   });
 
   it('Property 28: a read failure gives error, no body and no downloads', () => {

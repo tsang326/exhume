@@ -1,5 +1,5 @@
 // Format detection: content rules first (PCX, dBase, WordStar), then the file
-// name extension, then unknown. The file name is used for the extension only.
+// name extension, then the plain text content rule, then unknown. The file name is used for the extension only.
 
 import { asciiUpper, isAsciiLetter } from './chars';
 import { assertUint8Array } from './guard';
@@ -23,6 +23,11 @@ const STYLE_BOLD = 0x02;
 const STYLE_UNDERLINE = 0x13;
 const STYLE_ITALIC = 0x19;
 const DOT_PREFIX_BYTES = 3; // '.' plus two letters
+const TEXT_PRINTABLE_MIN = 0x20;
+const TEXT_PRINTABLE_MAX = 0x7e;
+const TEXT_TAB = 0x09;
+const TEXT_FF = 0x0c;
+const TEXT_EOF = 0x1a;
 
 function isPcx(s: Uint8Array): boolean {
   if (s.length < PCX_MIN_BYTES || s[0] !== PCX_MAGIC) return false;
@@ -80,6 +85,23 @@ function isWordStar(s: Uint8Array): boolean {
   return false;
 }
 
+/** One bounded pass: non-empty and only text content bytes (printable ASCII, TAB, LF, FF, CR, EOF). */
+function isTextSample(s: Uint8Array): boolean {
+  if (s.length === 0) return false;
+  for (let i = 0; i < s.length; i++) {
+    const b = s[i];
+    const ok =
+      (b >= TEXT_PRINTABLE_MIN && b <= TEXT_PRINTABLE_MAX) ||
+      b === TEXT_TAB ||
+      b === LF ||
+      b === TEXT_FF ||
+      b === HARD_CR ||
+      b === TEXT_EOF;
+    if (!ok) return false;
+  }
+  return true;
+}
+
 function foldAscii(text: string): string {
   let out = '';
   for (let i = 0; i < text.length; i++) {
@@ -103,6 +125,15 @@ function formatFromExtension(fileName: string): DetectResult['format'] {
       return 'dbase';
     case 'PCX':
       return 'pcx';
+    case 'TXT':
+    case 'BAT':
+    case 'ASC':
+    case 'LOG':
+    case 'NFO':
+    case 'DIZ':
+    case '1ST':
+    case 'ME':
+      return 'text';
     default:
       return 'unknown';
   }
@@ -120,5 +151,6 @@ export function detectFormat(input: Uint8Array, fileName?: unknown): DetectResul
     const format = formatFromExtension(fileName);
     if (format !== 'unknown') return { format, source: 'extension' };
   }
+  if (isTextSample(sample)) return { format: 'text', source: 'content' };
   return { format: 'unknown', source: 'none' };
 }

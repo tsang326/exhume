@@ -3,7 +3,7 @@
 import { parseGraveArgs } from '../args';
 import { withEnvelope } from '../envelope';
 import type { Outcome } from '../errors';
-import { prepareGrave } from '../grave-source';
+import { formatOf, prepareGrave } from '../grave-source';
 import type { ToolContext } from '../grave-source';
 import { MAX_TEXT_CHARS } from '../limits';
 import { readPngInfo } from '../png-info';
@@ -26,7 +26,7 @@ export function runReadGrave(ctx: ToolContext, args: unknown): Outcome<unknown> 
       ok: true,
       value: withEnvelope({
         grave: graveView,
-        format: conversion.extension === '.csv' ? 'csv' : 'markdown',
+        format: formatOf(conversion.extension),
         mime: conversion.mime,
         extension: conversion.extension,
         text: capped.text,

@@ -44,6 +44,14 @@ export function createPreviewPanel(deps: PreviewDeps): PreviewPanel {
         if (body.shortened) out.push(h('p', { class: 'preview-shortened' }, SHORTENED_NOTE));
         break;
       }
+      case 'text': {
+        // One Text node, so disk text can never become markup.
+        out.push(
+          h('div', { class: 'preview-scroll preview-text', tabindex: '0', role: 'region', 'aria-label': 'Document text' }, body.text),
+        );
+        if (body.shortened) out.push(h('p', { class: 'preview-shortened' }, SHORTENED_NOTE));
+        break;
+      }
       case 'csv':
         out.push(buildCsvTable(body.table));
         break;

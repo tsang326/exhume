@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { convertDBase, convertPcx, convertWordStar } from './index';
+import { convertDBase, convertPcx, convertPlainText, convertWordStar } from './index';
 import type { ConversionResult } from './index';
 import {
   CONVERT_TIME_BUDGET_MS,
   MAX_CONVERT_INPUT_BYTES,
+  MAX_TEXT_OUTPUT_BYTES,
   MAX_WARNINGS,
 } from './limits';
 import { TEMPLATES, fill } from './templates';
@@ -275,5 +276,81 @@ describe('targeted hostile WordStar', () => {
     const r = run(convertWordStar, input);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.warnings.some((w) => w.code === 'dot-commands-ignored')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Plain text
+// ---------------------------------------------------------------------------
+
+describe('targeted hostile plain text', () => {
+  // A dropped control byte (0x01) at the start guarantees a control-codes-dropped warning
+  // where the rest of the input would convert silently.
+
+  it('converts 4 MiB of text with no EOF byte', () => {
+    const input = new Uint8Array(MAX_CONVERT_INPUT_BYTES);
+    for (let i = 0; i < input.length; i++) input[i] = i % 80 === 79 ? 0x0a : 0x61 + (i % 26);
+    input[0] = 0x01;
+    const r = run(convertPlainText, input);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.mime).toBe('text/plain');
+      expect(r.warnings.some((w) => w.code === 'control-codes-dropped')).toBe(true);
+    }
+  });
+
+  it('drops 4 MiB of control bytes and returns empty text', () => {
+    const input = new Uint8Array(MAX_CONVERT_INPUT_BYTES).fill(0x01);
+    const r = run(convertPlainText, input);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.output).toBe('');
+      expect(r.warnings.some((w) => w.code === 'control-codes-dropped')).toBe(true);
+    }
+  });
+
+  it('turns 4 MiB of CR into line feeds', () => {
+    const input = new Uint8Array(MAX_CONVERT_INPUT_BYTES).fill(0x0d);
+    input[0] = 0x01;
+    const r = run(convertPlainText, input);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.output.length).toBe(MAX_CONVERT_INPUT_BYTES - 1);
+      expect(r.warnings.some((w) => w.code === 'control-codes-dropped')).toBe(true);
+    }
+  });
+
+  it('stops at the real output cap for 4 MiB of 0xC4', () => {
+    // 0xC4 is U+2500 in CP437: three UTF-8 bytes each, so 12 MiB wanted against an 8 MiB cap.
+    const input = new Uint8Array(MAX_CONVERT_INPUT_BYTES).fill(0xc4);
+    const r = run(convertPlainText, input);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.warnings.some((w) => w.code === 'output-capped')).toBe(true);
+      expect(typeof r.output).toBe('string');
+      if (typeof r.output === 'string') {
+        expect(new TextEncoder().encode(r.output).length).toBeLessThanOrEqual(MAX_TEXT_OUTPUT_BYTES);
+        expect(r.output.length).toBeLessThan(MAX_CONVERT_INPUT_BYTES);
+      }
+    }
+  });
+
+  it('truncates input of MAX_CONVERT_INPUT_BYTES + 1 bytes', () => {
+    const input = new Uint8Array(MAX_CONVERT_INPUT_BYTES + 1).fill(0x61);
+    const r = run(convertPlainText, input);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.warnings.some((w) => w.code === 'input-truncated')).toBe(true);
+      expect(r.output.length).toBe(MAX_CONVERT_INPUT_BYTES);
+    }
+  });
+
+  it('survives 4 MiB of high bytes', () => {
+    const input = new Uint8Array(MAX_CONVERT_INPUT_BYTES);
+    for (let i = 0; i < input.length; i++) input[i] = 0x80 + (i % 128);
+    input[0] = 0x01;
+    const r = run(convertPlainText, input);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.warnings.some((w) => w.code === 'control-codes-dropped')).toBe(true);
   });
 });

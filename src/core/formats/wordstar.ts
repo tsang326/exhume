@@ -6,7 +6,7 @@ import { assertUint8Array, guarded, limitInput } from './guard';
 import { MAX_MARKDOWN_OUTPUT_BYTES } from './limits';
 import { okResult } from './result';
 import { TEMPLATES, fill } from './templates';
-import { makeAsciiSink } from './textsink';
+import { makeTextSink } from './textsink';
 import { ConversionWarningCode } from './types';
 import type { MarkdownResult } from './types';
 import { makeWarningCollector } from './warnings';
@@ -73,7 +73,7 @@ function convert(
   w: ReturnType<typeof makeWarningCollector>,
 ): MarkdownResult {
   const n = input.length;
-  const sink = makeAsciiSink();
+  const sink = makeTextSink();
 
   let pendingSpaces = 0;
   let wantBold = false;

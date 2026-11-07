@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync, renameSync, writeFileSync } from
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { writeWordStar } from '../test-support/formats/index';
-import { dbfFile, diskWith, longName, pcxFile, wordstarFile } from '../test-support/mcp/images';
+import { bytesOf, dbfFile, diskWith, longName, pcxFile, wordstarFile } from '../test-support/mcp/images';
 import { faultyFs } from '../test-support/mcp/recording-fs';
 import { callTool } from '../test-support/mcp/rpc';
 import { makeWorkspace } from '../test-support/mcp/workspace';
@@ -84,6 +84,29 @@ describe('exhume tool', () => {
     expect(readFileSync(join(w.root, 'exhumed', 'PEOPLE.csv'), 'utf8')).toContain('Ada');
     const png = readFileSync(join(w.root, 'exhumed', 'PIC.png'));
     expect(png.subarray(1, 4).toString('latin1')).toBe('PNG');
+  });
+
+  it('writes a plain text Grave as one new .txt file and never overwrites it', () => {
+    const { w, server } = setup([{ name: 'README.TXT', content: bytesOf('Hello floppy\r\nline two\r\n') }]);
+    const r = callTool(server, 'exhume', { image: 'disk.img', path: '/README.TXT' });
+    expect(r.isError).toBe(false);
+    const out = r.output as { path: string; format: string; mime: string; bytes: number };
+    expect(out.format).toBe('text');
+    expect(out.mime).toBe('text/plain');
+    expect(out.path).toBe('exhumed/README.txt');
+    const name = out.path.slice('exhumed/'.length);
+    expect(name).toMatch(/^[A-Za-z0-9._-]+$/);
+    expect(name.length).toBeLessThanOrEqual(64);
+    const data = readFileSync(join(w.root, out.path));
+    expect(out.bytes).toBe(data.length);
+    expect(data.toString('utf8')).toBe('Hello floppy\nline two\n');
+    expect(exhumedFiles(w)).toEqual(['README.txt']);
+
+    const again = callTool(server, 'exhume', { image: 'disk.img', path: '/README.TXT' });
+    expect(again.isError).toBe(false);
+    expect((again.output as { path: string }).path).toBe('exhumed/README-1.txt');
+    expect(exhumedFiles(w)).toEqual(['README-1.txt', 'README.txt']);
+    expect(readFileSync(join(w.root, 'exhumed', 'README.txt'), 'utf8')).toBe('Hello floppy\nline two\n');
   });
 
   it('gives EXHUME_FAILED when exhumed is a symlink', () => {

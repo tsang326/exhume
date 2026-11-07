@@ -8,12 +8,12 @@
 
 import * as fc from 'fast-check';
 
-import { expandContent, dbfTableArb, pcxSourceArb, wsParagraphsArb } from './arbitraries';
+import { expandContent, dbfTableArb, pcxSourceArb, plainTextBytesArb, wsParagraphsArb } from './arbitraries';
 import { writeDbf } from './dbase-writer';
 import { encodePcx } from './pcx-encoder';
 import { writeWordStar } from './wordstar-writer';
 
-export type HostileFormat = 'wordstar' | 'dbase' | 'pcx' | 'auto';
+export type HostileFormat = 'wordstar' | 'dbase' | 'pcx' | 'text' | 'auto';
 
 export interface HostileInput {
   format: HostileFormat;
@@ -61,9 +61,10 @@ const FIXTURE_BY_FORMAT: Record<Exclude<HostileFormat, 'auto'>, fc.Arbitrary<Uin
   wordstar: wsFileArb,
   dbase: dbfFileArb,
   pcx: pcxFileArb,
+  text: plainTextBytesArb,
 };
 
-const anyFixtureArb: fc.Arbitrary<Uint8Array> = fc.oneof(wsFileArb, dbfFileArb, pcxFileArb);
+const anyFixtureArb: fc.Arbitrary<Uint8Array> = fc.oneof(wsFileArb, dbfFileArb, pcxFileArb, plainTextBytesArb);
 
 function fixtureFor(format: HostileFormat): fc.Arbitrary<Uint8Array> {
   return format === 'auto' ? anyFixtureArb : FIXTURE_BY_FORMAT[format];
@@ -77,7 +78,8 @@ const PREFIXES: Record<HostileFormat, number[][]> = {
   wordstar: [[], [0x8d, 0x0a], [0x0d, 0x0a], [0x02], [0x1a], [0x2e, 0x50, 0x41, 0x0d, 0x0a], [0x2e, 0x2e]],
   dbase: [[], [0x03], [0x03, 0x7c, 1, 1], [0x83], [0x8b], [0xf5], [0x30]],
   pcx: [[], [0x0a], [0x0a, 5, 1, 8], [0x0a, 3, 1, 1], [0x0a, 5, 1, 4]],
-  auto: [[], [0x0a, 5, 1, 8], [0x03, 0x7c, 1, 1], [0x2e, 0x50, 0x41]],
+  text: [[], [0x1a], [0x0d], [0x0d, 0x0a], [0x00], [0x7f], [0x68, 0x69, 0x0d, 0x0a]],
+  auto: [[], [0x0a, 5, 1, 8], [0x03, 0x7c, 1, 1], [0x2e, 0x50, 0x41], [0x68, 0x69, 0x0d, 0x0a]],
 };
 
 export function randomBytesArb(format: HostileFormat): fc.Arbitrary<HostileInput> {
@@ -192,6 +194,24 @@ const pcxGrammarArb: fc.Arbitrary<Uint8Array> = fc
     return out;
   });
 
+const TEXT_TOKENS: number[][] = [
+  [0x0d, 0x0a], [0x0d], [0x0a], [0x0a, 0x0d], [0x09], [0x0c], [0x1a], [0x00], [0x01], [0x1b], [0x1f],
+  [0x7f], [0x80], [0xc4], [0xdb], [0xe1], [0xff], [0x20], [0x20, 0x20], [0x41, 0x42, 0x43],
+  [0x2e, 0x50, 0x41], [0x68, 0x65, 0x6c, 0x6c, 0x6f],
+];
+
+/** Text-like bytes: printable runs, every kind of line ending, EOF, NUL, DEL, control and high bytes. */
+const textGrammarArb: fc.Arbitrary<Uint8Array> = fc
+  .array(
+    fc.oneof(
+      fc.constantFrom(...TEXT_TOKENS),
+      fc.integer({ min: 0x20, max: 0x7e }).map((n) => [n]),
+      fc.integer({ min: 0, max: 255 }).map((n) => [n]),
+    ),
+    { minLength: 0, maxLength: 400 },
+  )
+  .map((tokens) => Uint8Array.from(tokens.flat()));
+
 export function grammarBytesArb(format: HostileFormat): fc.Arbitrary<HostileInput> {
   const bytes: fc.Arbitrary<Uint8Array> =
     format === 'wordstar'
@@ -200,7 +220,9 @@ export function grammarBytesArb(format: HostileFormat): fc.Arbitrary<HostileInpu
         ? dbfGrammarArb
         : format === 'pcx'
           ? pcxGrammarArb
-          : fc.oneof(wsGrammarArb, dbfGrammarArb, pcxGrammarArb);
+          : format === 'text'
+            ? textGrammarArb
+            : fc.oneof(wsGrammarArb, dbfGrammarArb, pcxGrammarArb, textGrammarArb);
   return bytes.map((b): HostileInput => ({ format, family: 'grammar', bytes: b }));
 }
 
@@ -288,6 +310,19 @@ const wsPatchArb: fc.Arbitrary<HeaderPatch> = fc
     for (const w of ws) if (w.pos < b.length) b[w.pos] = w.value;
   });
 
+/** Text has no header: patch up to 4 of the first 16 bytes with EOF, CR, LF, NUL, DEL, tab and high bytes. */
+const textPatchArb: fc.Arbitrary<HeaderPatch> = fc
+  .array(
+    fc.record({
+      pos: fc.integer({ min: 0, max: 15 }),
+      value: fc.constantFrom(0x00, 0x09, 0x0a, 0x0c, 0x0d, 0x1a, 0x20, 0x7f, 0x80, 0xff),
+    }),
+    { minLength: 1, maxLength: 4 },
+  )
+  .map((ws): HeaderPatch => (b) => {
+    for (const w of ws) if (w.pos < b.length) b[w.pos] = w.value;
+  });
+
 /** Valid fixtures with header fields replaced by boundary values (PCX 65,535 sides, dBase count 4,294,967,295, ...). */
 export function fuzzedHeaderArb(format: HostileFormat): fc.Arbitrary<HostileInput> {
   const patched = (
@@ -306,11 +341,14 @@ export function fuzzedHeaderArb(format: HostileFormat): fc.Arbitrary<HostileInpu
         ? patched(dbfFileArb, dbfPatchArb)
         : format === 'pcx'
           ? patched(pcxFileArb, pcxPatchArb)
-          : fc.oneof(
-              patched(wsFileArb, wsPatchArb),
-              patched(dbfFileArb, dbfPatchArb),
-              patched(pcxFileArb, pcxPatchArb),
-            );
+          : format === 'text'
+            ? patched(plainTextBytesArb, textPatchArb)
+            : fc.oneof(
+                patched(wsFileArb, wsPatchArb),
+                patched(dbfFileArb, dbfPatchArb),
+                patched(pcxFileArb, pcxPatchArb),
+                patched(plainTextBytesArb, textPatchArb),
+              );
   return bytes.map((b): HostileInput => ({ format, family: 'fuzzed-header', bytes: b }));
 }
 

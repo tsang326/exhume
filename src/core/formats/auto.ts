@@ -2,6 +2,7 @@ import { convertDBase } from './dbase';
 import { detectFormat } from './detect';
 import { assertUint8Array } from './guard';
 import { convertPcx } from './pcx';
+import { convertPlainText } from './plaintext';
 import { TEMPLATES } from './templates';
 import type { ConversionResult } from './types';
 import { convertWordStar } from './wordstar';
@@ -17,6 +18,8 @@ export function convertAuto(input: Uint8Array, fileName?: unknown): ConversionRe
       return convertDBase(input);
     case 'pcx':
       return convertPcx(input);
+    case 'text':
+      return convertPlainText(input);
     default:
       return { ok: false, error: TEMPLATES.errNoConverter, warnings: [] };
   }

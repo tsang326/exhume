@@ -4,6 +4,7 @@ import {
   convertWordStar,
   convertDBase,
   convertPcx,
+  convertPlainText,
   encodePng,
   detectFormat,
   convertAuto,
@@ -29,6 +30,7 @@ import type {
   ConversionFailure,
   MarkdownResult,
   CsvResult,
+  TextResult,
   PngResult,
   RgbaImage,
   DetectResult,
@@ -65,13 +67,14 @@ const converters: Array<[string, (input: Uint8Array) => unknown, Uint8Array]> = 
   ['convertWordStar', convertWordStar, wordstar],
   ['convertDBase', convertDBase, dbase],
   ['convertPcx', convertPcx, pcx],
+  ['convertPlainText', convertPlainText, Uint8Array.from([0x68, 0x69, 0x0d, 0x0a])],
   ['detectFormat', (i) => detectFormat(i), wordstar],
   ['convertAuto', (i) => convertAuto(i), wordstar],
 ];
 
 describe('formats public index', () => {
   it('exposes the public values', () => {
-    for (const f of [convertWordStar, convertDBase, convertPcx, encodePng, detectFormat, convertAuto]) {
+    for (const f of [convertWordStar, convertDBase, convertPcx, convertPlainText, encodePng, detectFormat, convertAuto]) {
       expect(typeof f).toBe('function');
     }
     expect(ConversionWarningCode.InputTruncated).toBe('input-truncated');
@@ -87,7 +90,7 @@ describe('formats public index', () => {
   it('exposes the public types', () => {
     const types: [
       ConversionResult?, ConversionWarning?, ConversionSuccess<string, 'text/markdown', '.md'>?,
-      ConversionFailure?, MarkdownResult?, CsvResult?, PngResult?, RgbaImage?, DetectResult?,
+      ConversionFailure?, MarkdownResult?, CsvResult?, TextResult?, PngResult?, RgbaImage?, DetectResult?,
       DetectedFormat?, DetectSource?, OutputMime?, OutputExtension?,
     ] = [];
     expect(types).toHaveLength(0);
@@ -97,6 +100,7 @@ describe('formats public index', () => {
     const keys = Object.keys(api);
     expect(keys).not.toContain('runWordStar');
     expect(keys).not.toContain('runDBase');
+    expect(keys).not.toContain('runPlainText');
   });
 
   describe.each(converters)('%s', (_name, fn, sample) => {

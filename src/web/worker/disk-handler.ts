@@ -82,6 +82,8 @@ export function handleRequest(session: WorkerSession, raw: unknown): WorkerRespo
       result = { kind: 'markdown', text: converted.output, warnings: converted.warnings };
     } else if (converted.mime === 'text/csv') {
       result = { kind: 'csv', text: converted.output, warnings: converted.warnings };
+    } else if (converted.mime === 'text/plain') {
+      result = { kind: 'text', text: converted.output, warnings: converted.warnings };
     } else {
       result = { kind: 'png', png: owned(converted.output), warnings: converted.warnings };
     }

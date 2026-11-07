@@ -506,7 +506,7 @@ function gradeLive(chain, size, ctx) {
   if (got === 0) return make(GraveState.Lost, reason);
   return make(GraveState.Partial, reason);
 }
-const SPACE$1 = 32;
+const SPACE$2 = 32;
 const UNITS_PER_RECORD = 13;
 function sanitizeComponent(raw) {
   let out = "";
@@ -525,9 +525,9 @@ function sanitizeComponent(raw) {
 }
 function trimmedField(entry, start, length) {
   const field = new Uint8Array(length);
-  for (let i = 0; i < length; i++) field[i] = entry[start + i] ?? SPACE$1;
+  for (let i = 0; i < length; i++) field[i] = entry[start + i] ?? SPACE$2;
   let end = length;
-  while (end > 0 && field[end - 1] === SPACE$1) end--;
+  while (end > 0 && field[end - 1] === SPACE$2) end--;
   return field.subarray(0, end);
 }
 function decodeShortName(entry) {
@@ -1256,7 +1256,7 @@ const MESSAGES = {
   IMAGE_UNREADABLE: "The image file could not be read.",
   GRAVE_NOT_FOUND: "No grave on this disk matches that path and id.",
   GRAVE_NOT_READABLE: "This grave cannot be read. It is a directory, it is lost, or its data is unreadable.",
-  NO_CONVERTER: "No converter matches this file. Supported formats are WordStar, dBase III and PCX.",
+  NO_CONVERTER: "No converter matches this file. Supported formats are WordStar, dBase III, PCX and plain text.",
   CONVERSION_FAILED: "The file was recognised but could not be converted.",
   EXHUME_FAILED: "The converted file could not be written to the exhumed folder."
 };
@@ -1514,6 +1514,7 @@ const MAX_CONVERT_INPUT_BYTES = 4 * MIB;
 const DETECT_SAMPLE_BYTES = 4096;
 const MAX_WARNINGS = 100;
 const MAX_MARKDOWN_OUTPUT_BYTES = 8 * MIB;
+const MAX_TEXT_OUTPUT_BYTES = MAX_MARKDOWN_OUTPUT_BYTES;
 const MAX_DBF_FIELDS = 128;
 const MAX_DBF_RECORDS = 1e5;
 const MAX_CSV_OUTPUT_BYTES = 16 * MIB;
@@ -1549,6 +1550,7 @@ function failResult(error, w) {
 const TEMPLATES = {
   inputTruncated: "input truncated to {0} bytes (MAX_CONVERT_INPUT_BYTES)",
   outputCappedMarkdown: "output capped at {0} bytes (MAX_MARKDOWN_OUTPUT_BYTES)",
+  outputCappedText: "output capped at {0} bytes (MAX_TEXT_OUTPUT_BYTES)",
   outputCappedCsv: "output capped at {0} bytes (MAX_CSV_OUTPUT_BYTES)",
   warningsCapped: "warnings capped at {0}",
   controlCodesDropped: "{0} control bytes dropped",
@@ -1578,6 +1580,7 @@ const LIMIT_EXCEEDED_TEMPLATES = {
   DETECT_SAMPLE_BYTES: "DETECT_SAMPLE_BYTES exceeded",
   MAX_WARNINGS: "MAX_WARNINGS exceeded",
   MAX_MARKDOWN_OUTPUT_BYTES: "MAX_MARKDOWN_OUTPUT_BYTES exceeded",
+  MAX_TEXT_OUTPUT_BYTES: "MAX_TEXT_OUTPUT_BYTES exceeded",
   MAX_DBF_FIELDS: "MAX_DBF_FIELDS exceeded",
   MAX_DBF_RECORDS: "MAX_DBF_RECORDS exceeded",
   MAX_CSV_OUTPUT_BYTES: "MAX_CSV_OUTPUT_BYTES exceeded",
@@ -1635,21 +1638,42 @@ function guarded(fn, w) {
     return failResult(TEMPLATES.errInternal, w);
   }
 }
-function makeAsciiSink() {
+const ASCII_END = 128;
+const TWO_BYTE_END = 2048;
+const HIGH_SURROGATE_START = 55296;
+const LOW_SURROGATE_START = 56320;
+const SURROGATE_END = 57344;
+function isHigh$1(unit) {
+  return unit >= HIGH_SURROGATE_START && unit < LOW_SURROGATE_START;
+}
+function isLow$1(unit) {
+  return unit >= LOW_SURROGATE_START && unit < SURROGATE_END;
+}
+function makeTextSink() {
   const pieces = [];
-  const chunk = new Uint8Array(TEXT_CHUNK_BYTES);
+  const chunk = new Uint16Array(TEXT_CHUNK_BYTES);
   let used = 0;
   let total = 0;
+  let prevHigh = false;
   function flush() {
     if (used === 0) return;
     const view = used === TEXT_CHUNK_BYTES ? chunk : chunk.subarray(0, used);
     pieces.push(String.fromCharCode.apply(null, view));
     used = 0;
   }
+  function costOf(unit) {
+    if (unit < ASCII_END) return 1;
+    if (unit < TWO_BYTE_END) return 2;
+    if (isHigh$1(unit)) return 4;
+    if (isLow$1(unit) && prevHigh) return 0;
+    return 3;
+  }
   function push(code) {
+    const unit = code & U16_MAX;
     if (used === TEXT_CHUNK_BYTES) flush();
-    chunk[used++] = code;
-    total++;
+    chunk[used++] = unit;
+    total += costOf(unit);
+    prevHigh = isHigh$1(unit);
   }
   return {
     get length() {
@@ -1658,6 +1682,22 @@ function makeAsciiSink() {
     push,
     pushString(s) {
       for (let i = 0; i < s.length; i++) push(s.charCodeAt(i));
+    },
+    pushStringCapped(s, maxBytes) {
+      let i = 0;
+      while (i < s.length) {
+        const unit = s.charCodeAt(i);
+        const paired = isHigh$1(unit) && i + 1 < s.length && isLow$1(s.charCodeAt(i + 1));
+        const cost = paired ? 4 : costOf(unit);
+        if (total + cost > maxBytes) break;
+        push(unit);
+        i++;
+        if (paired) {
+          push(s.charCodeAt(i));
+          i++;
+        }
+      }
+      return i;
     },
     finish() {
       flush();
@@ -1744,11 +1784,11 @@ function convertWordStar(input) {
 function runWordStar(input, outputCap) {
   assertUint8Array(input);
   const w = makeWarningCollector();
-  return guarded(() => convert(limitInput(input, w), outputCap, w), w);
+  return guarded(() => convert$1(limitInput(input, w), outputCap, w), w);
 }
-function convert(input, outputCap, w) {
+function convert$1(input, outputCap, w) {
   const n = input.length;
-  const sink = makeAsciiSink();
+  const sink = makeTextSink();
   let pendingSpaces = 0;
   let wantBold = false;
   let wantEm = false;
@@ -1995,7 +2035,7 @@ function utf8Length(s) {
   }
   return n;
 }
-const SPACE = 32;
+const SPACE$1 = 32;
 function isDigit(b) {
   return b >= 48 && b <= 57;
 }
@@ -2014,7 +2054,7 @@ function daysInMonth(year, month) {
 }
 function formatText(bytes) {
   let end = bytes.length;
-  while (end > 0 && (bytes[end - 1] === SPACE || bytes[end - 1] === 0)) end--;
+  while (end > 0 && (bytes[end - 1] === SPACE$1 || bytes[end - 1] === 0)) end--;
   const decoded = decodeCp437(bytes.subarray(0, end));
   let out = "";
   for (let i = 0; i < decoded.length; i++) {
@@ -2026,8 +2066,8 @@ function formatText(bytes) {
 function formatNumber(bytes) {
   let lo = 0;
   let hi = bytes.length;
-  while (lo < hi && bytes[lo] === SPACE) lo++;
-  while (hi > lo && bytes[hi - 1] === SPACE) hi--;
+  while (lo < hi && bytes[lo] === SPACE$1) lo++;
+  while (hi > lo && bytes[hi - 1] === SPACE$1) hi--;
   let state = 0;
   for (let i = lo; i < hi; i++) {
     const b = bytes[i];
@@ -2045,7 +2085,7 @@ function formatNumber(bytes) {
 function formatDate(bytes) {
   let allSpaces = true;
   for (let i = 0; i < bytes.length; i++) {
-    if (bytes[i] !== SPACE) {
+    if (bytes[i] !== SPACE$1) {
       allSpaces = false;
       break;
     }
@@ -2067,7 +2107,7 @@ function formatLogical(bytes) {
   const b = bytes.length > 0 ? bytes[0] : -1;
   if (b === 84 || b === 116 || b === 89 || b === 121) return cell("TRUE", false);
   if (b === 70 || b === 102 || b === 78 || b === 110) return cell("FALSE", false);
-  if (b === 63 || b === SPACE) return cell("", false);
+  if (b === 63 || b === SPACE$1) return cell("", false);
   return cell("", true);
 }
 function formatCellBytes(type, bytes) {
@@ -2711,6 +2751,67 @@ function convertPcx(input) {
     return okResult(png.output, "image/png", ".png", collector);
   }, collector);
 }
+const CR = 13;
+const LF$1 = 10;
+const TAB = 9;
+const FF = 12;
+const EOF = 26;
+const SPACE = 32;
+const TILDE = 126;
+const HIGH = 128;
+function convertPlainText(input) {
+  return runPlainText(input, MAX_TEXT_OUTPUT_BYTES);
+}
+function runPlainText(input, outputCap) {
+  assertUint8Array(input);
+  const w = makeWarningCollector();
+  return guarded(() => convert(limitInput(input, w), outputCap, w), w);
+}
+function convert(input, outputCap, w) {
+  const n = input.length;
+  const sink = makeTextSink();
+  const scratch = new Uint8Array(TEXT_CHUNK_BYTES);
+  let used = 0;
+  let dropped = 0;
+  let lastWasCr = false;
+  let capped = false;
+  function flush() {
+    if (used === 0) return;
+    const text = decodeCp437(scratch.subarray(0, used));
+    used = 0;
+    if (sink.pushStringCapped(text, outputCap) < text.length) capped = true;
+  }
+  function emit2(b) {
+    if (used === TEXT_CHUNK_BYTES) flush();
+    scratch[used++] = b;
+  }
+  for (let i = 0; i < n && !capped; i++) {
+    const b = input[i];
+    if (b === EOF) break;
+    if (b === CR) {
+      emit2(LF$1);
+      lastWasCr = true;
+      continue;
+    }
+    const afterCr = lastWasCr;
+    lastWasCr = false;
+    if (b === LF$1) {
+      if (!afterCr) emit2(LF$1);
+    } else if (b === TAB || b === FF || b >= SPACE && b <= TILDE || b >= HIGH) {
+      emit2(b);
+    } else {
+      dropped++;
+    }
+  }
+  if (!capped) flush();
+  if (dropped > 0) {
+    w.add(ConversionWarningCode.ControlCodesDropped, fill(TEMPLATES.controlCodesDropped, dropped));
+  }
+  if (capped) {
+    w.add(ConversionWarningCode.OutputCapped, fill(TEMPLATES.outputCappedText, outputCap));
+  }
+  return okResult(sink.finish(), "text/plain", ".txt", w);
+}
 const MAX_FILE_NAME_CHARS = 255;
 const PCX_MIN_BYTES = 4;
 const PCX_MAGIC = 10;
@@ -2728,6 +2829,11 @@ const STYLE_BOLD = 2;
 const STYLE_UNDERLINE = 19;
 const STYLE_ITALIC = 25;
 const DOT_PREFIX_BYTES = 3;
+const TEXT_PRINTABLE_MIN = 32;
+const TEXT_PRINTABLE_MAX = 126;
+const TEXT_TAB = 9;
+const TEXT_FF = 12;
+const TEXT_EOF = 26;
 function isPcx(s) {
   if (s.length < PCX_MIN_BYTES || s[0] !== PCX_MAGIC) return false;
   const v = s[1];
@@ -2769,6 +2875,15 @@ function isWordStar(s) {
   }
   return false;
 }
+function isTextSample(s) {
+  if (s.length === 0) return false;
+  for (let i = 0; i < s.length; i++) {
+    const b = s[i];
+    const ok = b >= TEXT_PRINTABLE_MIN && b <= TEXT_PRINTABLE_MAX || b === TEXT_TAB || b === LF || b === TEXT_FF || b === HARD_CR || b === TEXT_EOF;
+    if (!ok) return false;
+  }
+  return true;
+}
 function foldAscii(text) {
   let out = "";
   for (let i = 0; i < text.length; i++) {
@@ -2791,6 +2906,15 @@ function formatFromExtension(fileName) {
       return "dbase";
     case "PCX":
       return "pcx";
+    case "TXT":
+    case "BAT":
+    case "ASC":
+    case "LOG":
+    case "NFO":
+    case "DIZ":
+    case "1ST":
+    case "ME":
+      return "text";
     default:
       return "unknown";
   }
@@ -2805,6 +2929,7 @@ function detectFormat(input, fileName) {
     const format = formatFromExtension(fileName);
     if (format !== "unknown") return { format, source: "extension" };
   }
+  if (isTextSample(sample)) return { format: "text", source: "content" };
   return { format: "unknown", source: "none" };
 }
 function convertAuto(input, fileName) {
@@ -2817,6 +2942,8 @@ function convertAuto(input, fileName) {
       return convertDBase(input);
     case "pcx":
       return convertPcx(input);
+    case "text":
+      return convertPlainText(input);
     default:
       return { ok: false, error: TEMPLATES.errNoConverter, warnings: [] };
   }
@@ -2904,6 +3031,18 @@ function viewPath(corePath) {
   return capUnits(sanitizeText(corePath, { multiline: false }), MAX_NAME_CHARS);
 }
 const SLASH = "/";
+function formatOf(extension) {
+  switch (extension) {
+    case ".csv":
+      return "csv";
+    case ".txt":
+      return "text";
+    case ".png":
+      return "png";
+    case ".md":
+      return "markdown";
+  }
+}
 function lastSegment(corePath) {
   return corePath.slice(corePath.lastIndexOf(SLASH) + 1);
 }
@@ -2948,7 +3087,7 @@ function runExhume(ctx, args) {
   const written = writeExhumed(ctx.fs, ctx.root, prepared.value);
   if (!written.ok) return written;
   const { grave, conversion } = prepared.value;
-  const format = conversion.extension === ".csv" ? "csv" : conversion.extension === ".png" ? "png" : "markdown";
+  const format = formatOf(conversion.extension);
   const body = {
     path: written.value.relPath,
     bytes: written.value.bytes,
@@ -3069,7 +3208,7 @@ function runReadGrave(ctx, args) {
       ok: true,
       value: withEnvelope({
         grave: graveView,
-        format: conversion.extension === ".csv" ? "csv" : "markdown",
+        format: formatOf(conversion.extension),
         mime: conversion.mime,
         extension: conversion.extension,
         text: capped.text,

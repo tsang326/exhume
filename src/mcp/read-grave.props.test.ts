@@ -9,6 +9,7 @@ import { callTool } from '../test-support/mcp/rpc';
 import { bytesOf, diskWith, HOSTILE_LONG_NAMES } from '../test-support/mcp/images';
 import type { DiskFile } from '../test-support/mcp/images';
 import { encodePcx, writeDbf, writeWordStar } from '../test-support/formats/index';
+import { plainTextBytesArb } from '../test-support/formats/arbitraries';
 import { MAX_TEXT_CHARS } from './limits';
 import { sanitizeCapped, viewPath } from './sanitize';
 import { createServer } from './server';
@@ -30,6 +31,13 @@ interface GraveOut {
 }
 
 const PNG_SIG_LEN = 8;
+
+/** Independent lookup of the tool-facing format for string-output extensions. */
+const TEXT_FORMAT_BY_EXTENSION: Readonly<Record<string, string>> = {
+  '.md': 'markdown',
+  '.csv': 'csv',
+  '.txt': 'text',
+};
 
 function readOne(image: string, path: string, id?: number) {
   const server = createServer(ws.root);
@@ -110,7 +118,7 @@ describe('read_grave properties', () => {
             r.out.text === capped.text &&
             r.out.totalChars === capped.total &&
             r.out.truncated === capped.truncated &&
-            r.out.format === (expected.extension === '.csv' ? 'csv' : 'markdown') &&
+            r.out.format === TEXT_FORMAT_BY_EXTENSION[expected.extension] &&
             !('width' in r.out)
           );
         }
@@ -189,6 +197,41 @@ describe('read_grave properties', () => {
         return true;
       }),
       { numRuns: numRuns(25) },
+    );
+  });
+
+  const LONG_TEXT_BYTES = bytesOf('A line of DOS text.\r\n'.repeat(Math.ceil((MAX_TEXT_CHARS * 1.5) / 21)));
+  const textFileArb: fc.Arbitrary<Uint8Array> = fc.oneof(
+    { weight: 9, arbitrary: plainTextBytesArb.filter((b) => b.length > 0) },
+    { weight: 1, arbitrary: fc.constant(LONG_TEXT_BYTES) },
+  );
+
+  // Feature: plain-text, Property 16: read_grave returns sanitized, capped text for text files
+  // **Validates: Requirements 5.1, 5.2**
+  it('returns sanitized, capped text for stored text files', () => {
+    fc.assert(
+      fc.property(textFileArb, (bytes) => {
+        const disk = diskWith([{ name: 'NOTE.TXT', content: bytes }]);
+        ws.write('p16.img', disk);
+        const grave = firstGrave(disk);
+        const expected = convertAuto(bytes, 'NOTE.TXT');
+        if (!expected.ok || typeof expected.output !== 'string') return false;
+        const capped = sanitizeCapped(expected.output, { multiline: true }, MAX_TEXT_CHARS);
+        const r = readOne('p16.img', grave.path);
+        const out = r.out as GraveOut & { mime?: string; extension?: string };
+        return (
+          !r.isError &&
+          out.untrusted === true &&
+          out.format === TEXT_FORMAT_BY_EXTENSION['.txt'] &&
+          out.mime === 'text/plain' &&
+          out.extension === '.txt' &&
+          out.text === capped.text &&
+          out.totalChars === capped.total &&
+          out.truncated === capped.truncated &&
+          !('width' in out)
+        );
+      }),
+      { numRuns: numRuns(100) },
     );
   });
 

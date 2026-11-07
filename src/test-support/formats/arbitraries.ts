@@ -216,3 +216,24 @@ export function pcxSourceArb(maxSide = 64): fc.Arbitrary<PcxSource> {
 }
 
 export const pcxSourceSmallArb: fc.Arbitrary<PcxSource> = pcxSourceArb(64);
+
+// ---------------------------------------------------------------------------
+// Plain text
+// ---------------------------------------------------------------------------
+
+const PLAIN_TEXT_TOKENS: number[][] = [
+  [0x0d, 0x0a], [0x0d], [0x0a], [0x09], [0x0c], [0x20], [0x1a], [0x00], [0x01], [0x1f], [0x7f],
+  [0x80], [0xc4], [0xe9], [0xff], [0x41, 0x42, 0x43], [0x68, 0x65, 0x6c, 0x6c, 0x6f],
+];
+
+/** Small DOS-style text files: printable ASCII, line endings, tabs, high CP437 bytes, and the odd control or EOF byte. */
+export const plainTextBytesArb: fc.Arbitrary<Uint8Array> = fc
+  .array(
+    fc.oneof(
+      { weight: 4, arbitrary: fc.integer({ min: 0x20, max: 0x7e }).map((n) => [n]) },
+      { weight: 3, arbitrary: fc.constantFrom(...PLAIN_TEXT_TOKENS) },
+      { weight: 1, arbitrary: fc.integer({ min: 0, max: 255 }).map((n) => [n]) },
+    ),
+    { minLength: 0, maxLength: 300 },
+  )
+  .map((tokens) => Uint8Array.from(tokens.flat()));

@@ -1,7 +1,7 @@
 import { describe, it } from 'vitest';
 import fc from 'fast-check';
-import { convertAuto, convertDBase, convertPcx, convertWordStar, detectFormat } from './index';
-import { CONVERT_TIME_BUDGET_MS } from './limits';
+import { convertAuto, convertDBase, convertPcx, convertPlainText, convertWordStar, detectFormat } from './index';
+import { CONVERT_TIME_BUDGET_MS, MAX_CONVERT_INPUT_BYTES } from './limits';
 import { contentSpecArb, expandContent } from '../../test-support/formats/arbitraries';
 import { hostileInputArb, mutatedFixtureArb } from '../../test-support/formats/hostile';
 import type { HostileFormat, HostileInput } from '../../test-support/formats/hostile';
@@ -49,6 +49,7 @@ const CONVERTERS: Record<Exclude<HostileFormat, 'auto'>, (input: Uint8Array) => 
   wordstar: (b) => convertWordStar(b),
   dbase: (b) => convertDBase(b),
   pcx: (b) => convertPcx(b),
+  text: (b) => convertPlainText(b),
 };
 
 function runAll(format: HostileFormat, bytes: Uint8Array): void {
@@ -60,7 +61,52 @@ function runAll(format: HostileFormat, bytes: Uint8Array): void {
   }
 }
 
-const FORMATS: HostileFormat[] = ['wordstar', 'dbase', 'pcx', 'auto'];
+const FORMATS: HostileFormat[] = ['wordstar', 'dbase', 'pcx', 'text', 'auto'];
+
+// Feature: plain-text, Property 8: Totality on hostile input
+// **Validates: Requirements 2.9, 3.2, 3.5, 3.7, 3.10**
+
+const PLAIN_TEXT_SIZES: number[] = [MAX_CONVERT_INPUT_BYTES, MAX_CONVERT_INPUT_BYTES + 1];
+
+const plainTextHostileArb: fc.Arbitrary<Uint8Array> = fc.oneof(
+  { weight: 3, arbitrary: fc.uint8Array({ minLength: 0, maxLength: 4096 }) },
+  {
+    weight: 2,
+    arbitrary: fc
+      .uint8Array({ minLength: 0, maxLength: 4096 })
+      .map((a) => a.map((b) => (b === 0x1a ? 0x1b : b))),
+  },
+  {
+    weight: 2,
+    arbitrary: fc
+      .array(fc.integer({ min: 0, max: 0x1f }), { minLength: 0, maxLength: 4096 })
+      .map((a) => Uint8Array.from(a)),
+  },
+  {
+    weight: 1,
+    arbitrary: fc.integer({ min: 0, max: 4096 }).map((n) => new Uint8Array(n).fill(0x0d)),
+  },
+  { weight: 3, arbitrary: mutatedFixtureArb('text').map((h) => h.bytes) },
+  { weight: 3, arbitrary: hostileInputArb('text').map((h) => h.bytes) },
+  {
+    weight: 1,
+    arbitrary: fc
+      .tuple(fc.constantFrom(...PLAIN_TEXT_SIZES), fc.constantFrom(0x0d, 0xc4, 0x01, 0x41, 0xff))
+      .map(([n, b]) => new Uint8Array(n).fill(b)),
+  },
+);
+
+describe('plain text hostile input (Property 8)', () => {
+  it('convertPlainText and convertAuto are total on hostile bytes', () => {
+    fc.assert(
+      fc.property(plainTextHostileArb, (bytes: Uint8Array) => {
+        checkConverter('convertPlainText', bytes, (b) => convertPlainText(b), true);
+        checkConverter('convertAuto', bytes, (b) => convertAuto(b), true);
+      }),
+      { numRuns: numRuns(100) },
+    );
+  }, 600_000);
+});
 
 describe('formats hostile input (Property 2)', () => {
   for (const format of FORMATS) {

@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Related tests on save",
+      "trigger": "PostFileSave",
+      "description": "Run Vitest on tests related to changed files when a TypeScript source file under src/ is saved.",
+      "matcher": "(^|/)src/.*\\.ts$",
+      "action": {
+        "type": "command",
+        "command": "npx vitest run --changed",
+        "timeout": 120
+      }
+    }
+  ]
+}

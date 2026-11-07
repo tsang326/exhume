@@ -4,6 +4,7 @@ import { convertAuto } from './auto';
 import { convertDBase } from './dbase';
 import * as barrel from './index';
 import { convertPcx } from './pcx';
+import { convertPlainText } from './plaintext';
 import { convertWordStar } from './wordstar';
 
 const ascii = (s: string): Uint8Array => Uint8Array.from(Array.from(s, (c) => c.charCodeAt(0)));
@@ -53,15 +54,24 @@ describe('convertAuto', () => {
   });
 
   it('returns the no-converter failure for unknown input', () => {
-    for (const input of [ascii('hello'), new Uint8Array(0), Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8])]) {
+    for (const input of [new Uint8Array(0), Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8])]) {
       expect(convertAuto(input)).toStrictEqual(NO_CONVERTER);
     }
   });
 
+  it('routes plain text content to the plain text converter', () => {
+    const input = ascii('hello');
+    const r = convertAuto(input);
+    expect(r).toEqual(convertPlainText(input));
+    expect(r.ok && r.mime).toBe('text/plain');
+    expect(r.ok && r.extension).toBe('.txt');
+  });
+
   it('returns a fresh warnings array on every call', () => {
-    const a = convertAuto(ascii('hello'));
+    const unknown = Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8]);
+    const a = convertAuto(unknown);
     a.warnings.push({ code: 'x' } as never);
-    const b = convertAuto(ascii('hello'));
+    const b = convertAuto(unknown);
     expect(b).toStrictEqual(NO_CONVERTER);
     expect(b.warnings).not.toBe(a.warnings);
   });
@@ -100,7 +110,7 @@ describe('convertAuto', () => {
       },
     };
     for (const name of [hostile, 42, null, ['x.ws'], Symbol('x.ws')]) {
-      expect(convertAuto(ascii('hello world'), name)).toStrictEqual(NO_CONVERTER);
+      expect(convertAuto(ascii('hello world'), name)).toEqual(convertPlainText(ascii('hello world')));
     }
   });
 });

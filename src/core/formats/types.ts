@@ -24,8 +24,8 @@ export interface ConversionWarning {
   message: string;
 }
 
-export type OutputMime = 'text/markdown' | 'text/csv' | 'image/png';
-export type OutputExtension = '.md' | '.csv' | '.png';
+export type OutputMime = 'text/markdown' | 'text/csv' | 'text/plain' | 'image/png';
+export type OutputExtension = '.md' | '.csv' | '.txt' | '.png';
 
 export interface ConversionSuccess<
   O extends string | Uint8Array,
@@ -47,8 +47,9 @@ export interface ConversionFailure {
 
 export type MarkdownResult = ConversionSuccess<string, 'text/markdown', '.md'> | ConversionFailure;
 export type CsvResult = ConversionSuccess<string, 'text/csv', '.csv'> | ConversionFailure;
+export type TextResult = ConversionSuccess<string, 'text/plain', '.txt'> | ConversionFailure;
 export type PngResult = ConversionSuccess<Uint8Array, 'image/png', '.png'> | ConversionFailure;
-export type ConversionResult = MarkdownResult | CsvResult | PngResult;
+export type ConversionResult = MarkdownResult | CsvResult | TextResult | PngResult;
 
 export interface RgbaImage {
   width: number;
@@ -56,7 +57,7 @@ export interface RgbaImage {
   rgba: Uint8Array;
 }
 
-export type DetectedFormat = 'wordstar' | 'dbase' | 'pcx' | 'unknown';
+export type DetectedFormat = 'wordstar' | 'dbase' | 'pcx' | 'text' | 'unknown';
 export type DetectSource = 'content' | 'extension' | 'none';
 export interface DetectResult {
   format: DetectedFormat;

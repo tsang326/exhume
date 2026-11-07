@@ -22,6 +22,7 @@ class FakeBlobApi implements BlobUrlApi {
 }
 
 const DL_MD: DownloadSpec = { label: 'Download .md', fileName: 'note.md', mime: 'text/markdown', data: '# hi' };
+const DL_TXT: DownloadSpec = { label: 'Download .txt', fileName: 'note.txt', mime: 'text/plain', data: 'abc' };
 const DL_RAW: DownloadSpec = {
   label: 'Download raw bytes',
   fileName: 'note.bin',
@@ -258,6 +259,50 @@ describe('createPreviewPanel (happy-dom)', () => {
     expect(api.revoked).toEqual([first]);
     expect(blobs.liveCount()).toBe(1);
     expect(blobs.isOwned(first)).toBe(false);
+  });
+
+  it('renders a text body as one Text node in a focusable labeled region', () => {
+    const evil = '<img src=x onerror=alert(1)><script>boom()</script>\nline two';
+    panel.open(
+      mdModel({ body: { kind: 'text', text: evil, shortened: false }, downloads: [DL_TXT, DL_RAW] }),
+      opener,
+    );
+    const d = dialog();
+    const region = d.querySelector('.preview-text') as HTMLElement;
+    expect(region).not.toBeNull();
+    expect(region.getAttribute('tabindex')).toBe('0');
+    expect(region.getAttribute('role')).toBe('region');
+    expect(region.getAttribute('aria-label')).toBe('Document text');
+    expect(region.childNodes.length).toBe(1);
+    expect(region.firstChild?.nodeType).toBe(Node.TEXT_NODE);
+    expect(region.children.length).toBe(0);
+    expect(region.textContent).toBe(evil);
+    expect(d.querySelector('img')).toBeNull();
+    expect(d.querySelector('script')).toBeNull();
+    expect(d.querySelector('.preview-shortened')).toBeNull();
+  });
+
+  it('shows the shortened note for a shortened text body', () => {
+    panel.open(mdModel({ body: { kind: 'text', text: 'abc', shortened: true } }), opener);
+    expect(dialog().querySelector('.preview-shortened')?.textContent).toContain('Only the start of the text');
+  });
+
+  it('offers both downloads and lists warnings for a text body', () => {
+    panel.open(
+      mdModel({
+        body: { kind: 'text', text: 'abc', shortened: false },
+        warnings: ['3 control bytes dropped'],
+        downloads: [DL_TXT, DL_RAW],
+      }),
+      opener,
+    );
+    const buttons = Array.from(dialog().querySelectorAll<HTMLButtonElement>('.preview-download'));
+    expect(buttons.map((b) => b.textContent)).toEqual(['Download .txt', 'Download raw bytes']);
+    buttons[0]?.click();
+    expect(started).toEqual([DL_TXT]);
+    expect(Array.from(dialog().querySelectorAll('.preview-warnings > li')).map((li) => li.textContent)).toEqual([
+      '3 control bytes dropped',
+    ]);
   });
 
   it('shows the partial note above the content', () => {

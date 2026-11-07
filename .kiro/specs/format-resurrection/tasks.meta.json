@@ -947,6 +947,94 @@
         "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
         "timestamp": 1794021706074
       }
+    ],
+    "14.1 Create `src/test-support/formats-purity.test.ts`": [
+      {
+        "executionId": "b7faa20a-f2a7-4211-b283-569e63b1b1f7",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021869538
+      },
+      {
+        "executionId": "b7faa20a-f2a7-4211-b283-569e63b1b1f7",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794022557641
+      }
+    ],
+    "15.1 Write property test for totality on hostile input": [
+      {
+        "executionId": "b7faa20a-f2a7-4211-b283-569e63b1b1f7",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021874498
+      },
+      {
+        "executionId": "b7faa20a-f2a7-4211-b283-569e63b1b1f7",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794022563213
+      }
+    ],
+    "15.2 Write the targeted hostile cases": [
+      {
+        "executionId": "b7faa20a-f2a7-4211-b283-569e63b1b1f7",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021910311
+      },
+      {
+        "executionId": "b7faa20a-f2a7-4211-b283-569e63b1b1f7",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794022569087
+      }
+    ],
+    "16.1 Write the largest-image timing tests": [
+      {
+        "executionId": "b7faa20a-f2a7-4211-b283-569e63b1b1f7",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021915346
+      },
+      {
+        "executionId": "b7faa20a-f2a7-4211-b283-569e63b1b1f7",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794022574682
+      }
+    ],
+    "16.2 Write the independent `MAX_PNG_BYTES` recompute test": [
+      {
+        "executionId": "b7faa20a-f2a7-4211-b283-569e63b1b1f7",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794021920542
+      },
+      {
+        "executionId": "b7faa20a-f2a7-4211-b283-569e63b1b1f7",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794022579915
+      }
+    ],
+    "14. Purity and import smoke tests": [
+      {
+        "executionId": "b7faa20a-f2a7-4211-b283-569e63b1b1f7",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794022557719
+      }
+    ],
+    "15. Hostile-input and fuzz tests (`*.hostile.test.ts`)": [
+      {
+        "executionId": "b7faa20a-f2a7-4211-b283-569e63b1b1f7",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794022569129
+      }
+    ],
+    "16. Timing and size tests for the largest images": [
+      {
+        "executionId": "b7faa20a-f2a7-4211-b283-569e63b1b1f7",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794022579972
+      }
+    ],
+    "17. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "b7faa20a-f2a7-4211-b283-569e63b1b1f7",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794022585217
+      }
     ]
   }
 }

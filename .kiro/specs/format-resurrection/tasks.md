@@ -21,7 +21,7 @@ Every task in this plan is required, including all test and property sub-tasks. 
     - Run the existing suite and confirm the purity test results are unchanged
     - _Requirements: 12.2, 12.8, 14.11_
 
-- [ ] 2. Foundation modules in `src/core/formats/`
+- [x] 2. Foundation modules in `src/core/formats/`
   - [x] 2.1 Create `limits.ts` and `types.ts`
     - `limits.ts`: every Limit and internal constant from the design (`U16_MAX`, `MAX_CONVERT_INPUT_BYTES`, `DETECT_SAMPLE_BYTES`, `MAX_WARNINGS`, `MAX_MARKDOWN_OUTPUT_BYTES`, `MAX_DBF_FIELDS`, `MAX_DBF_RECORDS`, `MAX_CSV_OUTPUT_BYTES`, `MAX_IMAGE_DIMENSION`, `MAX_IMAGE_PIXELS`, `MAX_PCX_BYTES_PER_LINE`, `MAX_PCX_DECODED_BYTES`, the PNG layout constants, `CONVERT_TIME_BUDGET_MS`, and the DBF and PCX header constants). Use the arithmetic spelling for the two 4,194,304 values.
     - Export `pngBytesForFiltered(filteredBytes)` and define `MAX_PNG_BYTES` as a computed constant from its inputs, never as a literal
@@ -373,8 +373,8 @@ Every task in this plan is required, including all test and property sub-tasks. 
     - `auto.test.ts`: one valid sample of each format converts through `convertAuto`, an unknown input returns the fixed failure with an empty `warnings` array, and the extension fallback routes a headerless sample
     - _Requirements: 2.11, 14.10_
 
-- [ ] 14. Purity and import smoke tests
-  - [ ] 14.1 Create `src/test-support/formats-purity.test.ts`
+- [x] 14. Purity and import smoke tests
+  - [x] 14.1 Create `src/test-support/formats-purity.test.ts`
     - Reuse the scanners from `scan.ts` over the non-test files in `src/core/formats/`: no Node built-in import, no `document`, `window`, `fetch`, `XMLHttpRequest`, `WebSocket`, `eval`, `new Function`, `createElement` or dynamic `import()`, no `any` type, no regular expression literal and no `RegExp`
     - The only import from outside `formats` is `decodeCp437` from `../fat12`; no import from `src/test-support/`
     - No numeric literal equal to an exported Limit value of 4,096 or more outside `limits.ts`, taking the values from the live exports so the list cannot drift
@@ -382,13 +382,13 @@ Every task in this plan is required, including all test and property sub-tasks. 
     - `package.json` `dependencies` stays empty
     - _Requirements: 12.1, 12.2, 12.4, 12.6, 12.8, 12.9, 14.2, 14.11_
 
-- [ ] 15. Hostile-input and fuzz tests (`*.hostile.test.ts`)
-  - [ ] 15.1 Write property test for totality on hostile input
+- [x] 15. Hostile-input and fuzz tests (`*.hostile.test.ts`)
+  - [x] 15.1 Write property test for totality on hostile input
     - **Property 2: Totality on hostile input**
     - In `src/core/formats/formats.hostile.test.ts` so `test:fuzz` selects it; cover `detectFormat`, `convertWordStar`, `convertDBase`, `convertPcx` and `convertAuto` over random, grammar-aware, mutated and fuzzed-header inputs of 0 to 2,097,152 bytes. Generate every input first, outside the timer; wrap only the converter call in `timed(() => ...)`; after the timer stops, check no throw, that the input bytes are unchanged, and `checkResultInvariants`. Use `numRuns(100)` so `test:fuzz` gives at least ten times the default.
     - **Validates: Requirements 1.7, 1.9, 12.3, 12.5, 12.11, 14.3, 14.4**
 
-  - [ ] 15.2 Write the targeted hostile cases
+  - [x] 15.2 Write the targeted hostile cases
     - In `src/core/formats/formats.targeted.hostile.test.ts`; build each input first, then time only the converter call
     - PCX: a 65,535 by 65,535 header; bytes per line 65,535; a 4 MiB RLE stream of `0xFF 0x00` pairs behind a small valid header; the 769-byte trailer overlapping pixel data; 2049 by 2048 and 4097 wide give `PCX image too large` with nothing decoded
     - dBase: record count 4,294,967,295; record length and header length 65,535; 255 descriptors with no terminator; field names and `C` values starting with `=`, `+`, `-` and `@` (no parsed cell begins with those characters unescaped)
@@ -396,18 +396,18 @@ Every task in this plan is required, including all test and property sub-tasks. 
     - Each case must not throw, must finish within `CONVERT_TIME_BUDGET_MS`, must respect the output caps and warning limits, and must return a failure or at least one warning
     - _Requirements: 1.15, 9.4, 9.5, 12.11, 12.12, 14.5, 14.6, 14.7, 14.8, 14.13_
 
-- [ ] 16. Timing and size tests for the largest images
-  - [ ] 16.1 Write the largest-image timing tests
+- [x] 16. Timing and size tests for the largest images
+  - [x] 16.1 Write the largest-image timing tests
     - In `src/core/formats/largest-images.test.ts`: build with the PCX encoder (outside the timer) a valid 24-bit 2048 by 2048 image, a valid 24-bit 4096 by 1024 image and a valid 24-bit 1024 by 4096 image, each with content that RLE-encodes to at most `MAX_CONVERT_INPUT_BYTES`
     - Time only the `convertPcx` call with `timed()`; each returns `ok: true` with no warnings within `CONVERT_TIME_BUDGET_MS` and a PNG of at most `MAX_PNG_BYTES`; the 1024 by 4096 PNG length equals `MAX_PNG_BYTES` exactly
     - _Requirements: 1.16, 12.5, 11.16, 11.17, 14.5, 14.6_
 
-  - [ ] 16.2 Write the independent `MAX_PNG_BYTES` recompute test
+  - [x] 16.2 Write the independent `MAX_PNG_BYTES` recompute test
     - In `src/core/formats/max-png-bytes.test.ts`: recompute from first principles with the pixel cap 4,194,304, dimension cap 4,096, block size 65,535 and the overhead constants 8, 12, 13, 5 and 6 written as literals in the test, not imported from `limits.ts`; assert the result equals the exported `MAX_PNG_BYTES` (16,782,660)
     - Encode 1024 by 4096 and assert the length equals `MAX_PNG_BYTES`; encode 4096 by 1024 and 2048 by 2048 and assert each length is at most `MAX_PNG_BYTES`
     - _Requirements: 1.17, 11.9, 11.16, 11.17, 14.16_
 
-- [ ] 17. Final checkpoint - Ensure all tests pass
+- [x] 17. Final checkpoint - Ensure all tests pass
   - Run `npm test`, `npm run test:fuzz` and `npm run typecheck`. Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

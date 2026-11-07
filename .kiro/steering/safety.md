@@ -17,7 +17,8 @@ attacker-controlled.
 - Untrusted text goes into the DOM with `textContent` only, never `innerHTML`.
 - Downloads use Blob URLs with a fixed safe MIME type (`text/markdown`, `text/csv`, `image/png`,
   `application/octet-stream`) and a sanitized file name.
-- Strict CSP on the page: `default-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'`.
+- Strict CSP on the page: `default-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'`.
+  `connect-src 'self'` allows same-origin static files only, for demo disks; `fetch` is allowed only in `src/web/demos.ts`.
   The page never sends disk bytes anywhere.
 
 ## MCP server (the agent boundary)

@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit && tsc -p src/core/tsconfig.json --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p src/core/tsconfig.json --noEmit && tsc -p src/web/logic/tsconfig.json --noEmit && tsc -p src/web/worker/tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:fuzz": "FC_RUNS_MULTIPLIER=10 vitest run hostile"

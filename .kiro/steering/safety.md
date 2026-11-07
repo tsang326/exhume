@@ -33,4 +33,4 @@ attacker-controlled.
 
 ## General
 - Never execute anything found on a disk image. Never write outside the paths above. No network calls in core, web
-  or MCP.
+  or MCP, except the same-origin demo-disk fetch in `src/web/demos.ts`.

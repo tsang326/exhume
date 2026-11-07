@@ -1,7 +1,4 @@
-import './style.css'
+import './style.css';
 
-// Placeholder only. The real boot sequence, desktop shell and ghost are built in Kiro from the specs.
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <pre class="boot">REVENANT.OS
-booting...</pre>
-`
+// Stub. Task 15 and later tasks build the real page.
+new Worker(new URL('./web/worker/disk.worker.ts', import.meta.url), { type: 'module' });

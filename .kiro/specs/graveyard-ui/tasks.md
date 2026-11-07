@@ -10,8 +10,8 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
 
 ## Tasks
 
-- [ ] 1. Build and configuration groundwork
-  - [ ] 1.1 Apply the build and configuration changes with placeholders for the smoke check
+- [x] 1. Build and configuration groundwork
+  - [x] 1.1 Apply the build and configuration changes with placeholders for the smoke check
     - Design: "Build and script changes", "CSP, Vite output and the network rule", "Module layout"
     - Create `vite.config.ts`: `defineConfig({ build: { modulePreload: { polyfill: false }, assetsInlineLimit: 0 }, worker: { format: 'es' } })`. Set no `base` (it stays `'/'`).
     - Create `src/web/logic/tsconfig.json`: a copy of the options in `src/core/tsconfig.json` with `lib: ["ES2022"]` (no DOM), `types: []`, strict, `include: ["./**/*.ts"]`, `exclude: ["./**/*.test.ts"]`
@@ -25,7 +25,7 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
     - Replace `index.html` with a minimal placeholder: `<meta charset>`, then the exact CSP meta tag from the design as the next element, a title, `lang="en"`, one `h1`, and the module script for `/src/main.ts`. Task 15.1 writes the full page.
     - _Requirements: 2.1, 2.2, 2.3, 2.5, 14.8, 15.7, 15.8, 15.10, 15.11, 15.12_
 
-  - [ ] 1.2 Run the build smoke check
+  - [x] 1.2 Run the build smoke check
     - Design: "Vite constraints (checked against the placeholder build)", "Research notes"
     - Run `npm run build` and require exit code 0
     - Worker is a separate chunk: `ls dist/assets | grep -E '^disk\.worker-.*\.js$'` prints exactly one file; `grep -l 'graveyard-ui-stub-worker-marker' dist/assets/*.js` lists only that `disk.worker-*.js` file (the marker is not inside the entry chunk); `grep -l 'disk.worker' dist/assets/index-*.js` shows the entry chunk references the worker file by name
@@ -37,79 +37,79 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
     - If a check fails, fix the configuration in 1.1 and repeat; record the final outcome of each check
     - _Requirements: 2.2, 2.3, 2.5, 11.1, 14.8, 15.12_
 
-- [ ] 2. Worker protocol, validation and request ids
-  - [ ] 2.1 Create `logic/protocol.ts` and `logic/validate.ts`
+- [x] 2. Worker protocol, validation and request ids
+  - [x] 2.1 Create `logic/protocol.ts` and `logic/validate.ts`
     - Design: "Worker_Protocol: `logic/protocol.ts`", "Validation and request ids"
     - `protocol.ts`: `RequestKind`, `OpenRequest`, `ExhumeRequest`, `WorkerRequest`, `ExhumeResult`, `OpenedResponse`, `ExhumedResponse`, `FailureCause`, `FailedResponse`, `WorkerResponse`, `OUTPUT_BY_KIND`. Plain data only (objects, arrays, strings, numbers, booleans, `null`, `Uint8Array`).
     - `validate.ts`: `Parsed<T>`, `isRequestId` (non-negative safe integer), total `parseResponse` and `parseRequest` that check the full shape including every `Grave` field and enum value, bound the grave count by `MAX_TOTAL_ENTRIES` and the warning count, require finite numbers, and never throw (including objects with throwing getters)
     - Reserved id `0` is accepted by `parseResponse` for `failed` / `invalid-request`
     - _Requirements: 3.3, 3.4, 3.7, 3.17, 3.18_
 
-  - [ ]* 2.2 Write property tests for validation
+  - [x]* 2.2 Write property tests for validation
     - **Property 7: Response validation is total**
     - **Property 8: Valid messages survive validation and structured cloning**
     - In `src/web/logic/validate.test.ts`; Property 8 compares `structuredClone` output and `parse*` of the clone with the original
     - **Validates: Requirements 3.3, 3.4, 3.7, 3.18**
 
-  - [ ] 2.3 Create `logic/requests.ts`
+  - [x] 2.3 Create `logic/requests.ts`
     - Design: "Validation and request ids", "Main-thread bytes, transfer and recovery"
     - `createRequestTracker()` with `begin`, `accept`, `latest`, `supersedeAll` (the counter keeps growing; ids start at 1), plus `kindOfResponse` and `isCurrent`
     - `buildOpenMessage(held, id)`: copy with `held.slice()` and list that copy's buffer for transfer; `held` stays unchanged
     - `transferablesOf(response)`: distinct whole buffers behind every `Uint8Array` in a response
     - _Requirements: 3.5, 3.6, 3.8, 3.15, 3.17_
 
-  - [ ]* 2.4 Write property tests for request ids and transfer
+  - [x]* 2.4 Write property tests for request ids and transfer
     - **Property 9: Request ids only grow and only the latest response is accepted**
     - **Property 10: Open messages copy before they transfer**
     - In `src/web/logic/requests.test.ts`
     - **Validates: Requirements 3.5, 3.6, 3.8, 3.15**
 
-- [ ] 3. Size and text helpers
-  - [ ] 3.1 Create `logic/size.ts` and `logic/text.ts`
+- [x] 3. Size and text helpers
+  - [x] 3.1 Create `logic/size.ts` and `logic/text.ts`
     - Design: "Size and text helpers"
     - `size.ts`: `checkImageSize(bytes, cap?)` with messages exactly as in Requirements 4.3 and 4.4; `formatBytes` (divisor 1,024, unit chosen by the rounded value, no unit above MB, never throws)
     - `text.ts`: `toLabel` (prefix cut at `LABEL_CAP`, drop a trailing lone high surrogate, markup characters unchanged), `lastSegment`, `segmentCount`, `formatDate` (length 19, digits and ranges checked, no `Date`, `'no date'` otherwise)
     - _Requirements: 1.8, 4.3, 4.4, 4.10, 4.11, 6.5, 6.6, 6.7, 6.8, 6.9, 6.19_
 
-  - [ ]* 3.2 Write property tests for size checks and formatting
+  - [x]* 3.2 Write property tests for size checks and formatting
     - **Property 13: The size check accepts exactly 1 through the cap**
     - **Property 14: Size formatting has the stated shape**
     - In `src/web/logic/size.test.ts`; include the boundary examples `1`, `MAX_IMAGE_BYTES`, `MAX_IMAGE_BYTES + 1` and `1_048_575`
     - **Validates: Requirements 4.3, 4.4, 4.10, 4.11, 4.13, 6.6**
 
-  - [ ]* 3.3 Write property tests for labels and dates
+  - [x]* 3.3 Write property tests for labels and dates
     - **Property 1: Visible labels are bounded and unchanged**
     - **Property 16: Date formatting is total and time-zone free**
     - In `src/web/logic/text.test.ts`; add examples for `lastSegment`, `segmentCount` and surrogate-pair cuts
     - **Validates: Requirements 1.8, 6.7, 6.8, 6.9, 6.19**
 
-- [ ] 4. View model and paging
-  - [ ] 4.1 Create `logic/viewmodel.ts` and `logic/paging.ts`
+- [x] 4. View model and paging
+  - [x] 4.1 Create `logic/viewmodel.ts` and `logic/paging.ts`
     - Design: "View model and paging"
     - `ItemViewModel`, `VolumeSummary`, `toItemViewModels`, `summarize`, `warningLines`; `visual` is `tombstone` only for alive; `action: 'exhume'` only for kind file and state other than lost; `(unnamed)` and `(no label)` placeholders; core `reason` carried unchanged
     - `paging.ts`: `visibleCount`, `hasMore`, `progressText` ("X of Y")
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.10, 6.11, 6.12, 6.13, 6.14, 6.15, 6.16, 6.17, 6.18, 7.1, 7.2, 7.3, 7.4, 7.7, 7.9, 9.16_
 
-  - [ ]* 4.2 Write property tests for the view model
+  - [x]* 4.2 Write property tests for the view model
     - **Property 17: The view-model mapping preserves every grave**
     - **Property 18: The summary and warning lines match the report**
     - In `src/web/logic/viewmodel.test.ts`; build reports with the existing `src/test-support/fat12` arbitraries where helpful; include the size 4,294,967,295, a `null` date and an unparseable date
     - **Validates: Requirements 6.1, 6.2, 6.3, 6.4, 6.5, 6.10, 6.11, 6.12, 6.13, 6.14, 6.15, 6.17, 6.18, 6.19, 9.16**
 
-  - [ ]* 4.3 Write property test for paging
+  - [x]* 4.3 Write property test for paging
     - **Property 19: Paging shows `min(total, pages x 200)` and grows by at most one page**
     - In `src/web/logic/paging.test.ts`; add the 4,096-entry example (21 pages, 20 activations)
     - **Validates: Requirements 7.1, 7.2, 7.3, 7.4, 7.5, 7.7, 7.9**
 
-- [ ] 5. Markdown, CSV, hex, file names, contrast and the preview model
-  - [ ] 5.1 Create `logic/markdown.ts`
+- [x] 5. Markdown, CSV, hex, file names, contrast and the preview model
+  - [x] 5.1 Create `logic/markdown.ts`
     - Design: "Safe_Markdown_Subset re-verification", "Markdown: `logic/markdown.ts`"
     - `parseMarkdown`, `truncateForPreview`, `plainText`, the node types and `MarkdownModel` with `dropped`
     - Iterative and linear: lines, blocks, then inline events with the two-slot marker stack (so `***x***` closes in the right order), then pairing that turns unclosed markers back into literal text; escapes as listed in the design; a spaces-only line is ordinary text; a line exactly `---` is a thematic break
     - Conservation law: `sum(text value lengths) + dropped == input.length`
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.9, 5.10_
 
-  - [ ]* 5.2 Write the Markdown emitter and property tests
+  - [x]* 5.2 Write the Markdown emitter and property tests
     - **Property 20: The Markdown parser is total and only produces safe nodes**
     - **Property 21: No input character is lost or invented**
     - **Property 22: Converter-shaped Markdown parses back to its plain text and structure**
@@ -117,144 +117,144 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
     - Create `src/test-support/web/md-emitter.ts` (converter-shaped generator with known plain text, paragraph count and node positions), then `src/web/logic/markdown.test.ts`; add the doubling-time example (best of three runs, skipped with a note when the base time is under 5 ms)
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.6, 5.7, 5.8, 5.9, 5.10**
 
-  - [ ] 5.3 Create `logic/csv-display.ts`
+  - [x] 5.3 Create `logic/csv-display.ts`
     - Design: "CSV display parser: `logic/csv-display.ts`"
     - `CsvTable` and `parseCsv(text, maxRows?, maxCols?)`: one-pass RFC 4180 state machine; `""` input yields zero rows; a trailing terminator adds no extra record; an unterminated quote takes the rest of the input; counting continues past the display limits so `totalRows` and `totalCols` are real
     - _Requirements: 9.8, 9.9_
 
-  - [ ]* 5.4 Write the CSV reference writer and property tests
+  - [x]* 5.4 Write the CSV reference writer and property tests
     - **Property 24: CSV display parsing round-trips what the reference writer writes**
     - **Property 25: CSV display limits report real sizes**
     - Create `src/test-support/web/csv-writer.ts` (own RFC 4180 writer; the core's `csvCell` and `csvRow` are not exported, so the core file is not imported), then `src/web/logic/csv-display.test.ts`; add the RFC 4180 examples from the design
     - **Validates: Requirements 9.8, 9.9**
 
-  - [ ] 5.5 Create `logic/hex.ts`
+  - [x] 5.5 Create `logic/hex.ts`
     - Design: "Hex view: `logic/hex.ts`"
     - `HexRow` and `hexRows(bytes, limit?)`: 8-digit offsets, hex column padded to 47 characters, text column maps `0x20`..`0x7E` to itself and everything else to `.`
     - _Requirements: 9.12, 9.19_
 
-  - [ ]* 5.6 Write property test for the hex view
+  - [x]* 5.6 Write property test for the hex view
     - **Property 26: The hex view has the stated shape**
     - In `src/web/logic/hex.test.ts`
     - **Validates: Requirements 9.12, 9.19**
 
-  - [ ] 5.7 Create `logic/filename.ts`
+  - [x] 5.7 Create `logic/filename.ts`
     - Design: "File name sanitizer: `logic/filename.ts`"
     - `sanitizeFileName(diskName, extension)` implementing steps (a) to (h) of Requirement 10.4 with plain loops (no regex over input); stem falls back to `grave`; reserved stems such as `CON` pass through
     - _Requirements: 9.10, 10.4, 10.5, 10.6, 10.7_
 
-  - [ ]* 5.8 Write property test for the sanitizer
+  - [x]* 5.8 Write property test for the sanitizer
     - **Property 27: The file name sanitizer always yields a safe name**
     - In `src/web/logic/filename.test.ts` with a step-by-step reference implementation; examples `a.exe`, `CON.md`, `...` and 300-character names
     - **Validates: Requirements 10.4, 10.5, 10.6, 10.7, 9.10**
 
-  - [ ] 5.9 Create `logic/contrast.ts`
+  - [x] 5.9 Create `logic/contrast.ts`
     - Design: "Small pure helpers: `focus-order.ts`, `effects-math.ts`, `contrast.ts`"
     - `Rgb`, `parseHexColor` (`#rgb` and `#rrggbb` only), `relativeLuminance`, `contrastRatio` (WCAG 2.x, symmetric, 1 to 21), `compositeOver`
     - _Requirements: 11.4, 12.15_
 
-  - [ ]* 5.10 Write property test for contrast
+  - [x]* 5.10 Write property test for contrast
     - **Property 34: The contrast function is a pure WCAG ratio**
     - In `src/web/logic/contrast.test.ts`
     - **Validates: Requirements 11.4, 12.15**
 
-  - [ ] 5.11 Create `logic/preview-model.ts`
+  - [x] 5.11 Create `logic/preview-model.ts`
     - Design: "Preview model: `logic/preview-model.ts`"
     - `DownloadSpec`, `PreviewBody`, `PreviewModel`, `ExhumeOutcome`, `buildPreviewModel(item, outcome)`: warnings are read warnings then conversion warnings (all, in order); `partialNote` is the core reason only for partial items; PNG `alt` is `sanitizeFileName(name, '.png')`; always a raw `.bin` download of the full bytes with `application/octet-stream` when the read worked; converted download from `OUTPUT_BY_KIND`; read failure gives body `none`, the core error text and no downloads
     - _Requirements: 5.10, 9.7, 9.8, 9.10, 9.12, 9.13, 9.14, 9.15, 9.17, 9.18, 10.1, 10.2, 10.3_
 
-  - [ ]* 5.12 Write property test for the preview model
+  - [x]* 5.12 Write property test for the preview model
     - **Property 28: The preview model matches the worker result**
     - In `src/web/logic/preview-model.test.ts`
     - **Validates: Requirements 9.7, 9.10, 9.12, 9.13, 9.14, 9.15, 9.17, 9.18, 10.1, 10.2, 10.3**
 
-- [ ] 6. Demo validation and the demo registry
-  - [ ] 6.1 Create `logic/demo-validate.ts`
+- [x] 6. Demo validation and the demo registry
+  - [x] 6.1 Create `logic/demo-validate.ts`
     - Design: "Demo validation: `logic/demo-validate.ts`, `demos.ts`"
     - `DemoEntryShape`, `DemoCheck`, `validateDemoDisk` (pure, total, plain loops; id 1 to 64, title 1 to 80, description 1 to 200 without `\r` or `\n`, URL rules for `/disks/`, `//`, scheme, backslash, `..` segment, `%2e` and `%2f` in any case, non-empty file part), `selectValidDemos` (drops invalid entries and later duplicate ids, keeps order). It does not import `demos.ts`.
     - _Requirements: 8.3, 8.4, 8.5, 8.6_
 
-  - [ ]* 6.2 Write property test for demo validation
+  - [x]* 6.2 Write property test for demo validation
     - **Property 30: Demo entries are validated and de-duplicated**
     - In `src/web/logic/demo-validate.test.ts`
     - **Validates: Requirements 8.3, 8.4, 8.5, 8.6**
 
-  - [ ] 6.3 Create `src/web/demos.ts`
+  - [x] 6.3 Create `src/web/demos.ts`
     - Design: "Demo validation: `logic/demo-validate.ts`, `demos.ts`", "CSP, Vite output and the network rule"
     - `DemoDisk`, `DEMO_REGISTRY` (empty, documented as the extension point for spec 5), `DemoLoad`, `loadDemoBytes(demo, fetchImpl?, timeoutMs?)`: revalidate first (`invalid`, no request); `fetch` with `credentials: 'omit'`, `redirect: 'error'`, `referrerPolicy: 'no-referrer'`, `cache: 'no-store'` and an `AbortController` (10 s, `timeout`); `http` for non-2xx; `Content-Length` over the cap is `too-large` before reading; stream with a running byte count; `arrayBuffer()` fallback when `body` is null; zero bytes is `empty`
     - This is the only file in the Web_Sources that may name `fetch`; it uses no other network API
     - _Requirements: 8.1, 8.2, 8.10, 8.12, 8.13, 8.14, 13.2, 13.8_
 
-  - [ ] 6.4 Write example tests for `demos.ts`
+  - [x] 6.4 Write example tests for `demos.ts`
     - In `src/web/demos.test.ts` with a fake `fetch` returning `ReadableStream` bodies and fake timers: `credentials: 'omit'` and the validated URL are passed; the 10 s abort gives `timeout`; non-2xx gives `http`; a header over the cap gives `too-large` without reading; a null body uses the fallback; an invalid entry sends no request
     - _Requirements: 8.12, 8.14, 13.8_
 
-  - [ ]* 6.5 Write property test for demo loading
+  - [x]* 6.5 Write property test for demo loading
     - **Property 31: Demo loading never accumulates more than the cap**
     - In `src/web/demos.props.test.ts`; chunk sequences with and without `Content-Length`, including a lying header
     - **Validates: Requirements 8.12, 8.14**
 
-- [ ] 7. Drop, rising gate, focus order and effects math
-  - [ ] 7.1 Create `logic/drop.ts`
+- [x] 7. Drop, rising gate, focus order and effects math
+  - [x] 7.1 Create `logic/drop.ts`
     - Design: "Drop classification: `logic/drop.ts`"
     - `DropInfo`, `DropDecision`, `classifyDrop`: no file or a directory first item is a `reject` with the "please drop a disk image file" message; more than one file is `use-first` with `ignoredOthers: true`
     - _Requirements: 4.5, 4.6, 4.9_
 
-  - [ ]* 7.2 Write property test for drop classification
+  - [x]* 7.2 Write property test for drop classification
     - **Property 15: Drops are classified by what they carry**
     - In `src/web/logic/drop.test.ts`
     - **Validates: Requirements 4.5, 4.6, 4.9**
 
-  - [ ] 7.3 Create `logic/rise-gate.ts`
+  - [x] 7.3 Create `logic/rise-gate.ts`
     - Design: "Rising gate: `logic/rise-gate.ts`", "Exhume sequence"
     - `RiseEvent`, `RiseState`, `RiseStep`, `startRise(reduced)`, `stepRise(state, event)`: `show` at most once; `error` shows at once and stops the animation; `result` shows when the animation is done or reduced, else waits for `animation-end`; `cancel` stops and never shows
     - _Requirements: 9.3, 9.4, 9.5, 9.6_
 
-  - [ ]* 7.4 Write property test for the rising gate
+  - [x]* 7.4 Write property test for the rising gate
     - **Property 32: The rising gate shows once, in time, and never waits needlessly**
     - In `src/web/logic/rise-gate.test.ts`
     - **Validates: Requirements 9.3, 9.4, 9.5, 9.6**
 
-  - [ ] 7.5 Create `logic/focus-order.ts`
+  - [x] 7.5 Create `logic/focus-order.ts`
     - Design: "Small pure helpers"
     - `nextFocusIndex(count, current, backwards)`: wraps; `-1` current means outside the list; count 0 gives `-1`
     - _Requirements: 12.8_
 
-  - [ ]* 7.6 Write property test for focus order
+  - [x]* 7.6 Write property test for focus order
     - **Property 33: Tab focus wraps inside the dialog**
     - In `src/web/logic/focus-order.test.ts`
     - **Validates: Requirements 12.8**
 
-  - [ ] 7.7 Create `logic/effects-math.ts`
+  - [x] 7.7 Create `logic/effects-math.ts`
     - Design: "Small pure helpers", "Canvas fog and lantern"
     - `canvasBacking(cssWidth, cssHeight, dpr)` (integers, 1 to 1920 by 1 to 1080, aspect ratio kept when scaled, safe for zero, huge and fractional input) and `frameDue(lastMs, nowMs)` (true when `now - last >= 1000 / FX_MAX_FPS`)
     - _Requirements: 11.6_
 
-  - [ ]* 7.8 Write property test for canvas size and frame rate
+  - [x]* 7.8 Write property test for canvas size and frame rate
     - **Property 35: Canvas size and frame rate stay within budget**
     - In `src/web/logic/effects-math.test.ts`
     - **Validates: Requirements 11.6**
 
-- [ ] 8. Checkpoint - Pure logic complete
+- [x] 8. Checkpoint - Pure logic complete
   - Run `npm run typecheck`, `npm test`, `npm run test:fuzz` and `npm run build`. All must exit 0.
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 9. Source scans and test support
-  - [ ] 9.1 Create `src/test-support/web/scan.ts`
+  - [~] 9.1 Create `src/test-support/web/scan.ts`
     - Design: "Phrase scan helper: comment-aware tokenizer", Testing Strategy (`sources.scan.test.ts`)
     - Scanners that return `{ file, line, name }` violations: HTML sink names (the sink names live only in this file, never in a Web_Source; the scan does not skip comments or strings); network API names with the allow-list rule (accepts `fetch` only in `src/web/demos.ts` when the allow-list is exactly that one file; rejects a network name in any other file, an allow-list of two or more files, and any network name other than `fetch` in `demos.ts`); storage and cookie names in every file; forbidden phrases in string and template literals via `extractLiterals(source)` (hand-written single-pass tokenizer: code, line comment, block comment, single, double and template states, a brace-depth stack for `${}`, escapes, 1-based line numbers; regex literals are a documented limitation) and in the visible text of `index.html` (tags, comments, `script` and `style` contents stripped); `src` and `alt` assignments outside `setSrcBlob` in `dom/h.ts` (`.alt`, `.src`, `'alt'`, `'src'`, `setAttribute`); `.style.`, `cssText`, `createElement('style')` and `setAttribute('style'`; import-specifier resolver (relative, extension, directory form, `import type`, dynamic `import()`, `new URL()`) that allows only `src/core/fat12/index` and `src/core/formats/index`; main-thread files importing `openDisk`, `readDisk`, `convertAuto`, `convertWordStar`, `convertDBase`, `convertPcx` or `encodePng`; DOM global names in `logic/` files; `expect(` inside a `fc.property` callback in web tests
     - Violation messages print the file path, the 1-based line number and the name
     - _Requirements: 1.1, 1.3, 1.5, 1.6, 1.7, 2.4, 3.1, 3.2, 13.2, 13.4, 13.5, 13.6, 13.7, 15.1, 15.2, 15.3, 15.4_
 
-  - [ ] 9.2 Create `html-scan.ts`, `csp.ts` and `css-scan.ts` in `src/test-support/web/`
+  - [~] 9.2 Create `html-scan.ts`, `csp.ts` and `css-scan.ts` in `src/test-support/web/`
     - Design: Testing Strategy (`page.static.test.ts`), "Layers and z-index plan", "Accessibility and responsive layout"
     - `html-scan.ts`: parse a static HTML string into the facts the page test needs (CSP meta count and position, script, link and style elements, `on*` and `style` attributes, `lang`, title, `h1` count, text of notes, visible text for the phrase scan)
     - `csp.ts`: parse a CSP string into directives and check the exact set, `unsafe-*`, `data:`, `*` and remote hosts
     - `css-scan.ts`: read `--pair-*-fg` and `--pair-*-bg` custom properties and check them with `contrastRatio` (3:1 for names ending `-large` or `-ui`, 4.5:1 otherwise); check `.fx-*` rules for `pointer-events: none`, z-index below `.content` and opacity at most 0.6; composite an over-text layer with `compositeOver`; layout rules (no fixed width over 100% on page-level elements, `overflow-wrap` or truncation on file-name elements); reduced-motion block; no external or `data:` `url(`; no `.style.` use
     - _Requirements: 2.1, 2.2, 2.3, 11.1, 11.2, 11.3, 11.4, 11.7, 12.12, 12.14, 12.15, 12.16, 12.17_
 
-  - [ ] 9.3 Write `sources.scan.test.ts` with the real scans and self-tests
+  - [~] 9.3 Write `sources.scan.test.ts` with the real scans and self-tests
     - In `src/web/sources.scan.test.ts`
     - Self-tests: a fixture with every sink name reports one violation per name and a clean fixture reports none; the network scan accepts `fetch` in `src/web/demos.ts` and fails for another file, for an allow-list of two files and for another network API in `demos.ts`; a forbidden phrase in a string literal, in a template text part, after a comment marker inside a string, and inside a `${}` expression string is reported; the same phrase only in a `//` or `/* */` comment is not; an escaped quote does not end a literal; a stray `img.alt = x` is flagged
     - Real scans over every Web_Source file: sinks, network and storage names, forbidden phrases (literals and `index.html` text), `src` and `alt` only through `setSrcBlob`, core import rule (including test files under `src/web/`), main-thread files do not import the converter or reader functions, `logic/` files reference no DOM global, no `.style.` / `cssText` / `createElement('style')`, no `expect(` inside `fc.property` callbacks
@@ -270,13 +270,13 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
     - In `src/web/sources.scan.props.test.ts` (a separate file from 9.3 so the two tasks never write the same file)
     - **Validates: Requirements 1.1, 1.5, 1.6, 1.7, 3.2, 13.2, 13.4, 13.5, 13.6, 13.7, 15.3, 15.4**
 
-- [ ] 10. Checkpoint - Scans and test support in place
+- [~] 10. Checkpoint - Scans and test support in place
   - Run `npm run typecheck`, `npm test`, `npm run test:fuzz` and `npm run build`. All must exit 0.
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 11. Worker handler and glue
-  - [ ] 11.1 Create `worker/disk-handler.ts`
+  - [~] 11.1 Create `worker/disk-handler.ts`
     - Design: "Worker design", "Worker handler: `worker/disk-handler.ts`, `worker/disk.worker.ts`"
     - `WorkerSession { handle: DiskHandle | null }`, `createSession()`, total `handleRequest(session, raw)` that never throws and mutates only `session.handle`, and only on a successful `open`
     - `open`: `parseRequest`, `openDisk(image)`, install the new handle (this releases the old one); a report with geometry source `none` is a success; a throw becomes `failed` / `internal` and leaves the handle alone
@@ -285,7 +285,7 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
     - Imports from the core only `../../core/fat12/index` and `../../core/formats/index`
     - _Requirements: 3.1, 3.2, 3.9, 3.10, 3.11, 9.12, 9.13, 9.14, 9.15, 14.3, 14.4, 14.6_
 
-  - [ ] 11.2 Replace the stub with the real `worker/disk.worker.ts` glue
+  - [~] 11.2 Replace the stub with the real `worker/disk.worker.ts` glue
     - Design: "Worker handler: `worker/disk.worker.ts`"
     - `self.onmessage = (e) => { const res = handleRequest(session, e.data); self.postMessage(res, transferablesOf(res)); }` and nothing else; no logic in the glue
     - Remove the stub marker; confirm the worker tsconfig and the root exclusion still typecheck
@@ -297,24 +297,24 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
     - In `src/web/worker/disk-handler.test.ts`; generated disks from `src/test-support/fat12` with WordStar, dBase, PCX and unknown files; random, empty, truncated and over-cap images
     - **Validates: Requirements 3.9, 3.10, 3.11, 14.3, 14.4, 14.6**
 
-- [ ] 12. Checkpoint - Worker handler complete
+- [~] 12. Checkpoint - Worker handler complete
   - Run `npm run typecheck`, `npm test`, `npm run test:fuzz` and `npm run build`. All must exit 0.
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 13. DOM modules
-  - [ ] 13.1 Create `dom/h.ts`
+  - [~] 13.1 Create `dom/h.ts`
     - Design: "DOM helper: `dom/h.ts`"
     - `AttrName`, closed `AllowedTag` union, `h(tag, attrs?, ...children)` (string children become `Text` nodes), `clear(node)` (removeChild loop), `setDownloadHref(a, blobUrl, safeFileName)`, and `setSrcBlob(img, blobUrl, safeName)`, the only place that sets `src` and `alt`; it throws when `safeName` does not match `[A-Za-z0-9._-]{1,64}`
     - No HTML sink anywhere; `style`, `srcdoc`, `on*` and `alt` are not in `AttrName`
     - _Requirements: 1.2, 1.3, 1.4, 9.10_
 
-  - [ ] 13.2 Create `dom/status.ts` and `dom/errors.ts`
+  - [~] 13.2 Create `dom/status.ts` and `dom/errors.ts`
     - Design: "Status, errors, effects, rising"
     - `StatusRegion` with `set` and `clear` (`textContent` on the `role="status"` element); `installGlobalErrorHandlers(status)` for window `error` and `unhandledrejection`: fixed message (at most 300 characters, no page text echoed), touches neither the graveyard nor the preview
     - _Requirements: 4.12, 12.11, 14.1_
 
-  - [ ] 13.3 Create `dom/blob-urls.ts`
+  - [~] 13.3 Create `dom/blob-urls.ts`
     - Design: "Blob URLs, downloads"
     - `BlobUrlApi`, `BlobUrlManager` (`create`, `isOwned`, `revokeAll`, `liveCount`), `createBlobUrlManager(api?)` wrapping `URL.createObjectURL` and `revokeObjectURL`; revoking twice is harmless
     - _Requirements: 1.4, 9.11_
@@ -324,61 +324,61 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
     - In `src/web/dom/blob-urls.test.ts` with a fake `BlobUrlApi` (no DOM needed)
     - **Validates: Requirements 1.4, 9.11**
 
-  - [ ] 13.5 Create `dom/download.ts`
+  - [~] 13.5 Create `dom/download.ts`
     - Design: "Blob URLs, downloads"
     - `Downloader.start(spec)`: `Blob` with the spec MIME, URL through the manager, temporary `a[download][href]` via `setDownloadHref`, click, remove, schedule revoke after `DOWNLOAD_REVOKE_MS` (500 ms); any thrown error returns `{ ok: false, message }` and starts nothing
     - _Requirements: 10.1, 10.8, 10.9_
 
-  - [ ] 13.6 Write example tests for the downloader
+  - [~] 13.6 Write example tests for the downloader
     - In `src/web/dom/download.test.ts` with a fake URL api and scheduler: revoke delay is at most 1,000 ms; Blob creation failure starts nothing and returns the failure
     - _Requirements: 10.8, 10.9_
 
-  - [ ] 13.7 Create `dom/intake.ts`
+  - [~] 13.7 Create `dom/intake.ts`
     - Design: "Intake: `dom/intake.ts`"
     - `createIntake(deps)` with `attach` and `detach`: document-level `dragenter`/`dragover`/`drop` with `preventDefault`; picker button and hidden `input[type=file]`; `classifyDrop`; `checkImageSize(file.size)` before any read; `await file.arrayBuffer()` guarded by a monotonically increasing token (the newest choice wins); length check after the read (1..cap) with "changed while being read"; "could not be read" on failure; `input.value` cleared after each pick; messages containing a file name use `toLabel` and `textContent` only
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.12, 4.13, 4.14, 12.1_
 
-  - [ ] 13.8 Create `dom/graveyard.ts`
+  - [~] 13.8 Create `dom/graveyard.ts`
     - Design: "Graveyard renderer: `dom/graveyard.ts`"
     - `createGraveyardView(root, onActivate)` with `show`, `showMore`, `setActionsEnabled`, `itemElement`, `headingElement`
     - Item markup exactly as designed: `button.grave-action` only for exhumable files; directories and lost graves are plain `div.grave-body` with no button and no `tabindex`; state word, reason and markers as text; summary, "(no label)", empty-disk and unreadable-disk messages, collapsed `<details>` warnings list; paging appends only new `li` nodes, shows "X of Y" and the "Show more" button, hides it at the end, and moves focus to the first new item (programmatic `tabindex="-1"` on its `li` when it has no control)
     - All text through `h`
     - _Requirements: 1.2, 6.1, 6.2, 6.3, 6.4, 6.5, 6.10, 6.11, 6.12, 6.13, 6.14, 6.15, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.8, 7.9, 9.16, 12.2, 12.10_
 
-  - [ ] 13.9 Create `dom/preview-content.ts` and `dom/focus-trap.ts`
+  - [~] 13.9 Create `dom/preview-content.ts` and `dom/focus-trap.ts`
     - Design: "Preview dialog: `dom/preview.ts`, `dom/preview-content.ts`, `dom/focus-trap.ts`"
     - `buildMarkdown(model)` creates only `p`, `br`, `strong`, `em`, `hr` and text nodes; `buildCsvTable(table)` (wrapper div with own scroll, first stored row as `th`, the rest `td`, "truncated" note with real row and column counts); `buildHexView(rows)` (own scroll)
     - `trapTab(root, e)` wraps focus with `nextFocusIndex` over visible focusable elements
     - Never creates `a`, `img`, `iframe`, `object`, `embed`, `form`, `script` or `link`
     - _Requirements: 5.5, 5.11, 9.8, 9.12, 12.8_
 
-  - [ ] 13.10 Create `dom/preview.ts`
+  - [~] 13.10 Create `dom/preview.ts`
     - Design: "Preview dialog: `dom/preview.ts`, `dom/preview-content.ts`, `dom/focus-trap.ts`"
     - `createPreviewPanel(deps)` with `open`, `close`, `isOpen`: `div.preview-backdrop` > `div.preview[role=dialog][aria-modal=true][aria-labelledby]`; header with `h2[tabindex=-1]` and close button; partial note, error, warnings list, body, shortened-note, download buttons footer; background wrapper gets `inert`; Escape closes; focus to the heading on open and back to the opener on close, or to the graveyard heading when the opener is gone; Blob URLs revoked on close and when another preview opens; the PNG `img` comes from `setSrcBlob` only
     - _Requirements: 5.10, 9.7, 9.8, 9.10, 9.11, 9.12, 9.13, 9.14, 9.15, 9.17, 9.18, 9.20, 10.1, 12.5, 12.6, 12.7, 12.8, 12.9_
 
-  - [ ] 13.11 Create `dom/demo-slot.ts`
+  - [~] 13.11 Create `dom/demo-slot.ts`
     - Design: "Demo validation: `logic/demo-validate.ts`, `demos.ts`", Requirement 8
     - Labelled container ("Demo disks" plus an accessible name) built from `selectValidDemos(DEMO_REGISTRY)`; hidden entirely with zero valid entries and no error; native buttons showing title and description as text; buttons disabled with a loading message while a demo loads, re-enabled with a cause message on failure; bytes go to the same `onBytes` pipeline as a dropped file
     - _Requirements: 8.6, 8.7, 8.8, 8.9, 8.10, 8.11, 8.12_
 
-  - [ ] 13.12 Create `dom/effects.ts` and `dom/rising.ts`
+  - [~] 13.12 Create `dom/effects.ts` and `dom/rising.ts`
     - Design: "Rendering and effects", "Rising animation"
     - `createEffects(host)`: one `canvas.fx-canvas[aria-hidden]` with at most `FX_MAX_SHAPES` blobs per frame, `canvasBacking` sizing, `requestAnimationFrame` gated by `frameDue`, `visibilitychange` stop and resume, `matchMedia` reduced-motion change applied immediately (one static frame when on), `getContext('2d') === null` removes the canvas silently; class toggles only, no `style.*`
     - `playRise(item, reduced)`: `.is-rising` and `span.rise-ghost[aria-hidden]` added synchronously, `RISE_MS` timer, cleanup in `finally` so no animated element remains, instant resolve when reduced, `cancel()`
     - _Requirements: 11.1, 11.2, 11.5, 11.6, 11.7, 11.8, 11.9, 11.10, 9.1, 9.5_
 
-  - [ ] 13.13 Create `dom/worker-client.ts`
+  - [~] 13.13 Create `dom/worker-client.ts`
     - Design: "Worker client: `dom/worker-client.ts`", "Main-thread bytes, transfer and recovery"
     - `Settled<T>`, `WorkerClient` with `open`, `exhume`, `cancel`, `supersedeAll`, `hasPending`, `dispose`, and `createWorkerClient(factory?)` with an injectable worker factory
     - The client owns the request id source so ids keep growing across worker replacements; `message` events go through `parseResponse` then `tracker.accept`; `error`, `messageerror`, the 15 s open timer, the 30 s exhume timer and `cancel` each terminate the worker, call `supersedeAll`, resolve pending promises as `lost`, and create a new worker on the next request; `open` sends `buildOpenMessage` with the transfer list
     - _Requirements: 3.5, 3.6, 3.7, 3.8, 3.12, 3.13, 3.14, 3.15, 3.16, 3.17_
 
-  - [ ] 13.14 Write example tests for the worker client
+  - [~] 13.14 Write example tests for the worker client
     - In `src/web/dom/worker-client.test.ts` with an injected fake worker and fake timers: ids keep growing across a replacement; stale and invalid messages change nothing; `error`, `messageerror`, the 15 s open timeout, the 30 s exhume timeout and `cancel` each end as `lost` and the next request uses a new worker; `supersedeAll` resolves pending requests as `superseded`; the open request transfers a copy of the bytes
     - _Requirements: 3.5, 3.6, 3.7, 3.12, 3.13, 3.14, 3.15, 3.16_
 
-  - [ ] 13.15 Create `app.ts` and wire `main.ts`
+  - [~] 13.15 Create `app.ts` and wire `main.ts`
     - Design: "App wiring and session: `app.ts`", "Session states (main thread)", "Data kept and released", Error Handling table
     - `startApp()`: find the elements declared in `index.html`, install the error handlers, create the effects, worker client (worker created at boot), intake, demo slot, graveyard view and preview panel; `Session { phase, held, report, items }`
     - `openImage(bytes, name)`: the client transfers a copy; on `ok` revoke all Blob URLs, close the preview, `held = candidate`, render the new graveyard and reset paging (an unreadable disk with geometry `none` is a successful open); on `failed` keep the previous graveyard, preview and Blob URLs and name the failure kind; on `lost` set phase `lost`, keep the list, disable exhume controls and show **Reopen disk** (re-sends `held`)
@@ -387,20 +387,20 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
     - `src/main.ts`: `import './style.css'` and `startApp()` only
     - _Requirements: 3.12, 3.13, 3.14, 3.15, 3.16, 4.14, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.16, 9.20, 14.1, 14.2, 14.3, 14.5_
 
-- [ ] 14. Checkpoint - DOM modules complete
+- [~] 14. Checkpoint - DOM modules complete
   - Run `npm run typecheck`, `npm test`, `npm run test:fuzz` and `npm run build`. All must exit 0.
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 15. Page markup and stylesheet
-  - [ ] 15.1 Write the full `index.html`
+  - [~] 15.1 Write the full `index.html`
     - Design: "The policy", "Accessibility and responsive layout"
     - `<html lang="en">`, `<meta charset>`, then the single CSP meta tag with the exact policy from the design as the next element (before any `script`, `link` or `style`), non-empty `<title>`, module script for `/src/main.ts`
     - `header` with exactly one `h1` ("Exhume") and the privacy note "Your files stay in this browser. Nothing is uploaded."; `main` with the drop zone `section[aria-label]` ("Drop a floppy image here"), the visible **Choose a disk image** button and hidden file input, `p#status[role=status][aria-live=polite][aria-atomic=true]`, the demo slot container, the graveyard section; the preview root next to (not inside) the main wrapper that gets `inert`; `footer` with the honesty note naming "andete/disk-peek" as an existing browser tool for FAT12 images and deleted-entry recovery
     - No inline script, no `on*` attribute, no `style` attribute, no `<style>`; no forbidden phrase in the visible text
     - _Requirements: 2.1, 2.2, 2.3, 8.7, 8.8, 12.1, 12.9, 12.10, 12.14, 13.1, 13.3, 13.4_
 
-  - [ ] 15.2 Write `src/style.css`
+  - [~] 15.2 Write `src/style.css`
     - Design: "Visual identity", "Layers and z-index plan", "Tombstone and open-grave art (CSS only)", "Rising animation", "Accessibility and responsive layout"
     - Design tokens as CSS custom properties; contrast pairs as literal hex values named `--pair-<id>-fg` and `--pair-<id>-bg` with the ids and values from the design table, and rules using `var(--pair-...)`
     - Layers: `.preview-backdrop` 100, `.content` 10, `.fx-glow` 1 (opacity 0.45), `.fx-canvas` 0 (opacity 0.5); every `.fx-*` rule has `pointer-events: none`; effective opacity at most 0.6
@@ -410,42 +410,42 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
     - No `url(` to an external or `data:` resource, no external font, image or file
     - _Requirements: 2.4, 6.10, 11.1, 11.2, 11.3, 11.4, 11.7, 11.10, 12.4, 12.12, 12.13, 12.15, 12.16, 12.17_
 
-  - [ ] 15.3 Write `page.static.test.ts`
+  - [~] 15.3 Write `page.static.test.ts`
     - In `src/web/page.static.test.ts` using `html-scan.ts`, `csp.ts` and `css-scan.ts`
     - `index.html`: exactly one CSP meta before any `script`, `link` or `style` with the exact directive set and no `unsafe-*`, `data:`, `*` or remote host; no inline script content, `on*` attribute or `style` attribute; `lang`, title and exactly one `h1`; picker button; status region attributes; privacy note (1 to 140 characters) and honesty note (1 to 160 characters, contains `andete/disk-peek`); no forbidden phrase in the visible text
     - `style.css`: every `--pair-*` pair meets its minimum, with a self-test showing a failing pair is reported; layout rules; `.fx-*` rules; the over-text composite check; reduced-motion block; no external or `data:` `url(`
     - Self-tests for the helpers (a CSP with `unsafe-inline`, a second CSP meta, a low-contrast pair, an `.fx-*` rule without `pointer-events: none` are each reported)
     - _Requirements: 2.1, 2.2, 2.3, 11.1, 11.2, 11.3, 11.4, 11.7, 12.12, 12.14, 12.15, 12.16, 12.17, 13.1, 13.3, 13.4_
 
-  - [ ] 15.4 Write `dist.build.test.ts`
+  - [~] 15.4 Write `dist.build.test.ts`
     - In `src/web/dist.build.test.ts` with `describe.skipIf` when `dist/index.html` does not exist
     - Checks on the built `dist/index.html`: the CSP meta with the exact directives, no inline script content, no `on*` or `style` attribute, no `<style>` element, no `data:`; `dist/assets` holds a `disk.worker-*.js` file; no `data:` URL in the emitted CSS or JS (same patterns as task 1.2)
     - _Requirements: 2.5, 14.8_
 
-- [ ] 16. Checkpoint - Page complete
+- [~] 16. Checkpoint - Page complete
   - Run `npm run typecheck`, `npm test`, `npm run test:fuzz` and `npm run build`. All must exit 0.
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 17. Final integration and robustness
-  - [ ] 17.1 Write hostile-file tests through the worker handler
+  - [~] 17.1 Write hostile-file tests through the worker handler
     - In `src/web/worker/disk-handler.hostile.test.ts` (the `hostile` name makes `npm run test:fuzz` pick it up)
     - Through `handleRequest` in Node, with `timed()` from `src/test-support/timed.ts` and the `FC_RUNS_MULTIPLIER` convention: random bytes, empty, 1 byte, truncated generated disks, wrong-type files, an image of exactly `MAX_IMAGE_BYTES`, one byte over, and generated disks whose names, label and file contents hold markup and control characters
     - Each request gets exactly one response and never throws; random bytes give `opened` with geometry source `none` or `failed`, never a crash; hostile text stays plain data in the response; every `exhume` on a hostile disk answers once and `raw.length` never exceeds `MAX_FILE_OUTPUT_BYTES`; each open answers within 5 seconds
     - _Requirements: 3.9, 3.10, 3.11, 14.2, 14.3, 14.4, 14.6_
 
-  - [ ] 17.2 Run the final build check
+  - [~] 17.2 Run the final build check
     - Run `npm run build`, then repeat every smoke command of task 1.2 against the real page (worker chunk file, no inline script, no inline style or handler, no `data:` in HTML or CSP, no `unsafe-`, no `data:` URL in emitted CSS or JS)
     - Run `npm test` again so `dist.build.test.ts` runs against the fresh `dist/`
     - Run `git diff 4d7f5e7 -- package.json package-lock.json`: only the `typecheck` script line changes, with no change under `dependencies` or `devDependencies`; and confirm no `*.dom.test.ts` file exists
     - _Requirements: 2.5, 14.8, 15.5, 15.7, 15.8, 15.9, 15.12, 15.13_
 
-- [ ] 18. Final checkpoint - Ensure all tests pass
+- [~] 18. Final checkpoint - Ensure all tests pass
   - Run `npm run typecheck`, `npm test`, `npm run test:fuzz` and `npm run build`. All must exit 0.
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 19. MANUAL (for the user, not a coding-agent task): checks in a real browser
+- [~] 19. MANUAL (for the user, not a coding-agent task): checks in a real browser
   - Run `npm run build`, then `npm run preview` yourself, and use the built page (never `vite dev`). The coding agent does not do this task; record the results in `docs/KIRO_LOG.md`.
   - CSP (Req 2.7, 14.8): load an image, open each preview kind (Markdown, CSV, PNG, hex), download, and read the console. Expect zero CSP violations. In the Network tab confirm `assets/disk.worker-*.js` loads from the page origin and no other request is made after the initial load.
   - CSSOM probe (Req 2.8): in the console with the CSP active, run `document.body.style.setProperty('--probe', '1')`, `document.body.style.color = 'red'` and `document.body.setAttribute('style', 'color:blue')`. Record all three outcomes with the browser name and version (the first two are expected to be allowed, the third blocked).

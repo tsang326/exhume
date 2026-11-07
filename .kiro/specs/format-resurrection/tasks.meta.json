@@ -15,6 +15,18 @@
     "5.3 Write property test for agreement with Node zlib": {
       "status": "passed",
       "lastRunTimestamp": 1794017466909
+    },
+    "7.3 Write property test for extension fallback and file-name hygiene": {
+      "status": "passed",
+      "lastRunTimestamp": 1794018480620
+    },
+    "8.6 Write property test for dropped control bytes": {
+      "status": "passed",
+      "lastRunTimestamp": 1794019058681
+    },
+    "8.9 Write property test for marker balance": {
+      "status": "passed",
+      "lastRunTimestamp": 1794019128806
     }
   },
   "executionHistory": {
@@ -303,6 +315,229 @@
         "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
         "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
         "timestamp": 1794017661735
+      }
+    ],
+    "7.1 Create `detect.ts`": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017995986
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018105561
+      }
+    ],
+    "8.1 Create `textsink.ts`": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017996003
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018109912
+      }
+    ],
+    "8.2 Create `wordstar.ts` with `convertWordStar` and the internal `runWordStar`": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018115644
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018344401
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018593359
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018679729
+      }
+    ],
+    "7.2 Write property test for content detection": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018120010
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018348871
+      }
+    ],
+    "7.3 Write property test for extension fallback and file-name hygiene": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018353983
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018684539
+      }
+    ],
+    "8.3 Write WordStar example tests": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018359900
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018688974
+      }
+    ],
+    "8.4 Write property test for pass-through and high-bit invariance": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018364280
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018693755
+      }
+    ],
+    "8.7 Write property test for output alphabet and cap": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018375070
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018698371
+      }
+    ],
+    "8.8 Write property test for styles against the fixture description": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018379384
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018703057
+      }
+    ],
+    "7.4 Write property test for the sample window": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018708775
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018966187
+      }
+    ],
+    "7.5 Write detector example tests": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018718407
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018970990
+      }
+    ],
+    "8.5 Write property test for the `0x1A` end marker": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018722914
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018976777
+      }
+    ],
+    "8.9 Write property test for marker balance": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018727392
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019145368
+      }
+    ],
+    "8.11 Write property test for dot commands": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018732128
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018981172
+      }
+    ],
+    "7. Format detector": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018971034
+      }
+    ],
+    "8.6 Write property test for dropped control bytes": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794018987374
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019149918
+      }
+    ],
+    "8.10 Write property test for Markdown escaping": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019155308
+      },
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019287423
+      }
+    ],
+    "8. WordStar converter": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019287474
+      }
+    ],
+    "9. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "027250ce-8c2c-4067-97ea-9d5522476507",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794019327181
       }
     ]
   }

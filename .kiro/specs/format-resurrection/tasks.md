@@ -136,38 +136,38 @@ Every task in this plan is required, including all test and property sub-tasks. 
 - [x] 6. Checkpoint - Ensure all tests pass
   - Run `npm test` and `npm run typecheck`. Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Format detector
-  - [ ] 7.1 Create `detect.ts`
+- [x] 7. Format detector
+  - [x] 7.1 Create `detect.ts`
     - `detectFormat(input, fileName?)` in the order PCX, dBase, WordStar (one bounded pass over the sample), extension fallback with ASCII-only case folding by code point, then `unknown`
     - File name used only if it is a string of at most 255 characters, and only for the extension after the last `.`
     - Look at no more than `DETECT_SAMPLE_BYTES` bytes plus the full length for the dBase header comparison; short inputs never throw
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.12, 12.3_
 
-  - [ ] 7.2 Write property test for content detection
+  - [x] 7.2 Write property test for content detection
     - **Property 5: Content detection matches the rule oracle**
     - In `src/core/formats/detect.test.ts`; include every length from 0 to 12 bytes
     - **Validates: Requirements 2.1, 2.3, 2.4, 2.5, 2.8, 2.9**
 
-  - [ ] 7.3 Write property test for extension fallback and file-name hygiene
+  - [x] 7.3 Write property test for extension fallback and file-name hygiene
     - **Property 6: Extension fallback, content precedence and file-name hygiene**
     - Add to `detect.test.ts`
     - **Validates: Requirements 2.6, 2.7, 2.10, 2.12**
 
-  - [ ] 7.4 Write property test for the sample window
+  - [x] 7.4 Write property test for the sample window
     - **Property 7: Detection looks only at the sample window**
     - Add to `detect.test.ts`
     - **Validates: Requirements 2.2**
 
-  - [ ] 7.5 Write detector example tests
+  - [x] 7.5 Write detector example tests
     - `detect.examples.test.ts`: one valid sample of each format; `ws`, `Ws` and `WS7` extensions; a name with no dot; content beating a conflicting extension
     - _Requirements: 2.3, 2.4, 2.5, 2.6, 2.7, 14.10_
 
-- [ ] 8. WordStar converter
-  - [ ] 8.1 Create `textsink.ts`
+- [x] 8. WordStar converter
+  - [x] 8.1 Create `textsink.ts`
     - `makeAsciiSink()` with `push`, `pushString`, `length` and `finish()`; an 8 KiB `Uint8Array` chunk converted with `String.fromCharCode.apply`, pieces joined at the end
     - _Requirements: 3.9, 12.3_
 
-  - [ ] 8.2 Create `wordstar.ts` with `convertWordStar` and the internal `runWordStar`
+  - [x] 8.2 Create `wordstar.ts` with `convertWordStar` and the internal `runWordStar`
     - Character-level tokenizer (pair tokens, high-bit clearing, hard and soft returns, bare CR and LF, `0x1A` stop, tab, `0x00` and `0x1F` silent, other controls and `0x7F` dropped and counted)
     - Lazy style markers (bold, shared emphasis, close at hard return and end, spaces outside markers, proper nesting, no marker for empty spans)
     - Escaping of Markdown specials, including the line-start rules and the `1\.` form
@@ -175,51 +175,51 @@ Every task in this plan is required, including all test and property sub-tasks. 
     - `runWordStar(input, cap)` is a test seam and is not exported from `index.ts`
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10, 3.11, 3.13, 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.11, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 5.10, 1.6, 12.4_
 
-  - [ ] 8.3 Write WordStar example tests
+  - [x] 8.3 Write WordStar example tests
     - `wordstar.examples.test.ts`: soft versus hard return, bare CR, bare LF, lone `0x8D`, `0x0D 0x8A`, `.PA`, `.5` and `. x` kept as text, empty input, input over 4 MiB gives `input-truncated` and equals the result for the first 4 MiB, a 4 MiB input of `<` bytes hits the real cap with one `output-capped`, and the writer and converter agreement example
     - _Requirements: 3.2, 3.3, 3.4, 3.10, 3.11, 5.3, 5.6, 1.6, 13.9, 14.10_
 
-  - [ ] 8.4 Write property test for pass-through and high-bit invariance
+  - [x] 8.4 Write property test for pass-through and high-bit invariance
     - **Property 8: WordStar pass-through and high-bit invariance**
     - In `src/core/formats/wordstar.text.test.ts`
     - **Validates: Requirements 3.1, 3.12**
 
-  - [ ] 8.5 Write property test for the `0x1A` end marker
+  - [x] 8.5 Write property test for the `0x1A` end marker
     - **Property 9: `0x1A` ends the document**
     - Add to `wordstar.text.test.ts`
     - **Validates: Requirements 3.5**
 
-  - [ ] 8.6 Write property test for dropped control bytes
+  - [x] 8.6 Write property test for dropped control bytes
     - **Property 10: Dropped control bytes are counted exactly**
     - Add to `wordstar.text.test.ts`
     - **Validates: Requirements 3.7, 3.8, 3.13**
 
-  - [ ] 8.7 Write property test for output alphabet and cap
+  - [x] 8.7 Write property test for output alphabet and cap
     - **Property 11: WordStar output alphabet and output cap**
     - In `src/core/formats/wordstar.output.test.ts`; caps from 0 to 200 through `runWordStar`
     - **Validates: Requirements 3.9, 3.10**
 
-  - [ ] 8.8 Write property test for styles against the fixture description
+  - [x] 8.8 Write property test for styles against the fixture description
     - **Property 12: WordStar styles agree with the fixture description**
     - In `src/core/formats/wordstar.styles.test.ts`, using the decomposition oracle
     - **Validates: Requirements 3.2, 3.3, 3.6, 4.1, 4.2, 4.3, 13.4, 13.9**
 
-  - [ ] 8.9 Write property test for marker balance
+  - [x] 8.9 Write property test for marker balance
     - **Property 13: Markers are balanced, nested and hug the text**
     - Add to `wordstar.styles.test.ts`; inputs of 0 to 1,048,576 bytes
     - **Validates: Requirements 4.4, 4.5, 4.6, 4.8, 4.9, 4.10**
 
-  - [ ] 8.10 Write property test for Markdown escaping
+  - [x] 8.10 Write property test for Markdown escaping
     - **Property 14: Markdown specials are escaped**
     - Add to `wordstar.styles.test.ts`
     - **Validates: Requirements 4.7, 4.11**
 
-  - [ ] 8.11 Write property test for dot commands
+  - [x] 8.11 Write property test for dot commands
     - **Property 15: Dot-command lines are removed and counted**
     - In `src/core/formats/wordstar.dots.test.ts`
     - **Validates: Requirements 5.1, 5.2, 5.4, 5.5, 5.7, 5.8, 5.10**
 
-- [ ] 9. Checkpoint - Ensure all tests pass
+- [x] 9. Checkpoint - Ensure all tests pass
   - Run `npm test` and `npm run typecheck`. Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 10. dBase converter and CSV

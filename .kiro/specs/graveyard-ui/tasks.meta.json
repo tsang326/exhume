@@ -1110,6 +1110,145 @@
         "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
         "timestamp": 1794032173539
       }
+    ],
+    "20.1 Configure happy-dom for DOM tests": [
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036233946
+      },
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036468980
+      }
+    ],
+    "20. DOM tests (`*.dom.test.ts`) - approved: happy-dom 21.0.4, installed by the user": [
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036469040
+      }
+    ],
+    "20.2 Write `h.dom.test.ts`": [
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036474532
+      },
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036732490
+      }
+    ],
+    "20.3 Write `markdown-dom.dom.test.ts`": [
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036475149
+      },
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036732531
+      }
+    ],
+    "20.4 Write `graveyard.dom.test.ts`": [
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036476199
+      },
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036732443
+      }
+    ],
+    "20.5 Write `preview.dom.test.ts`": [
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036477156
+      },
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036732878
+      }
+    ],
+    "20.6 Write `keyboard.dom.test.ts`": [
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036477589
+      },
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036733681
+      }
+    ],
+    "20.7 Write `intake.dom.test.ts`": [
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036741982
+      },
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794037110985
+      }
+    ],
+    "20.8 Write `app.dom.test.ts`": [
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036743035
+      },
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794037110934
+      }
+    ],
+    "20.9 Write `demo-slot.dom.test.ts`": [
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036743641
+      },
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794037111037
+      }
+    ],
+    "20.10 Write `effects.dom.test.ts`": [
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036744647
+      },
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794037111638
+      }
+    ],
+    "20.11 Write `errors.dom.test.ts`": [
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794036745522
+      },
+      {
+        "executionId": "86980bf4-6f46-4ccd-aebc-4036b2f86d40",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794037541306
+      }
     ]
   }
 }

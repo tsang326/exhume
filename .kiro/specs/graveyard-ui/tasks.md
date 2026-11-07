@@ -2,11 +2,11 @@
 
 ## Overview
 
-The plan builds the web page of Exhume bottom-up, in the order the design lays out. It starts with build and configuration changes and a build smoke check (task 1), then the pure logic modules in `src/web/logic/` with their fast-check properties (tasks 2 to 7), then the source scans and test support (task 9), the worker handler and glue (task 11), the DOM modules (task 13), `index.html` and `style.css` (task 15), and final integration and robustness checks (task 17). A manual task for the user (task 19) and a blocked, optional group of DOM tests (task 20) close the plan. Checkpoints follow each major group.
+The plan builds the web page of Exhume bottom-up, in the order the design lays out. It starts with build and configuration changes and a build smoke check (task 1), then the pure logic modules in `src/web/logic/` with their fast-check properties (tasks 2 to 7), then the source scans and test support (task 9), the worker handler and glue (task 11), the DOM modules (task 13), `index.html` and `style.css` (task 15), and final integration and robustness checks (task 17). A manual task for the user (task 19) and an optional group of DOM tests (task 20, DOM library approved: happy-dom 21.0.4, installed by the user) close the plan. Checkpoints follow each major group.
 
 All code is TypeScript under `strict`, with no UI framework. Tests use Vitest 3.2.4 and fast-check 4.3.0. Property callbacks return nothing or a boolean and never call `expect(...)`. Every property is tagged `// Feature: graveyard-ui, Property N: <title>` and runs at least 100 times, using the `FC_RUNS_MULTIPLIER` convention from `src/test-support/runs.ts`. Imports from the core use only `src/core/fat12/index` and `src/core/formats/index`.
 
-Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm test`, `npm run test:fuzz` and `npm run build`, and `git diff --stat 4d7f5e7 -- src/core`, which must print nothing.
+Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm test`, `npm run test:fuzz` and `npm run build`, and `git diff --stat 4d7f5e7 -- src/core`, which must print nothing. Once task 20.1 is done, checkpoints also run `npm run test:dom` (always after `npm run build`, and in addition to the commands above).
 
 ## Tasks
 
@@ -18,7 +18,7 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
     - Create `src/web/worker/tsconfig.json`: same options with `lib: ["ES2022", "WebWorker"]`, `types: []`, `include: ["./**/*.ts"]`, `exclude: ["./**/*.test.ts"]`
     - Root `tsconfig.json`: add `"exclude": ["src/web/worker/disk.worker.ts"]` and change nothing else
     - `package.json`: change only the `typecheck` script to `tsc --noEmit && tsc -p src/core/tsconfig.json --noEmit && tsc -p src/web/logic/tsconfig.json --noEmit && tsc -p src/web/worker/tsconfig.json --noEmit`. Do not touch `dependencies` or `devDependencies`, and do not install anything.
-    - `vitest.config.ts`: add `'**/*.dom.test.ts'` to `exclude` (it stays until a DOM library is approved)
+    - `vitest.config.ts`: add `'**/*.dom.test.ts'` to `exclude` (it stays permanently, so the default `npm test` never runs DOM tests; happy-dom 21.0.4 is approved and installed by the user, and task 20.1 adds the separate `test:dom` run)
     - Create `src/web/logic/limits.ts` with every constant from the design (it imports `MAX_IMAGE_BYTES`, `MAX_TOTAL_ENTRIES`, `MAX_FILE_OUTPUT_BYTES` from `../../core/fat12/index` and re-exports them). This is the first real logic module and keeps the logic project non-empty.
     - Create a stub worker entry `src/web/worker/disk.worker.ts` that only posts a fixed marker string `'graveyard-ui-stub-worker-marker'` from `self.onmessage`. Task 11.2 replaces it.
     - Replace the placeholder `src/main.ts` with a stub that imports `./style.css` and creates `new Worker(new URL('./web/worker/disk.worker.ts', import.meta.url), { type: 'module' })` (the literal pattern the design requires)
@@ -437,7 +437,7 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
   - [x] 17.2 Run the final build check
     - Run `npm run build`, then repeat every smoke command of task 1.2 against the real page (worker chunk file, no inline script, no inline style or handler, no `data:` in HTML or CSP, no `unsafe-`, no `data:` URL in emitted CSS or JS)
     - Run `npm test` again so `dist.build.test.ts` runs against the fresh `dist/`
-    - Run `git diff 4d7f5e7 -- package.json package-lock.json`: only the `typecheck` script line changes, with no change under `dependencies` or `devDependencies`; and confirm no `*.dom.test.ts` file exists
+    - Run `git diff 4d7f5e7 -- package.json package-lock.json`: only the `typecheck` script line changes, with no change under `dependencies` or `devDependencies`; and confirm no `*.dom.test.ts` file exists (historical check, valid when this task ran; after task 20 the check becomes: only the `happy-dom` dev dependency (21.0.4, exact pin) differs in `package.json` and `package-lock.json`, besides the `typecheck` script and the `test:dom` script)
     - _Requirements: 2.5, 14.8, 15.5, 15.7, 15.8, 15.9, 15.12, 15.13_
 
 - [x] 18. Final checkpoint - Ensure all tests pass
@@ -454,58 +454,63 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
   - Reduced motion (Req 11.7, 11.8): with the system setting on, the rising animation is skipped and the fog is static; toggling the setting while the page is open applies within 500 ms.
   - Optional: search `dist/assets/index-*.js` for `openDisk` to confirm the core stayed out of the main bundle (the source scan is the enforced check).
 
-- [ ] 20. BLOCKED: DOM tests (`*.dom.test.ts`) - requires the user's approval of a DOM library (happy-dom or jsdom); do not install, do not create these files until approved
-  - Nothing in this group runs now. Until the user names a library, no `*.dom.test.ts` file is created, `vitest.config.ts` keeps `'**/*.dom.test.ts'` in `exclude`, and no dependency is added. Ask the user before any install (Requirements 15.8, 15.9).
-  - [ ]* 20.1 BLOCKED: Set up the approved DOM library
-    - Only after the user approves a library: add it as a dev dependency pinned to an exact version, remove `'**/*.dom.test.ts'` from the `exclude` list in `vitest.config.ts`, and start every DOM test file with `// @vitest-environment <jsdom|happy-dom>`. Keep script execution off in the test environment. Check current security advisories for the chosen package first.
+- [x] 20. DOM tests (`*.dom.test.ts`) - approved: happy-dom 21.0.4, installed by the user
+  - The DOM library is approved: happy-dom 21.0.4 (exact pin, dev dependency), already installed by the user. Do not install or change any dependency. DOM test files run only through `npm run test:dom`; `vitest.config.ts` keeps `'**/*.dom.test.ts'` in `exclude`, so the default `npm test` never runs them (Requirements 15.8, 15.9).
+  - [x]* 20.1 Configure happy-dom for DOM tests
+    - Install nothing: happy-dom 21.0.4 is already installed. Do not touch `dependencies` or `devDependencies`.
+    - Create `vitest.dom.config.ts` (a dedicated config that includes only `'**/*.dom.test.ts'`, e.g. `defineConfig({ test: { include: ['**/*.dom.test.ts'] } })`; do not set a global `environment`).
+    - `package.json`: add only the script `"test:dom": "vitest run --config vitest.dom.config.ts"`.
+    - Keep `'**/*.dom.test.ts'` in the `exclude` list of `vitest.config.ts` (the default `npm test` must not run DOM tests).
+    - Convention: every DOM test file starts with the comment `// @vitest-environment happy-dom` (per-file, no global environment). Keep script execution off in the test environment (do not enable happy-dom JavaScript evaluation).
+    - From now on, checkpoints run `npm run test:dom` as well as `npm run typecheck`, `npm test`, `npm run test:fuzz` and `npm run build` (run `npm run build` before the tests).
     - _Requirements: 15.8, 15.9_
 
-  - [ ]* 20.2 BLOCKED: Write `h.dom.test.ts`
+  - [x]* 20.2 Write `h.dom.test.ts`
     - Design: "DOM helper: `dom/h.ts`", Testing Strategy (DOM tests)
     - `setSrcBlob` sets `src` and `alt` together for a Safe_File_Name and throws for an unsafe name; `h` creates only allowed tags and attributes and puts string children in `Text` nodes; `setDownloadHref` accepts only an owned Blob URL; hostile attribute values derived from disk text are limited to `aria-label`, `title`, `data-*` and `download`
     - _Requirements: 1.2, 1.3, 1.4, 9.10_
 
-  - [ ]* 20.3 BLOCKED: Write `markdown-dom.dom.test.ts`
+  - [x]* 20.3 Write `markdown-dom.dom.test.ts`
     - Builder output uses only `p`, `br`, `strong`, `em`, `hr` and text nodes; the fixture `<img src=x onerror=alert(1)>` produces no `img` element, no `onerror` attribute and shows the text unchanged; the CSV and hex builders create no forbidden element types
     - _Requirements: 5.5, 5.11, 5.12, 9.8, 9.12_
 
-  - [ ]* 20.4 BLOCKED: Write `graveyard.dom.test.ts`
+  - [x]* 20.4 Write `graveyard.dom.test.ts`
     - Hostile names (`<img src=x onerror=alert(1)>`, 255+ character names, markup characters) render as text with no extra elements and no `on*` attribute; tombstone versus open-grave classes and visible state words; directories and lost graves have no `button` and no `tabindex`; the warnings `<details>` is collapsed; empty and unreadable disk messages; "Show more" renders 200 more, shows "X of Y", hides at the end, keeps earlier nodes and moves focus to the first new item
     - _Requirements: 1.2, 1.3, 6.3, 6.4, 6.10, 6.11, 6.13, 6.14, 6.15, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.8, 7.9, 9.16, 12.2_
 
-  - [ ]* 20.5 BLOCKED: Write `preview.dom.test.ts`
+  - [x]* 20.5 Write `preview.dom.test.ts`
     - `role="dialog"`, `aria-modal="true"` and a non-empty accessible name; focus moves to the heading; Escape closes; Tab and Shift+Tab wrap; focus returns to the opener, or to the graveyard heading when the opener is gone; Blob URLs revoked on close and when another preview opens; the PNG `img` has an owned Blob URL `src` and a sanitized `alt`; the shortened-note and the CSV truncated note
     - _Requirements: 5.10, 9.8, 9.10, 9.11, 9.20, 12.5, 12.6, 12.7, 12.8, 12.9_
 
-  - [ ]* 20.6 BLOCKED: Write `keyboard.dom.test.ts`
+  - [x]* 20.6 Write `keyboard.dom.test.ts`
     - Activating an item with Enter and with Space triggers the same action as a click (the library does not synthesize a click from a key press, so the test dispatches the events a browser would); Escape closes the Preview_Panel; focus returns to the opening item
     - _Requirements: 12.3, 12.5, 12.6, 12.19_
 
-  - [ ]* 20.7 BLOCKED: Write `intake.dom.test.ts`
+  - [x]* 20.7 Write `intake.dom.test.ts`
     - Oversize, empty, random-byte, truncated and wrong-type fixtures end in a graveyard or non-empty status text with the drop zone still in the body; `dragover` and `drop` call `preventDefault`; non-file, directory and multi-file drops; a too-large file is not read; the newest of two overlapping reads wins
     - _Requirements: 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.13, 4.14, 14.2, 14.7_
 
-  - [ ]* 20.8 BLOCKED: Write `app.dom.test.ts`
+  - [x]* 20.8 Write `app.dom.test.ts`
     - With an injected fake worker client: a successful open replaces the graveyard, closes the preview and resets paging; a failed open keeps the old graveyard, preview and Blob URLs; the lost state disables items and shows **Reopen disk**; the busy text and **Cancel**; rising then preview sequencing for result-first, animation-first, error and reduced motion
     - _Requirements: 3.14, 3.16, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 14.3, 14.5_
 
-  - [ ]* 20.9 BLOCKED: Write `demo-slot.dom.test.ts`
+  - [x]* 20.9 Write `demo-slot.dom.test.ts`
     - Hidden with zero valid entries (label included, no error); labelled container and native buttons with one or more; invalid and duplicate entries omitted; buttons disabled while loading and re-enabled with a cause message on failure
     - _Requirements: 8.6, 8.7, 8.8, 8.9, 8.11, 8.12_
 
-  - [ ]* 20.10 BLOCKED: Write `effects.dom.test.ts`
+  - [x]* 20.10 Write `effects.dom.test.ts`
     - A fake `matchMedia` change toggles reduced motion; `visibilitychange` stops and resumes the loop (fake `requestAnimationFrame`); a null 2D context removes the canvas without an error; no `.rise-ghost` or `.is-rising` is left after the animation
     - _Requirements: 11.5, 11.7, 11.8, 11.9, 11.10_
 
-  - [ ]* 20.11 BLOCKED: Write `errors.dom.test.ts`
+  - [x]* 20.11 Write `errors.dom.test.ts`
     - `error` and `unhandledrejection` events write a bounded fixed message (1 to 300 characters) and change nothing else; the drop zone stays enabled
     - _Requirements: 14.1_
 
 ## Notes
 
-- Conventions for every task: no HTML sinks (no `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, `DOMParser`, `createContextualFragment`, `srcdoc`, `setHTML`, `eval`, `new Function`, and no `setAttribute` with `on*`, `style` or `srcdoc`); no new dependency of any kind; no file under `src/core` touched; ask the user before any install.
+- Conventions for every task: no HTML sinks (no `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, `DOMParser`, `createContextualFragment`, `srcdoc`, `setHTML`, `eval`, `new Function`, and no `setAttribute` with `on*`, `style` or `srcdoc`); no new dependency of any kind (the only dev dependency added to the project is the user-approved happy-dom 21.0.4, already installed); no file under `src/core` touched; ask the user before any other install.
 - Tasks marked with `*` are optional and can be skipped for a faster MVP. The property tests are optional. The scan tests (9.3), the page and build tests (15.3, 15.4), the example tests for the downloader, worker client and `demos.ts` (6.4, 13.6, 13.14) and the hostile worker test (17.1) are not optional, because they are the only automated checks of Requirements 1, 2, 3, 8, 10 and 13 that need no DOM library.
-- Task 1.1 only changes `package.json` scripts (`typecheck`). Dependencies are never changed. If a task ever needs a dev dependency, it stops and asks for explicit approval first. Task 20 is blocked on that approval.
+- Task 1.1 only changes `package.json` scripts (`typecheck`). Dependencies are never changed by the coding agent. If a task ever needs a dev dependency, it stops and asks for explicit approval first. Task 20 is approved: happy-dom 21.0.4, installed by the user. After task 20, the historical "no `*.dom.test.ts` file exists" checks (tasks 17.2 and 18) become: only the `happy-dom` dev dependency differs in `package.json`. From task 20.1 on, checkpoints also run `npm run test:dom` (after `npm run build`).
 - Task 19 is a manual task for the user. The coding agent must not attempt it.
 - Some property groups are split across more test files than the design's file table lists (for example `sources.scan.props.test.ts` and `demos.props.test.ts`), so tasks in the same wave never write to the same file. The properties themselves are unchanged.
 - Property callbacks return nothing or a boolean and never call `expect(...)`. Each property is tagged with `// Feature: graveyard-ui, Property N: <title>`.

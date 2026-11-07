@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit && tsc -p src/core/tsconfig.json --noEmit && tsc -p src/web/logic/tsconfig.json --noEmit && tsc -p src/web/worker/tsconfig.json --noEmit",
     "test": "vitest run",
+    "test:dom": "vitest run --config vitest.dom.config.ts",
     "test:watch": "vitest",
     "test:fuzz": "FC_RUNS_MULTIPLIER=10 vitest run hostile"
   },

@@ -17,7 +17,7 @@ const flush = async (): Promise<void> => {
 
 describe('createDemoSlot (happy-dom)', () => {
   it('hides everything with the default empty registry', () => {
-    const slot = createDemoSlot(vi.fn());
+    const slot = createDemoSlot(vi.fn(), []);
     expect(slot.count).toBe(0);
     expect(slot.element.hasAttribute('hidden')).toBe(true);
     expect(slot.element.querySelector('h2')).toBeNull();

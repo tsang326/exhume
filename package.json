@@ -8,6 +8,7 @@
     "build": "npm run typecheck && vite build",
     "preview": "vite preview",
     "build:mcp": "vite build --config vite.mcp.config.ts",
+    "make:demos": "vite build --config vite.demos.config.ts && node node_modules/.cache/exhume-demos/make-demo-disks.mjs",
     "typecheck": "tsc --noEmit && tsc -p src/core/tsconfig.json --noEmit && tsc -p src/web/logic/tsconfig.json --noEmit && tsc -p src/web/worker/tsconfig.json --noEmit && tsc -p src/mcp/tsconfig.json --noEmit",
     "test": "vitest run",
     "test:dom": "vitest run --config vitest.dom.config.ts",

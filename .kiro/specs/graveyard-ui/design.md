@@ -407,6 +407,8 @@ Algorithm (iterative, no recursion, one forward scan per stage, nesting limit 2)
 
 Everything is O(n): each character is visited a constant number of times and the stack never exceeds 2.
 
+**Known limitation (Req 5.4, 5.8).** A run of stars is ambiguous without lookahead, for example `*a**b*` versus `*a**b***`. The star-run rule closes an open emphasis on any star run, so converter output that starts bold inside emphasis (`*a**b***`) does not read back exactly as written. No character is lost (the conservation law holds) and the text stays safe. The parser is intentionally unchanged. The test emitter only generates bold-outside-emphasis-inside (`***x***`), emphasis alone and bold alone.
+
 `truncateForPreview(text)` returns `text.slice(0, MD_PREVIEW_CHARS)` and `shortened: text.length > MD_PREVIEW_CHARS`. The downloadable data is always the untruncated string.
 
 ### CSV display parser: `logic/csv-display.ts`
@@ -1207,6 +1209,16 @@ All earlier open questions are settled by the approved requirements and the user
 5. **Phrase scan scope.** Visible text of `index.html` plus string and template literals; comments are not scanned (Req 13.4, 13.6). Regex literals are a documented tokenizer limitation.
 6. **Steering file.** `.kiro/steering/safety.md` already says `connect-src 'self'`. Its General section still says "No network calls in core, web or MCP". Optional wording follow-up for the user: add "except the same-origin demo fetch in `src/web/demos.ts`". Not edited here.
 7. **DOM tests.** No `*.dom.test.ts` file and no DOM dependency until the user approves a library; they form a final optional task group.
+
+### Implementation divergences (accepted)
+
+- `segmentCount` counts non-empty segments only (`A//B/` is 2).
+- An item in state `lost` gets the note "not previewable".
+- `sizeText` is produced with `formatBytes` for directories as well as files.
+- In the rise gate, `cancel` sets `shown: true` (no separate cancelled flag), and a `result` after an `error` is ignored.
+- `transferablesOf` collects only whole-buffer views, and only from `exhumed` responses.
+- `validateDemoDisk` rejects any `name:` colon-prefix pattern, including a colon inside a path segment such as `/disks/a:b.img`.
+- The demo too-large message names the 2.8 MB cap.
 
 ## Traceability
 

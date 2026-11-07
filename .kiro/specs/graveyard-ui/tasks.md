@@ -240,28 +240,28 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 9. Source scans and test support
-  - [~] 9.1 Create `src/test-support/web/scan.ts`
+- [x] 9. Source scans and test support
+  - [x] 9.1 Create `src/test-support/web/scan.ts`
     - Design: "Phrase scan helper: comment-aware tokenizer", Testing Strategy (`sources.scan.test.ts`)
     - Scanners that return `{ file, line, name }` violations: HTML sink names (the sink names live only in this file, never in a Web_Source; the scan does not skip comments or strings); network API names with the allow-list rule (accepts `fetch` only in `src/web/demos.ts` when the allow-list is exactly that one file; rejects a network name in any other file, an allow-list of two or more files, and any network name other than `fetch` in `demos.ts`); storage and cookie names in every file; forbidden phrases in string and template literals via `extractLiterals(source)` (hand-written single-pass tokenizer: code, line comment, block comment, single, double and template states, a brace-depth stack for `${}`, escapes, 1-based line numbers; regex literals are a documented limitation) and in the visible text of `index.html` (tags, comments, `script` and `style` contents stripped); `src` and `alt` assignments outside `setSrcBlob` in `dom/h.ts` (`.alt`, `.src`, `'alt'`, `'src'`, `setAttribute`); `.style.`, `cssText`, `createElement('style')` and `setAttribute('style'`; import-specifier resolver (relative, extension, directory form, `import type`, dynamic `import()`, `new URL()`) that allows only `src/core/fat12/index` and `src/core/formats/index`; main-thread files importing `openDisk`, `readDisk`, `convertAuto`, `convertWordStar`, `convertDBase`, `convertPcx` or `encodePng`; DOM global names in `logic/` files; `expect(` inside a `fc.property` callback in web tests
     - Violation messages print the file path, the 1-based line number and the name
     - _Requirements: 1.1, 1.3, 1.5, 1.6, 1.7, 2.4, 3.1, 3.2, 13.2, 13.4, 13.5, 13.6, 13.7, 15.1, 15.2, 15.3, 15.4_
 
-  - [~] 9.2 Create `html-scan.ts`, `csp.ts` and `css-scan.ts` in `src/test-support/web/`
+  - [x] 9.2 Create `html-scan.ts`, `csp.ts` and `css-scan.ts` in `src/test-support/web/`
     - Design: Testing Strategy (`page.static.test.ts`), "Layers and z-index plan", "Accessibility and responsive layout"
     - `html-scan.ts`: parse a static HTML string into the facts the page test needs (CSP meta count and position, script, link and style elements, `on*` and `style` attributes, `lang`, title, `h1` count, text of notes, visible text for the phrase scan)
     - `csp.ts`: parse a CSP string into directives and check the exact set, `unsafe-*`, `data:`, `*` and remote hosts
     - `css-scan.ts`: read `--pair-*-fg` and `--pair-*-bg` custom properties and check them with `contrastRatio` (3:1 for names ending `-large` or `-ui`, 4.5:1 otherwise); check `.fx-*` rules for `pointer-events: none`, z-index below `.content` and opacity at most 0.6; composite an over-text layer with `compositeOver`; layout rules (no fixed width over 100% on page-level elements, `overflow-wrap` or truncation on file-name elements); reduced-motion block; no external or `data:` `url(`; no `.style.` use
     - _Requirements: 2.1, 2.2, 2.3, 11.1, 11.2, 11.3, 11.4, 11.7, 12.12, 12.14, 12.15, 12.16, 12.17_
 
-  - [~] 9.3 Write `sources.scan.test.ts` with the real scans and self-tests
+  - [x] 9.3 Write `sources.scan.test.ts` with the real scans and self-tests
     - In `src/web/sources.scan.test.ts`
     - Self-tests: a fixture with every sink name reports one violation per name and a clean fixture reports none; the network scan accepts `fetch` in `src/web/demos.ts` and fails for another file, for an allow-list of two files and for another network API in `demos.ts`; a forbidden phrase in a string literal, in a template text part, after a comment marker inside a string, and inside a `${}` expression string is reported; the same phrase only in a `//` or `/* */` comment is not; an escaped quote does not end a literal; a stray `img.alt = x` is flagged
     - Real scans over every Web_Source file: sinks, network and storage names, forbidden phrases (literals and `index.html` text), `src` and `alt` only through `setSrcBlob`, core import rule (including test files under `src/web/`), main-thread files do not import the converter or reader functions, `logic/` files reference no DOM global, no `.style.` / `cssText` / `createElement('style')`, no `expect(` inside `fc.property` callbacks
     - On a violation, print the file path, line number and name
     - _Requirements: 1.5, 1.6, 1.7, 2.4, 3.1, 3.2, 13.2, 13.4, 13.5, 13.6, 13.7, 15.1, 15.2, 15.3, 15.4_
 
-  - [ ]* 9.4 Write property tests for the scans
+  - [x]* 9.4 Write property tests for the scans
     - **Property 2: The sink scan finds every sink and reports where**
     - **Property 3: The sink scan accepts clean text**
     - **Property 4: Network API names are confined to one allow-listed file**
@@ -270,7 +270,7 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
     - In `src/web/sources.scan.props.test.ts` (a separate file from 9.3 so the two tasks never write the same file)
     - **Validates: Requirements 1.1, 1.5, 1.6, 1.7, 3.2, 13.2, 13.4, 13.5, 13.6, 13.7, 15.3, 15.4**
 
-- [~] 10. Checkpoint - Scans and test support in place
+- [x] 10. Checkpoint - Scans and test support in place
   - Run `npm run typecheck`, `npm test`, `npm run test:fuzz` and `npm run build`. All must exit 0.
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.

@@ -378,6 +378,16 @@
         "executionId": "28dd30b1-2402-4efa-b20d-c1b440a8198a",
         "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
         "timestamp": 1794025713129
+      },
+      {
+        "executionId": "e78a0bce-2a23-450a-b64c-998d6a2dc5df",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794027274166
+      },
+      {
+        "executionId": "e78a0bce-2a23-450a-b64c-998d6a2dc5df",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794027750105
       }
     ],
     "9.2 Create `html-scan.ts`, `csp.ts` and `css-scan.ts` in `src/test-support/web/`": [
@@ -385,6 +395,16 @@
         "executionId": "28dd30b1-2402-4efa-b20d-c1b440a8198a",
         "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
         "timestamp": 1794025713162
+      },
+      {
+        "executionId": "e78a0bce-2a23-450a-b64c-998d6a2dc5df",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794027274186
+      },
+      {
+        "executionId": "e78a0bce-2a23-450a-b64c-998d6a2dc5df",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794027805717
       }
     ],
     "9.3 Write `sources.scan.test.ts` with the real scans and self-tests": [
@@ -392,6 +412,16 @@
         "executionId": "28dd30b1-2402-4efa-b20d-c1b440a8198a",
         "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
         "timestamp": 1794025713194
+      },
+      {
+        "executionId": "e78a0bce-2a23-450a-b64c-998d6a2dc5df",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794027806106
+      },
+      {
+        "executionId": "e78a0bce-2a23-450a-b64c-998d6a2dc5df",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794028046471
       }
     ],
     "10. Checkpoint - Scans and test support in place": [
@@ -399,6 +429,16 @@
         "executionId": "28dd30b1-2402-4efa-b20d-c1b440a8198a",
         "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
         "timestamp": 1794025713229
+      },
+      {
+        "executionId": "e78a0bce-2a23-450a-b64c-998d6a2dc5df",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794028056505
+      },
+      {
+        "executionId": "e78a0bce-2a23-450a-b64c-998d6a2dc5df",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794028198713
       }
     ],
     "11.1 Create `worker/disk-handler.ts`": [
@@ -763,6 +803,25 @@
         "executionId": "28dd30b1-2402-4efa-b20d-c1b440a8198a",
         "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
         "timestamp": 1794026882027
+      }
+    ],
+    "9.4 Write property tests for the scans": [
+      {
+        "executionId": "e78a0bce-2a23-450a-b64c-998d6a2dc5df",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794027816614
+      },
+      {
+        "executionId": "e78a0bce-2a23-450a-b64c-998d6a2dc5df",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794028051446
+      }
+    ],
+    "9. Source scans and test support": [
+      {
+        "executionId": "e78a0bce-2a23-450a-b64c-998d6a2dc5df",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794028046523
       }
     ]
   }

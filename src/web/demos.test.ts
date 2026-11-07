@@ -38,8 +38,12 @@ describe('demos', () => {
     vi.useRealTimers();
   });
 
-  it('ships with an empty registry', () => {
-    expect(DEMO_REGISTRY.length).toBe(0);
+  it('ships with the three demo entries', () => {
+    expect(DEMO_REGISTRY.map((d) => [d.id, d.url])).toEqual([
+      ['writers-disk', '/disks/writers-disk.img'],
+      ['office-disk', '/disks/office-disk.img'],
+      ['damaged-disk', '/disks/damaged-disk.img'],
+    ]);
   });
 
   it('passes the validated URL and credentials omit, and returns the bytes', async () => {

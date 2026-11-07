@@ -28,3 +28,12 @@ what had to be fixed by hand. Be honest — the write-up is built from this.
   test-only writers/oracles. 803 tests + fuzz suite. Kiro ran parallel sub-agents per task wave.
 - By hand: tightened image memory limits in requirements before design (4 Mpx, 16 MiB decoded, exact max PNG size);
   denied two shell commands I could not read in full; sub-agents sometimes wrote files via heredoc despite instructions.
+## 2026-11-08/09 — graveyard-ui (spec 3)
+- Kiro wrote requirements/design/tasks and the whole web page: pure logic in `src/web/logic/`, the worker handler,
+  DOM modules built only through a checked `h()` helper (attribute allow-list, owned `blob:` URLs only), strict CSP,
+  page shell and styles. 1120 tests + 43 fuzz properties; task 20 added 153 DOM tests under happy-dom (`test:dom`).
+- By hand: denied a prettier run, shell edits via sed/python, and a load test that spawned busy loops (asked for a
+  median of 5 runs instead); one npx slip that installed nothing. I approved happy-dom 21.0.4 (pinned, dev only).
+  Review fixes: blob URL ownership check in `h.ts`, Markdown preview limits written into design as known limitations.
+- Kiro found and removed `innerHTML` uses in its own DOM tests (source scans skip test files). Manual browser check
+  (task 19: CSP console, 320px layout, keyboard, reduced motion) is still open.

@@ -1,8 +1,18 @@
-# REVENANT.OS
+# Exhume
 
-Interactive horror where the antagonist actually listens. You boot a dead computer; the ghost inside talks back.
+Your old disks aren't dead. They're buried.
 
-Kiroween 2026 — Costume Contest category. Built with [Kiro](https://kiro.dev) (see `/.kiro` and `docs/KIRO_LOG.md`).
+Drop a DOS floppy image into the page and its files appear as a graveyard. Deleted files are open graves you can
+dig up. WordStar documents rise as Markdown, dBase tables as CSV, PCX pictures as PNG. Everything runs in your
+browser; nothing is uploaded.
+
+Also ships as an MCP server / Kiro Power and a Kiro Crew app, so an agent can open a floppy image and exhume files
+into your project.
+
+Prior art: [disk-peek](https://github.com/andete/disk-peek) already browses FAT12 images and recovers deleted
+entries in the browser.
+
+Kiroween 2026, Resurrection category. Built with [Kiro](https://kiro.dev) (see `/.kiro` and `docs/KIRO_LOG.md`).
 
 ## Run
 ```bash
@@ -10,7 +20,84 @@ npm install
 npm run dev      # http://localhost:5173
 npm test
 ```
-The ghost's live voice needs `GEMINI_API_KEY` (see `.env.example`). Without it the game runs on scripted lines.
+
+## MCP server and Kiro Power
+
+Exhume ships as a local stdio MCP server (`power/server/exhume-mcp.mjs`) wrapped in a Kiro Power (`power/`). It is a
+hand-written JSON-RPC 2.0 server with no SDK and no runtime dependency. Disk content is untrusted data: every name,
+label and text it returns is sanitized and marked as untrusted.
+
+Status: the workspace server (`.kiro/settings/mcp.json`) is verified by hand in Kiro and is the only supported way to
+run Exhume there. The Power in `power/` is not working yet: Kiro does not copy `server/` when it installs a power, so
+the server fails with "Connection Failed" (details below). Whether to convert it to the Agent Plugins format
+(`plugin.json`) with an `EXHUME_ROOT` setting is a later decision.
+
+### Tools
+- `open_disk`: open a disk image inside the workspace and list its files with state (`alive`, `recovered`, `partial`,
+  `lost`), size and date.
+- `read_grave`: convert one file and return a preview (Markdown or CSV text, or PNG dimensions). Takes `image`, `path`
+  and an optional integer `id` from the `open_disk` listing, for when two entries share a path.
+- `exhume`: convert one file and write the full result into the `exhumed/` folder of the workspace. It never
+  overwrites an existing file.
+- `explain_state`: return a fixed explanation of one state.
+
+`exhumed/` is the only place the server writes. It is git-ignored.
+
+### Platforms
+macOS and Linux are supported. Windows is unsupported: Node has no `O_NOFOLLOW` there, so the no-symlink guarantee
+cannot be given and the server refuses to start.
+
+### Build and run
+`power/server/exhume-mcp.mjs` is a committed build, refreshed with `npm run build:mcp`. Running that command is a
+manual step for you. You can start the server by hand with:
+
+```bash
+node power/server/exhume-mcp.mjs [--root <dir>]
+```
+
+Without `--root` the server uses its working directory as the workspace root. It reads one JSON-RPC message per line
+on standard input.
+
+### Install in Kiro
+1. Open the repository folder in Kiro as the workspace. Kiro reads the committed `.kiro/settings/mcp.json`, which has
+   a single `exhume` entry:
+   ```json
+   { "mcpServers": { "exhume": { "command": "node", "args": ["power/server/exhume-mcp.mjs"] } } }
+   ```
+2. Check that the MCP Servers list shows `exhume` with its 4 tools. On a fresh clone it loads when the folder opens.
+   If you added the file while the window was already open, run "Developer: Reload Window" from the command palette.
+3. Check that the Kiro setting "Kiro Agent: Configure MCP" is Enabled (it is by default).
+
+Kiro starts the server with the workspace root as its working directory, so `--root` is not needed. It is only an
+option for when a client starts the server somewhere else: image calls then fail closed with `PATH_REJECTED` and
+expose nothing, and you can append `"--root", "<absolute workspace path>"` to the `args` array of the `exhume` entry.
+
+### Power and plugin results (verified by hand in Kiro)
+The Power in `power/` is not working yet. What was checked:
+1. Installed as a legacy Power (`POWER.md` format) from `power/`, Kiro accepts the frontmatter and shows "Exhume by
+   tsang326". The internal name comes from the folder name (`power`), so the server is named `power-power-exhume`.
+2. Kiro copies only `POWER.md`, `mcp.json` and `steering/` into `~/.kiro/powers/installed/power/`. `server/` is not
+   copied, so the server fails with "Connection Failed".
+3. Not verified: whether `steering/floppy-images.md` is used in chat.
+4. Agent Plugins format (a `plugin.json` with `$schema` `https://agent-plugins.org/schemas/1.0.0/plugin.schema.json`,
+   tried on a scratch copy only): Kiro copies the whole folder including `server/`, expands `${PLUGIN_ROOT}` in `args`
+   and the server connects. But its working directory is the installed plugin folder, so it cannot reach your
+   workspace. Kiro does not expand `${workspaceFolder}`, does not answer `roots/list`, and cancels elicitation
+   requests automatically. It does expand environment variables of the Kiro process in `args` and `env`.
+5. Using a power's tools from chat takes: activate the power, then a call through Kiro's power "use" tool, with three
+   approvals (Kiro Powers, the power, trust the tool).
+
+The plugin.json conversion and an `EXHUME_ROOT` setting are a later decision; neither is in the repo.
+
+### Accepted residual risks
+Path checks confine image reads to the workspace (no `..` escape, no symlinks, regular files only, size cap). Two
+risks are accepted and not hidden:
+- Node has no resolve-beneath open (`openat2` with `RESOLVE_BENEATH`). A local process that can already write inside
+  the workspace could, in a window of microseconds, swap a directory for a symlink and back between the checks and the
+  open. The server re-verifies the path and the file identity after opening, which narrows the window but cannot close
+  it.
+- A hard link inside the workspace to a file elsewhere on the same file system cannot be detected, so such a link is
+  read as an ordinary file.
 
 ## License
 MIT

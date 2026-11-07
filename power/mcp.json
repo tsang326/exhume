@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "exhume": {
+      "command": "node",
+      "args": ["server/exhume-mcp.mjs"]
+    }
+  }
+}

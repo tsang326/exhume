@@ -3,13 +3,27 @@ inclusion: always
 ---
 # Tech rules
 
-- Vanilla TypeScript + Vite, DOM + canvas. No UI framework. Strict TypeScript, no `any`.
-- Game logic (dialogue state machine, trust/suspicion, beats, endings) is pure, framework-free TypeScript in `src/game/`,
-  with no DOM access, so it can be unit- and property-tested.
-- UI in `src/ui/`, effects in `src/fx/`, LLM client in `src/ghost/`. One serverless function `api/ghost.ts` on Vercel
-  calls the Gemma model (Google AI Studio) with the key from `GEMINI_API_KEY`. The key never reaches the browser.
-- Every LLM call has: a timeout, per-IP rate limit, output length cap, and a fallback to scripted lines from
-  `src/ghost/fallback/*.json` keyed by game state. With the API off, the whole game must still be playable to an ending.
-- Tests: Vitest + fast-check in `src/**/*.test.ts`. State-machine invariants are property-based tests.
-- No new runtime dependencies without a reason written in the PR/commit message.
-- All audio and art are made in code or are CC0 with the source noted in `docs/CREDITS.md`. No copyrighted music.
+- TypeScript, strict, no `any`. Vite for the web page, no UI framework. Node 22+ for the MCP server.
+- Layout:
+  - `src/core/` — pure, dependency-free: FAT12 reader (boot sector/BPB, FAT, root dir, subdirs, cluster chains),
+    undelete grading, format converters (`wordstar`, `dbase`, `pcx`), PNG encoder (stored/deflate via
+    `CompressionStream` or a tiny pure encoder). Input is `Uint8Array`. No DOM, no Node APIs, no I/O.
+  - `src/web/` — the graveyard page. Uses `core` only.
+  - `src/mcp/` — a hand-written JSON-RPC 2.0 stdio server (one message per line), no SDK and no runtime
+    dependency; a thin wrapper over `core` plus a workspace-confined file reader and writer, built with
+    `npm run build:mcp` into the committed `power/server/exhume-mcp.mjs`.
+  - `power/` — Kiro Power packaging (manifest, `mcp.json`, skill docs).
+  - `scripts/make-demo-disks.ts` — deterministic generator for the demo floppy images (with deleted files and
+    sample WordStar/dBase/PCX files we author ourselves).
+  - The Crew app lives in a separate repo and depends on a pinned build of this MCP server.
+- One result shape: `DiskReport { volume, files: Grave[], warnings[] }`, `Grave { path, size, date, state:
+  'alive'|'recovered'|'partial'|'lost', kind, reason? }`. Web, MCP and Crew all use it.
+- Tests: Vitest + fast-check in `src/**/*.test.ts`.
+  - Round-trip property: generate random file sets → build a FAT12 image (test-only image writer) → read back →
+    same names/sizes/bytes.
+  - Hostile-input properties: random bytes, cyclic FAT chains, out-of-range clusters, self-referencing directories,
+    absurd sizes → the reader returns a report with warnings and never throws, hangs or allocates without bound.
+  - Converter properties: never throw on random bytes; known fixtures convert to known output.
+  - A fast-check property callback returns nothing or a boolean, never `expect(...)`.
+- No new runtime dependency without a reason in the commit message; `core` has zero runtime deps.
+- Hosting: static build (GitHub Pages or Vercel). No backend, no secrets, no analytics.

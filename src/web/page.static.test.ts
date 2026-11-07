@@ -184,7 +184,7 @@ describe('src/style.css', () => {
     expect(used.size).toBeGreaterThan(10);
     const cssText = stripCssComments(css);
     // Hook-only classes: set for tests or future use, styled through a sibling class or parent.
-    const hookOnly = new Set(['csv-wrap', 'demo-slot-label', 'hex-bytes']);
+    const hookOnly = new Set<string>();
     const missing = [...used].filter((c) => !hookOnly.has(c) && !new RegExp(`\\.${c}(?![A-Za-z0-9_-])`).test(cssText)).sort();
     expect(missing).toEqual([]);
   });

@@ -21,6 +21,12 @@ function emittedFiles(ext: '.js' | '.css'): string[] {
   return readdirSync(ASSETS).filter((f) => f.endsWith(ext));
 }
 
+if (!existsSync(INDEX)) {
+  console.warn(
+    `[dist.build.test] dist/index.html is missing (${INDEX}): the dist checks are SKIPPED. Run \`npm run build\` before \`npm test\`.`,
+  );
+}
+
 describe.skipIf(!existsSync(INDEX))('built dist/', () => {
   const html = existsSync(INDEX) ? readFileSync(INDEX, 'utf8') : '';
   const facts = scanHtml(html);

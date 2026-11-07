@@ -427,20 +427,20 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 17. Final integration and robustness
-  - [~] 17.1 Write hostile-file tests through the worker handler
+- [x] 17. Final integration and robustness
+  - [x] 17.1 Write hostile-file tests through the worker handler
     - In `src/web/worker/disk-handler.hostile.test.ts` (the `hostile` name makes `npm run test:fuzz` pick it up)
     - Through `handleRequest` in Node, with `timed()` from `src/test-support/timed.ts` and the `FC_RUNS_MULTIPLIER` convention: random bytes, empty, 1 byte, truncated generated disks, wrong-type files, an image of exactly `MAX_IMAGE_BYTES`, one byte over, and generated disks whose names, label and file contents hold markup and control characters
     - Each request gets exactly one response and never throws; random bytes give `opened` with geometry source `none` or `failed`, never a crash; hostile text stays plain data in the response; every `exhume` on a hostile disk answers once and `raw.length` never exceeds `MAX_FILE_OUTPUT_BYTES`; each open answers within 5 seconds
     - _Requirements: 3.9, 3.10, 3.11, 14.2, 14.3, 14.4, 14.6_
 
-  - [~] 17.2 Run the final build check
+  - [x] 17.2 Run the final build check
     - Run `npm run build`, then repeat every smoke command of task 1.2 against the real page (worker chunk file, no inline script, no inline style or handler, no `data:` in HTML or CSP, no `unsafe-`, no `data:` URL in emitted CSS or JS)
     - Run `npm test` again so `dist.build.test.ts` runs against the fresh `dist/`
     - Run `git diff 4d7f5e7 -- package.json package-lock.json`: only the `typecheck` script line changes, with no change under `dependencies` or `devDependencies`; and confirm no `*.dom.test.ts` file exists
     - _Requirements: 2.5, 14.8, 15.5, 15.7, 15.8, 15.9, 15.12, 15.13_
 
-- [~] 18. Final checkpoint - Ensure all tests pass
+- [x] 18. Final checkpoint - Ensure all tests pass
   - Run `npm run typecheck`, `npm test`, `npm run test:fuzz` and `npm run build`. All must exit 0.
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.

@@ -252,6 +252,12 @@ button[disabled] {
   margin: 1rem 0;
 }
 
+.demo-slot-label {
+  color: var(--pair-lantern-fg);
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+}
+
 .demo-slot-status {
   margin: 0.25rem 0;
   color: var(--pair-muted-fg);
@@ -662,6 +668,10 @@ button[disabled] {
   image-rendering: pixelated;
 }
 
+.csv-wrap {
+  margin: 0.5rem 0;
+}
+
 .csv-table {
   border-collapse: collapse;
   font-size: 0.875rem;
@@ -692,6 +702,11 @@ button[disabled] {
 
 .hex-offset {
   color: var(--pair-muted-raised-fg);
+}
+
+.hex-bytes {
+  color: var(--pair-body-panel-fg);
+  letter-spacing: 0.02em;
 }
 
 .hex-text {

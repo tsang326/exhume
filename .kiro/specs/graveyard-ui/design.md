@@ -1219,6 +1219,8 @@ All earlier open questions are settled by the approved requirements and the user
 - `transferablesOf` collects only whole-buffer views, and only from `exhumed` responses.
 - `validateDemoDisk` rejects any `name:` colon-prefix pattern, including a colon inside a path segment such as `/disks/a:b.img`.
 - The demo too-large message names the 2.8 MB cap.
+- The Cancel button hides when the worker result arrives, so a rise animation that is still playing cannot be cancelled from it.
+- When a disk is lost before any disk was ever opened, the session stays in phase `empty` (no held bytes), so a message shows but there is no Reopen button.
 
 ## Traceability
 

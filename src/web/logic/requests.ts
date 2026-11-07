@@ -22,7 +22,7 @@ export function kindOfResponse(res: WorkerResponse): RequestKind {
   }
 }
 
-export function isCurrent(latest: Readonly<Record<RequestKind, number>>, res: WorkerResponse): boolean {
+function isCurrent(latest: Readonly<Record<RequestKind, number>>, res: WorkerResponse): boolean {
   return res.id === latest[kindOfResponse(res)];
 }
 

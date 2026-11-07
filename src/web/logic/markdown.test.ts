@@ -232,22 +232,24 @@ describe('markdown examples', () => {
   it('parses in linear time: doubling the input does not more than triple the time', (ctx) => {
     const unit = 'word *em* **bold** \\* more\nline two ***both*** end\n\n';
     const build = (chars: number): string => unit.repeat(Math.ceil(chars / unit.length)).slice(0, chars);
-    const best = (text: string): number => {
-      let t = Infinity;
-      for (let i = 0; i < 3; i++) {
+    // Median of 5 runs, so one slow run (GC, a busy machine) cannot fail the test.
+    const median = (text: string): number => {
+      const times: number[] = [];
+      for (let i = 0; i < 5; i++) {
         const start = performance.now();
         parseMarkdown(text);
-        t = Math.min(t, performance.now() - start);
+        times.push(performance.now() - start);
       }
-      return t;
+      times.sort((a, b) => a - b);
+      return times[2]!;
     };
-    const base = best(build(1_000_000));
+    const base = median(build(1_000_000));
     if (base < 5) {
       console.info(`doubling-time example skipped: base parse took ${base.toFixed(2)} ms (< 5 ms)`);
       ctx.skip();
       return;
     }
-    const doubled = best(build(2_000_000));
+    const doubled = median(build(2_000_000));
     expect(doubled).toBeLessThanOrEqual(base * 3);
   });
 });

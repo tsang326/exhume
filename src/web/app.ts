@@ -33,10 +33,10 @@ import type { Session } from './logic/session';
 import { toItemViewModels } from './logic/viewmodel';
 import type { ItemViewModel } from './logic/viewmodel';
 
-export const MISSING_ELEMENTS_MESSAGE = 'Part of this page did not load, so some controls may not work.';
-export const OPEN_FAILED_MESSAGE = 'The disk could not be opened because the reader reported an error.';
-export const OPEN_INVALID_MESSAGE = 'The disk could not be opened because the request was not valid.';
-export const REOPEN_NEEDED_MESSAGE = 'The disk reader stopped. Reopen the disk to continue.';
+const MISSING_ELEMENTS_MESSAGE = 'Part of this page did not load, so some controls may not work.';
+const OPEN_FAILED_MESSAGE = 'The disk could not be opened because the reader reported an error.';
+const OPEN_INVALID_MESSAGE = 'The disk could not be opened because the request was not valid.';
+const REOPEN_NEEDED_MESSAGE = 'The disk reader stopped. Reopen the disk to continue.';
 
 function byId(id: string): HTMLElement | null {
   return document.getElementById(id);

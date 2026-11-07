@@ -20,8 +20,8 @@ export interface PreviewDeps {
   background: HTMLElement;
 }
 
-export const SHORTENED_NOTE = 'Only the start of the text is shown here. The download has all of it.';
-export const IMAGE_FAILED_MESSAGE = 'The image could not be shown.';
+const SHORTENED_NOTE = 'Only the start of the text is shown here. The download has all of it.';
+const IMAGE_FAILED_MESSAGE = 'The image could not be shown.';
 
 interface Mounted {
   backdrop: HTMLElement;

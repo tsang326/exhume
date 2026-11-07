@@ -392,7 +392,7 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 15. Page markup and stylesheet
+- [x] 15. Page markup and stylesheet
   - [x] 15.1 Write the full `index.html`
     - Design: "The policy", "Accessibility and responsive layout"
     - `<html lang="en">`, `<meta charset>`, then the single CSP meta tag with the exact policy from the design as the next element (before any `script`, `link` or `style`), non-empty `<title>`, module script for `/src/main.ts`
@@ -410,19 +410,19 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
     - No `url(` to an external or `data:` resource, no external font, image or file
     - _Requirements: 2.4, 6.10, 11.1, 11.2, 11.3, 11.4, 11.7, 11.10, 12.4, 12.12, 12.13, 12.15, 12.16, 12.17_
 
-  - [~] 15.3 Write `page.static.test.ts`
+  - [x] 15.3 Write `page.static.test.ts`
     - In `src/web/page.static.test.ts` using `html-scan.ts`, `csp.ts` and `css-scan.ts`
     - `index.html`: exactly one CSP meta before any `script`, `link` or `style` with the exact directive set and no `unsafe-*`, `data:`, `*` or remote host; no inline script content, `on*` attribute or `style` attribute; `lang`, title and exactly one `h1`; picker button; status region attributes; privacy note (1 to 140 characters) and honesty note (1 to 160 characters, contains `andete/disk-peek`); no forbidden phrase in the visible text
     - `style.css`: every `--pair-*` pair meets its minimum, with a self-test showing a failing pair is reported; layout rules; `.fx-*` rules; the over-text composite check; reduced-motion block; no external or `data:` `url(`
     - Self-tests for the helpers (a CSP with `unsafe-inline`, a second CSP meta, a low-contrast pair, an `.fx-*` rule without `pointer-events: none` are each reported)
     - _Requirements: 2.1, 2.2, 2.3, 11.1, 11.2, 11.3, 11.4, 11.7, 12.12, 12.14, 12.15, 12.16, 12.17, 13.1, 13.3, 13.4_
 
-  - [~] 15.4 Write `dist.build.test.ts`
+  - [x] 15.4 Write `dist.build.test.ts`
     - In `src/web/dist.build.test.ts` with `describe.skipIf` when `dist/index.html` does not exist
     - Checks on the built `dist/index.html`: the CSP meta with the exact directives, no inline script content, no `on*` or `style` attribute, no `<style>` element, no `data:`; `dist/assets` holds a `disk.worker-*.js` file; no `data:` URL in the emitted CSS or JS (same patterns as task 1.2)
     - _Requirements: 2.5, 14.8_
 
-- [~] 16. Checkpoint - Page complete
+- [x] 16. Checkpoint - Page complete
   - Run `npm run typecheck`, `npm test`, `npm run test:fuzz` and `npm run build`. All must exit 0.
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.

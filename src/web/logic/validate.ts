@@ -19,7 +19,7 @@ import type {
 export type Parsed<T> = { ok: true; value: T } | { ok: false; reason: string };
 
 /** Upper bound on warnings accepted in one message. */
-export const MAX_MESSAGE_WARNINGS = 10_000;
+const MAX_MESSAGE_WARNINGS = 10_000;
 
 const MAX_U32 = 4_294_967_295;
 

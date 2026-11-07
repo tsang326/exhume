@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import { decodeCp437 } from '../../core/fat12';
 import { checkResultInvariants, digitSkeleton } from './invariants';
 import {
   dbfHeaderOracle,
+  detectFullOracle,
   detectOracle,
+  encodeCp437,
   expectedCell,
+  isTextSampleOracle,
+  plainTextOracle,
   findMarkdownDecomposition,
   isRealDate,
   lineMarkersBalanced,
@@ -127,6 +132,52 @@ describe('markdown oracles', () => {
     expect(lineMatchesStyles('a**b**', [plain, bold])).toBe(true);
     expect(lineMatchesStyles('a**b**', [plain, { bold: false, emphasis: true }])).toBe(false);
     expect(lineMatchesStyles('a**b**', [plain])).toBe(false);
+  });
+});
+
+describe('plain text oracles', () => {
+  it('plainTextOracle: line endings, EOF cut, DEL, empty, high byte', () => {
+    expect(plainTextOracle(bytesOf('a\r\nb')).text).toBe('a\nb');
+    expect(plainTextOracle(bytesOf('a\rb')).text).toBe('a\nb');
+    expect(plainTextOracle(bytesOf('a\nb')).text).toBe('a\nb');
+    expect(plainTextOracle(bytesOf('a\r\rb')).text).toBe('a\n\nb');
+    expect(plainTextOracle(Uint8Array.of(0x61, 0x1a, 0x62, 0x01))).toEqual({ text: 'a', dropped: 0 });
+    expect(plainTextOracle(Uint8Array.of(0x61, 0x7f, 0x00, 0x62))).toEqual({ text: 'ab', dropped: 2 });
+    expect(plainTextOracle(new Uint8Array(0))).toEqual({ text: '', dropped: 0 });
+    expect(plainTextOracle(Uint8Array.of(0xff)).text).toBe(decodeCp437(Uint8Array.of(0xff)));
+    expect(plainTextOracle(Uint8Array.of(0x09, 0x0c)).text).toBe('\t\f');
+  });
+
+  it('isTextSampleOracle: empty is not text, controls are not text', () => {
+    expect(isTextSampleOracle(new Uint8Array(0))).toBe(false);
+    expect(isTextSampleOracle(bytesOf('hi\r\n\t\f'))).toBe(true);
+    expect(isTextSampleOracle(Uint8Array.of(0x68, 0x1a))).toBe(true);
+    expect(isTextSampleOracle(Uint8Array.of(0x68, 0x01))).toBe(false);
+    expect(isTextSampleOracle(Uint8Array.of(0x68, 0x7f))).toBe(false);
+    expect(isTextSampleOracle(Uint8Array.of(0x68, 0xff))).toBe(false);
+  });
+
+  it('detectFullOracle: rule order', () => {
+    expect(detectFullOracle(bytesOf('hello'))).toEqual({ format: 'text', source: 'content' });
+    expect(detectFullOracle(Uint8Array.of(1, 2), 'a.TXT')).toEqual({ format: 'text', source: 'extension' });
+    expect(detectFullOracle(Uint8Array.of(1, 2), 'READ.me')).toEqual({ format: 'text', source: 'extension' });
+    expect(detectFullOracle(Uint8Array.of(1, 2), 'a.ws')).toEqual({ format: 'wordstar', source: 'extension' });
+    expect(detectFullOracle(bytesOf('hello'), 'a.dbf')).toEqual({ format: 'dbase', source: 'extension' });
+    expect(detectFullOracle(Uint8Array.of(0x0a, 5, 1, 8), 'a.txt')).toEqual({ format: 'pcx', source: 'content' });
+    expect(detectFullOracle(new Uint8Array(0))).toEqual({ format: 'unknown', source: 'none' });
+    expect(detectFullOracle(new Uint8Array(0), 'E.TXT')).toEqual({ format: 'text', source: 'extension' });
+    expect(detectFullOracle(Uint8Array.of(1), 42)).toEqual({ format: 'unknown', source: 'none' });
+  });
+
+  it('encodeCp437: round trip and null for an unmappable character', () => {
+    const all = Uint8Array.from({ length: 256 }, (_, i) => i);
+    const text = decodeCp437(all);
+    const encoded = encodeCp437(text);
+    expect(encoded).not.toBeNull();
+    expect(decodeCp437(encoded as Uint8Array)).toBe(text);
+    expect(Array.from(encodeCp437('A\n') as Uint8Array)).toEqual([0x41, 0x0a]);
+    expect(encodeCp437('\u4e2d')).toBeNull();
+    expect(encodeCp437('')).toEqual(new Uint8Array(0));
   });
 });
 

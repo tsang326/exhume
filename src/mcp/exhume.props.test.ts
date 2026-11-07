@@ -194,6 +194,59 @@ describe('exhume properties', () => {
     );
   });
 
+  const textLineArb = fc.string({
+    unit: fc.integer({ min: 0x20, max: 0x7e }).map((c) => String.fromCharCode(c)),
+    maxLength: 60,
+  });
+  const textBodyArb = fc
+    .tuple(fc.array(textLineArb, { maxLength: 8 }), fc.constantFrom('\r\n', '\n', '\r'))
+    .map(([lines, eol]) => 'a' + lines.join(eol) + eol);
+  const textLongNameArb = fc
+    .oneof(
+      fc.string({ unit: unitArb.filter((c) => c !== '\u0000' && c !== '\uD800' && c !== '\uDC00' && c !== '/'), minLength: 1, maxLength: 30 }),
+      fc.integer({ min: 200, max: 251 }).map((n) => 'q'.repeat(n)),
+    )
+    .map((s) => s.slice(0, 251).replace(/[\uD800-\uDFFF]/g, 'z') + '.txt');
+
+  // Feature: plain-text, Property 17: exhume writes one safe .txt file
+  // **Validates: Requirements 5.3, 5.4**
+  it('writes one new safe .txt file per call for a text grave and never replaces one', () => {
+    fc.assert(
+      fc.property(textBodyArb, textLongNameArb, (body, longName) => {
+        return withSpace((w) => {
+          const content = bytesOf(body);
+          const disk = diskWith([{ name: 'NOTE.TXT', longName, content }]);
+          w.write('disk.img', disk);
+          const grave = openDisk(disk).report.files.find((g) => g.kind !== 'directory');
+          if (grave === undefined) return false;
+          const conv = convertAuto(content, 'NOTE.TXT');
+          if (!conv.ok || typeof conv.output !== 'string' || conv.mime !== 'text/plain') return false;
+          const expected = Buffer.from(conv.output, 'utf8');
+
+          const server = createServer(w.root);
+          const args = { image: 'disk.img', path: viewPath(grave.path), id: grave.id };
+          const paths: string[] = [];
+          for (let k = 0; k < 2; k += 1) {
+            const r = callTool(server, 'exhume', args);
+            const out = r.output as { path?: string; format?: string; mime?: string; bytes?: number } | undefined;
+            if (r.isError || typeof out?.path !== 'string') return false;
+            if (out.format !== 'text' || out.mime !== 'text/plain') return false;
+            if (!out.path.startsWith('exhumed/') || paths.includes(out.path)) return false;
+            const name = out.path.slice('exhumed/'.length);
+            if (!SAFE_NAME.test(name) || !name.endsWith('.txt')) return false;
+            paths.push(out.path);
+            const inside = readdirSync(join(w.root, 'exhumed'));
+            if (inside.length !== k + 1 || !inside.includes(name)) return false;
+            const data = readFileSync(join(w.root, out.path));
+            if (out.bytes !== data.length || !data.equals(expected)) return false;
+          }
+          return readdirSync(w.root).sort().join('|') === 'disk.img|exhumed';
+        });
+      }),
+      { numRuns: numRuns(25) },
+    );
+  });
+
   const wordArb = fc.stringMatching(/^[A-Za-z]{1,10}$/);
   const pad = (text: string, length: number): Uint8Array => {
     const out = new Uint8Array(length).fill(0x20);

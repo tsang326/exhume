@@ -39,6 +39,11 @@ describe('README demo-disk section', () => {
     expect(readme).toContain('not recovered archive material');
   });
 
+  it('names plain text among the conversions', () => {
+    expect(readme).toContain('plain text files as `.txt` text');
+    expect(readme).toContain('Markdown, CSV or plain text, or PNG dimensions');
+  });
+
   it('keeps the prior-art credit and makes no "first" claim', () => {
     expect(readme).toContain('disk-peek');
     const lower = readme.toLowerCase();

@@ -16,7 +16,7 @@ Exhume reads old FAT12 floppy disk images, lists live and deleted files, and con
 ## Tools
 
 - `open_disk`: open a disk image inside the workspace and list its files with their state (`alive`, `recovered`, `partial`, `lost`), size and date.
-- `read_grave`: convert one file from the image and return a preview (Markdown or CSV text, or PNG dimensions). Takes `image`, `path` and an optional integer `id` from the `open_disk` listing, for when two entries share a path.
+- `read_grave`: convert one file from the image and return a preview (Markdown, CSV or plain text, or PNG dimensions). Takes `image`, `path` and an optional integer `id` from the `open_disk` listing, for when two entries share a path.
 - `exhume`: convert one file and write the full result into the workspace `exhumed/` folder. It never overwrites an existing file.
 - `explain_state`: return a fixed explanation of one state.
 

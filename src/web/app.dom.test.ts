@@ -154,7 +154,7 @@ function makeDisk(extra: FileTree['children'] = []): Uint8Array {
         name: 'PIC.PCX',
         content: encodePcx({ mode: 'mono', width: 8, height: 2, indices: new Uint8Array(16).map((_, i) => i % 2) }),
       },
-      { kind: 'file', name: 'NOTES.BIN', content: ascii('JUNKDATA'.repeat(8)) },
+      { kind: 'file', name: 'NOTES.BIN', content: Uint8Array.from([0x01, 0xfe, ...ascii('JUNKDATA'.repeat(8))]) },
       { kind: 'file', name: 'HOSTILE.TXT', longName: HOSTILE_NAME, content: ascii('plain text') },
       { kind: 'file', name: 'GONE.WS', deleted: true, content: writeWordStar([{ spans: [{ text: 'old news' }] }]) },
       ...extra,

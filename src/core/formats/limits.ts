@@ -9,6 +9,7 @@ export const MAX_CONVERT_INPUT_BYTES = 4 * MIB; // 4,194,304
 export const DETECT_SAMPLE_BYTES = 4096;
 export const MAX_WARNINGS = 100;
 export const MAX_MARKDOWN_OUTPUT_BYTES = 8 * MIB; // 8,388,608
+export const MAX_TEXT_OUTPUT_BYTES = MAX_MARKDOWN_OUTPUT_BYTES; // 8,388,608 bytes of UTF-8
 export const MAX_DBF_FIELDS = 128;
 export const MAX_DBF_RECORDS = 100_000;
 export const MAX_CSV_OUTPUT_BYTES = 16 * MIB; // 16,777,216
@@ -43,7 +44,7 @@ export const MAX_PNG_BYTES = pngBytesForFiltered(MAX_IMAGE_PIXELS * 4 + MAX_IMAG
 
 // Internal constants.
 export const MARKDOWN_CLOSE_RESERVE_BYTES = 3; // closing `**` + `*` must always fit under the cap
-export const TEXT_CHUNK_BYTES = 8 * 1024; // AsciiSink chunk
+export const TEXT_CHUNK_BYTES = 8 * 1024; // TextSink chunk, in UTF-16 code units; also the scratch byte buffer of the plain text converter
 export const MAX_MESSAGE_CHARS = 200;
 export const DBF_FIXED_HEADER_BYTES = 32;
 export const DBF_DESCRIPTOR_BYTES = 32;
@@ -61,6 +62,7 @@ export type LimitName =
   | 'DETECT_SAMPLE_BYTES'
   | 'MAX_WARNINGS'
   | 'MAX_MARKDOWN_OUTPUT_BYTES'
+  | 'MAX_TEXT_OUTPUT_BYTES'
   | 'MAX_DBF_FIELDS'
   | 'MAX_DBF_RECORDS'
   | 'MAX_CSV_OUTPUT_BYTES'

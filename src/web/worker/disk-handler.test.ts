@@ -34,6 +34,7 @@ const tree: FileTree = {
     { kind: 'file', name: 'PIC.PCX', content: pcx },
     { kind: 'file', name: 'MISC.BIN', content: unknown },
     { kind: 'file', name: 'EMPTY.TXT', content: new Uint8Array(0) },
+    { kind: 'file', name: 'NOTE.TXT', content: Uint8Array.from([0x48, 0x69, 0x0d, 0x0a, 0x79, 0x6f, 0x75]) },
     { kind: 'file', name: 'GONE.WS', content: wordstar, deleted: true },
     { kind: 'directory', name: 'SUB', children: [{ kind: 'file', name: 'INNER.BIN', content: unknown }] },
   ],
@@ -43,11 +44,12 @@ const disk = writeFat12Image(tree, '1440K');
 const overCap = new Uint8Array(MAX_IMAGE_BYTES + 1);
 const diskReport = openDisk(disk).report;
 
-type Expected = 'markdown' | 'csv' | 'png' | 'raw';
+type Expected = 'markdown' | 'csv' | 'png' | 'raw' | 'text';
 const expectedKinds: Record<string, Expected> = {
   '/DOC.WS': 'markdown',
   '/DATA.DBF': 'csv',
   '/PIC.PCX': 'png',
+  '/NOTE.TXT': 'text',
   '/MISC.BIN': 'raw',
   '/SUB/INNER.BIN': 'raw',
 };
@@ -227,7 +229,7 @@ describe('worker handler properties', () => {
         if (res.raw.byteOffset !== 0 || res.raw.buffer.byteLength !== res.raw.length) return false;
         const want = expectedKinds[grave.path];
         if (want !== undefined && res.result.kind !== want) return false;
-        if (grave.size === 0 && res.result.kind !== 'raw') return false;
+        if (grave.size === 0 && res.result.kind !== 'raw' && res.result.kind !== 'text') return false;
         if (res.result.kind === 'png') {
           const png = res.result.png;
           if (png.byteOffset !== 0 || png.buffer.byteLength !== png.length) return false;

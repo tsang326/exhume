@@ -10,7 +10,7 @@ import { truncateForPreview } from './markdown';
 import { toLabel } from './text';
 import type { ItemViewModel } from './viewmodel';
 
-export type DownloadMime = 'text/markdown' | 'text/csv' | 'image/png' | 'application/octet-stream';
+export type DownloadMime = 'text/markdown' | 'text/csv' | 'text/plain' | 'image/png' | 'application/octet-stream';
 
 export interface DownloadSpec {
   label: string;
@@ -22,6 +22,7 @@ export interface DownloadSpec {
 export type PreviewBody =
   | { kind: 'markdown'; text: string; shortened: boolean }
   | { kind: 'csv'; table: CsvTable }
+  | { kind: 'text'; text: string; shortened: boolean }
   | { kind: 'png'; png: Uint8Array; alt: string }
   | { kind: 'hex'; rows: HexRow[]; totalBytes: number; shownBytes: number }
   | { kind: 'none' };
@@ -68,6 +69,11 @@ export function buildPreviewModel(item: ItemViewModel, outcome: ExhumeOutcome): 
     case 'csv':
       body = { kind: 'csv', table: parseCsv(result.text) };
       break;
+    case 'text': {
+      const t = truncateForPreview(result.text);
+      body = { kind: 'text', text: t.text, shortened: t.shortened };
+      break;
+    }
     case 'png':
       body = { kind: 'png', png: result.png, alt: sanitizeFileName(item.name, '.png') };
       break;
@@ -91,6 +97,7 @@ export function buildPreviewModel(item: ItemViewModel, outcome: ExhumeOutcome): 
       data: result.kind === 'png' ? result.png : result.text,
     });
   }
+
   downloads.push({
     label: 'Download raw bytes',
     fileName: sanitizeFileName(item.name, '.bin'),

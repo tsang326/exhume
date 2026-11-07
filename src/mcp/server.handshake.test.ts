@@ -252,7 +252,7 @@ describe('Error_Catalogue', () => {
     };
 
     ws.write('notes.img', diskWith([
-      { name: 'PLAIN.TXT', content: bytesOf('just some text, no converter') },
+      { name: 'PLAIN.BIN', content: Uint8Array.of(0x01, 0x02, 0xfe, 0x00) },
       { name: 'BAD.DBF', content: dbfFile().subarray(0, 40) },
       { name: 'PIC.PCX', content: pcxFile() },
     ]));
@@ -269,7 +269,7 @@ describe('Error_Catalogue', () => {
       callTool(server, 'read_grave', { image: 'dirs.img', path: graveByKind(server, 'dirs.img', 'directory') }),
       'GRAVE_NOT_READABLE',
     );
-    check(callTool(server, 'read_grave', { image: 'notes.img', path: '/PLAIN.TXT' }), 'NO_CONVERTER');
+    check(callTool(server, 'read_grave', { image: 'notes.img', path: '/PLAIN.BIN' }), 'NO_CONVERTER');
     check(callTool(server, 'read_grave', { image: 'notes.img', path: '/BAD.DBF' }), 'CONVERSION_FAILED');
     check(callTool(server, 'exhume', { image: 'notes.img', path: '/PIC.PCX' }), 'EXHUME_FAILED');
 

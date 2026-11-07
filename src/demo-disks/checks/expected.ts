@@ -40,8 +40,8 @@ export interface Expectation {
   graves: ExpectedGrave[];
   /** Sorted. */
   warningCodes: string[];
-  /** Reader-side paths whose conversion is expected to fail (README and invoice text files). */
-  noConverter: string[];
+  /** Reader-side paths expected to convert as plain text (README and invoice text files). */
+  textFiles: string[];
 }
 
 /** Cluster size of all three demo geometries. */
@@ -76,7 +76,7 @@ export function expectationOf(id: DemoDiskId, plan: DiskPlan): Expectation {
           { path: '/README.TXT', kind: 'file', state: 'alive', size: sourceSize(plan, '/README.TXT'), date: WRITERS_README.expected },
         ],
         warningCodes: [],
-        noConverter: ['/README.TXT'],
+        textFiles: ['/README.TXT'],
       };
     case 'office-disk':
       return {
@@ -91,7 +91,7 @@ export function expectationOf(id: DemoDiskId, plan: DiskPlan): Expectation {
           { path: '/README.TXT', kind: 'file', state: 'alive', size: sourceSize(plan, '/README.TXT'), date: OFFICE_README.expected },
         ],
         warningCodes: [],
-        noConverter: ['/INVOICES/INV8903.TXT', '/README.TXT'],
+        textFiles: ['/INVOICES/INV8903.TXT', '/README.TXT'],
       };
     case 'damaged-disk':
       return {
@@ -103,7 +103,7 @@ export function expectationOf(id: DemoDiskId, plan: DiskPlan): Expectation {
           { path: '/README.TXT', kind: 'file', state: 'alive', size: sourceSize(plan, '/README.TXT'), date: DAMAGED_README.expected },
         ],
         warningCodes: ['bpb-invalid', 'chain-cycle'],
-        noConverter: ['/README.TXT'],
+        textFiles: ['/README.TXT'],
       };
   }
 }

@@ -6,6 +6,7 @@ import type { LimitName } from './limits';
 export const TEMPLATES = {
   inputTruncated: 'input truncated to {0} bytes (MAX_CONVERT_INPUT_BYTES)',
   outputCappedMarkdown: 'output capped at {0} bytes (MAX_MARKDOWN_OUTPUT_BYTES)',
+  outputCappedText: 'output capped at {0} bytes (MAX_TEXT_OUTPUT_BYTES)',
   outputCappedCsv: 'output capped at {0} bytes (MAX_CSV_OUTPUT_BYTES)',
   warningsCapped: 'warnings capped at {0}',
   controlCodesDropped: '{0} control bytes dropped',
@@ -39,6 +40,7 @@ export const LIMIT_EXCEEDED_TEMPLATES: Readonly<Record<LimitName, string>> = {
   DETECT_SAMPLE_BYTES: 'DETECT_SAMPLE_BYTES exceeded',
   MAX_WARNINGS: 'MAX_WARNINGS exceeded',
   MAX_MARKDOWN_OUTPUT_BYTES: 'MAX_MARKDOWN_OUTPUT_BYTES exceeded',
+  MAX_TEXT_OUTPUT_BYTES: 'MAX_TEXT_OUTPUT_BYTES exceeded',
   MAX_DBF_FIELDS: 'MAX_DBF_FIELDS exceeded',
   MAX_DBF_RECORDS: 'MAX_DBF_RECORDS exceeded',
   MAX_CSV_OUTPUT_BYTES: 'MAX_CSV_OUTPUT_BYTES exceeded',

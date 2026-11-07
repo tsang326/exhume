@@ -1,6 +1,6 @@
 import { FILE_NAME_MAX } from './limits';
 
-export type DownloadExtension = '.md' | '.csv' | '.png' | '.bin';
+export type DownloadExtension = '.md' | '.csv' | '.txt' | '.png' | '.bin';
 
 function isSafeCode(c: number): boolean {
   return (

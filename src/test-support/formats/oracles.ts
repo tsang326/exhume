@@ -556,3 +556,113 @@ export function lineMatchesStyles(line: string, expected: readonly TextStyle[], 
   if (markdownLineText(line).length !== expected.length) return false;
   return findMarkdownDecomposition(line, { hug, styleOf: (i) => expected[i] }) !== null;
 }
+
+// ---------------------------------------------------------------------------
+// Plain text
+// ---------------------------------------------------------------------------
+
+/** True for a byte the plain text rule keeps as is (before line ending handling). */
+function isKeptTextByte(b: number): boolean {
+  return b === 0x09 || (b >= 0x20 && b <= 0x7e) || b >= 0x80;
+}
+
+/**
+ * Independent model of the plain text converter: cut at the first 0x1A, turn CR LF,
+ * lone CR and lone LF into one LF, drop control bytes and DEL (counted), decode as CP437.
+ * Written as a split into segments, not as the converter's single pass.
+ */
+export function plainTextOracle(bytes: Uint8Array): { text: string; dropped: number } {
+  const eof = bytes.indexOf(0x1a);
+  const head = eof < 0 ? bytes : bytes.subarray(0, eof);
+
+  let dropped = 0;
+  const kept: number[] = [];
+  let previousWasCr = false;
+  for (let i = 0; i < head.length; i++) {
+    const b = head[i];
+    if (b === 0x0d) {
+      kept.push(0x0a);
+    } else if (b === 0x0a) {
+      if (!previousWasCr) kept.push(0x0a);
+    } else if (b === 0x0c || isKeptTextByte(b)) {
+      kept.push(b);
+    } else {
+      dropped++;
+    }
+    previousWasCr = b === 0x0d;
+  }
+  return { text: decodeCp437(Uint8Array.from(kept)), dropped };
+}
+
+/** The text content rule: non-empty and every byte is TAB, LF, FF, CR, 0x1A or 0x20..0x7E. */
+export function isTextSampleOracle(bytes: Uint8Array): boolean {
+  const sample = bytes.subarray(0, 4096);
+  if (sample.length === 0) return false;
+  return sample.every((b) => [0x09, 0x0a, 0x0c, 0x0d, 0x1a].includes(b) || (b >= 0x20 && b <= 0x7e));
+}
+
+const TEXT_EXTENSIONS: readonly string[] = ['TXT', 'BAT', 'ASC', 'LOG', 'NFO', 'DIZ', '1ST', 'ME'];
+const EXTENSION_FORMATS: Readonly<Record<string, OracleFormat | 'text'>> = {
+  WS: 'wordstar',
+  WS4: 'wordstar',
+  WS5: 'wordstar',
+  WS6: 'wordstar',
+  WS7: 'wordstar',
+  WSD: 'wordstar',
+  DBF: 'dbase',
+  PCX: 'pcx',
+};
+
+export interface FullOracleVerdict {
+  format: OracleFormat | 'text';
+  source: 'content' | 'extension' | 'none';
+}
+
+/**
+ * All five detection rules in order: PCX, dBase, WordStar content, file name extension,
+ * text content. A file name that is not a string or longer than 255 characters is ignored.
+ */
+export function detectFullOracle(bytes: Uint8Array, fileName?: unknown): FullOracleVerdict {
+  const content = detectOracle(bytes);
+  if (content !== 'unknown') return { format: content, source: 'content' };
+
+  if (typeof fileName === 'string' && fileName.length <= 255) {
+    const dot = fileName.lastIndexOf('.');
+    if (dot >= 0) {
+      let ext = '';
+      for (const ch of fileName.slice(dot + 1)) {
+        ext += ch >= 'a' && ch <= 'z' ? ch.toUpperCase() : ch;
+      }
+      const strong = EXTENSION_FORMATS[ext];
+      if (strong !== undefined && Object.prototype.hasOwnProperty.call(EXTENSION_FORMATS, ext)) {
+        return { format: strong, source: 'extension' };
+      }
+      if (TEXT_EXTENSIONS.includes(ext)) return { format: 'text', source: 'extension' };
+    }
+  }
+
+  if (isTextSampleOracle(bytes)) return { format: 'text', source: 'content' };
+  return { format: 'unknown', source: 'none' };
+}
+
+/**
+ * Inverse of decodeCp437, built by decoding each byte value once (no second table).
+ * Returns null when a character has no CP437 byte. Where two bytes decode to the same
+ * character, the lowest byte wins.
+ */
+export function encodeCp437(text: string): Uint8Array | null {
+  const byChar = new Map<string, number>();
+  for (let b = 0; b < 256; b++) {
+    const ch = decodeCp437(Uint8Array.of(b));
+    if (!byChar.has(ch)) byChar.set(ch, b);
+  }
+  const out = new Uint8Array(text.length);
+  let n = 0;
+  for (const ch of text) {
+    const b = byChar.get(ch);
+    if (b === undefined) return null;
+    if (n >= out.length) return null; // astral characters never map; defensive
+    out[n++] = b;
+  }
+  return out.subarray(0, n);
+}

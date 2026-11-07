@@ -54,3 +54,23 @@ what had to be fixed by hand. Be honest — the write-up is built from this.
   "Connection Failed". Agent Plugins format copies `server/`, but runs it with the install folder as working directory.
 - Kiro then updated README, POWER.md and this log; a sub-agent also edited the spec's requirements.md (verified Kiro results,
   decision 8, Requirement 14/15/17 wording) and the tasks.md status was updated; no source code or tests changed. Steering use in chat is unverified.
+## 2026-11-07 — demo-disks (spec 5)
+- Kiro wrote requirements/design/tasks and the generator: pure core in `src/demo-disks/`, a Node shell in
+  `scripts/make-demo-disks.ts`, shared checks that run on the images in memory before any file is written. Three disks:
+  WRITER DEMO, OFFICE DEMO, DAMAGE DEMO (1430 tests). Est. ~129 credits.
+- By hand: I ran `npm run make:demos` once and committed `public/disks/`; picked "DAMAGE DEMO" because the 12-char label
+  did not fit FAT's 11 bytes. Denied a python heredoc edit (Kiro redid it with its edit tool).
+- Lost once: I sent a chat message while a "Review changes" box was open and requirements.md vanished; restored it from the
+  transcript. Since then: accept or reject pending changes before sending anything.
+## 2026-11-07 — plain-text (spec 6, small follow-up)
+- Reason: README.TXT on every demo disk opened as "no converter" plus a hex dump, the first thing a judge would click.
+- Kiro wrote the spec (7 requirements, 17 properties) and a fourth converter: CP437 text to `.txt`, detected by extension
+  or as an all-printable sample, wired through the web preview, the worker protocol, MCP `read_grave`/`exhume` and the
+  demo-disk checks. 1537 tests, 156 DOM tests. Est. ~140 credits.
+- By hand: I ran `npm run build:mcp` after checking the config hash; denied four shell edits (`sed -i`, python) and Kiro
+  redid them with its edit tool. The text sink was extended in place (WordStar output proven unchanged by its old tests).
+## 2026-11-07 — agent hooks
+- Kiro created three hooks in `.kiro/hooks/`: related tests on save (`PostFileSave`), fuzz after core task (`PostTaskExec`,
+  only when `src/core` changed) and this session log (`Stop`, agent prompt). Nothing was run; JSON was only read back.
+- Helped: the `createHook` schema (trigger names checked, `PostTaskExec` exists so no file-save fallback); no spec or steering file.
+- By hand: nothing yet. The self-trigger guard of the log hook is prompt-only and still unverified.

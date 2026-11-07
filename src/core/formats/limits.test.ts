@@ -25,6 +25,11 @@ describe('limits', () => {
     expect(L.CONVERT_TIME_BUDGET_MS).toBe(2_000);
   });
 
+  it('sets the text output cap to 8,388,608 bytes, equal to the Markdown cap', () => {
+    expect(L.MAX_TEXT_OUTPUT_BYTES).toBe(8_388_608);
+    expect(L.MAX_TEXT_OUTPUT_BYTES).toBe(L.MAX_MARKDOWN_OUTPUT_BYTES);
+  });
+
   it('keeps the image pixel cap shape (2048x2048 and 4096x1024 fit, 2049x2048 does not)', () => {
     expect(2048 * 2048).toBeLessThanOrEqual(L.MAX_IMAGE_PIXELS);
     expect(4096 * 1024).toBeLessThanOrEqual(L.MAX_IMAGE_PIXELS);

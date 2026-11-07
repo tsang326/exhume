@@ -187,6 +187,7 @@ function readResult(v: unknown): ExhumeResult {
   switch (kind) {
     case 'markdown':
     case 'csv':
+    case 'text':
       return {
         kind,
         text: asStr(o.text, 'result.text'),

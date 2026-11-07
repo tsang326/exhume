@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Log the session",
+      "trigger": "Stop",
+      "description": "When the agent stops, append a short dated entry to docs/KIRO_LOG.md if the turn changed other files.",
+      "action": {
+        "type": "agent",
+        "prompt": "Session log hook. Follow these rules exactly.\n\n1. Skip check. Look at the files you created, edited or deleted in the turn that just ended. If none of them is a file other than docs/KIRO_LOG.md (for example the turn only answered questions, only touched docs/KIRO_LOG.md, or this turn was itself started by this hook), do nothing: write no file, run no tool, and reply with one short line saying the log was skipped.\n\n2. Otherwise append one entry to the end of docs/KIRO_LOG.md using fs_append. Do not rewrite or reformat existing entries. Match the existing style: a heading line `## YYYY-MM-DD — <short topic>` using today's date and the spec or topic name, then 2 to 3 short bullet lines starting with `- `, in first person where the existing entries are, plain and honest. The bullets cover: (a) what Kiro did, (b) which spec, hook or steering file helped (say 'none' if none did), (c) what was fixed or changed by hand (say 'nothing' if nothing). Keep each bullet to one or two lines. Do not invent facts; only record what happened in this turn.\n\n3. Never edit, create or delete any file other than docs/KIRO_LOG.md. Do not run shell commands, tests or builds. After appending, stop immediately: do not make further edits, do not append a second entry, and do not comment on the log entry beyond one short confirmation line."
+      }
+    }
+  ]
+}

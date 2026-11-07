@@ -26,6 +26,20 @@ export interface Prepared {
 
 const SLASH = '/';
 
+/** The tool-facing format name for a converter output extension. */
+export function formatOf(extension: ConversionSuccessAny['extension']): 'markdown' | 'csv' | 'text' | 'png' {
+  switch (extension) {
+    case '.csv':
+      return 'csv';
+    case '.txt':
+      return 'text';
+    case '.png':
+      return 'png';
+    case '.md':
+      return 'markdown';
+  }
+}
+
 function lastSegment(corePath: string): string {
   return corePath.slice(corePath.lastIndexOf(SLASH) + 1);
 }

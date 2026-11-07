@@ -60,7 +60,7 @@ describe('format arbitraries', () => {
   });
 
   it('hostile generators produce Uint8Array inputs for every format', () => {
-    const formats: HostileFormat[] = ['wordstar', 'dbase', 'pcx', 'auto'];
+    const formats: HostileFormat[] = ['wordstar', 'dbase', 'pcx', 'text', 'auto'];
     for (const f of formats) {
       for (const h of fc.sample(hostileInputArb(f), 12)) {
         expect(h.bytes).toBeInstanceOf(Uint8Array);

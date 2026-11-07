@@ -38,6 +38,11 @@ describe('sanitizeFileName examples', () => {
     expect(sanitizeFileName('a.exe', '.md')).toBe('a.md');
   });
 
+  it('appends the .txt extension for plain text downloads', () => {
+    expect(sanitizeFileName('README.TXT', '.txt')).toBe('README.txt');
+    expect(sanitizeFileName('', '.txt')).toBe('grave.txt');
+  });
+
   it('keeps reserved device names', () => {
     expect(sanitizeFileName('CON', '.md')).toBe('CON.md');
     expect(sanitizeFileName('CON.TXT', '.md')).toBe('CON.md');

@@ -657,6 +657,11 @@ button[disabled] {
   border-top: 1px solid var(--pair-border-ui-fg);
 }
 
+.preview-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .preview-image {
   text-align: center;
 }

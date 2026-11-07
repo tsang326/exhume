@@ -4,12 +4,19 @@ import {
   convertAuto,
   convertDBase,
   convertPcx,
+  convertPlainText,
   convertWordStar,
   detectFormat,
   encodePng,
 } from './index';
 import type { ConversionResult, ConversionWarning } from './index';
-import { dbfTableArb, pcxSourceArb, rgbaImageArb, wsParagraphsArb } from '../../test-support/formats/arbitraries';
+import {
+  dbfTableArb,
+  pcxSourceArb,
+  plainTextBytesArb,
+  rgbaImageArb,
+  wsParagraphsArb,
+} from '../../test-support/formats/arbitraries';
 import { writeDbf } from '../../test-support/formats/dbase-writer';
 import { hostileInputArb } from '../../test-support/formats/hostile';
 import type { HostileFormat } from '../../test-support/formats/hostile';
@@ -31,6 +38,7 @@ type Expected = { mime: string; extension: string };
 const WORDSTAR: Expected = { mime: 'text/markdown', extension: '.md' };
 const DBASE: Expected = { mime: 'text/csv', extension: '.csv' };
 const PCX: Expected = { mime: 'image/png', extension: '.png' };
+const TEXT: Expected = { mime: 'text/plain', extension: '.txt' };
 
 /** Throws a plain Error naming the converter and joining the violations. */
 function assertContract(name: string, result: unknown, expected: Expected | null): void {
@@ -92,6 +100,13 @@ const CASES: ConverterCase[] = [
   { name: 'convertWordStar', format: 'wordstar', convert: convertWordStar, expected: WORDSTAR, fixture: wsFixtureArb },
   { name: 'convertDBase', format: 'dbase', convert: convertDBase, expected: DBASE, fixture: dbfFixtureArb },
   { name: 'convertPcx', format: 'pcx', convert: convertPcx, expected: PCX, fixture: pcxFixtureArb },
+  {
+    name: 'convertPlainText',
+    format: 'text',
+    convert: convertPlainText,
+    expected: TEXT,
+    fixture: plainTextBytesArb,
+  },
 ];
 
 /** What detection says, mapped to the converter that convertAuto must agree with. */
@@ -103,6 +118,8 @@ function converterFor(input: Uint8Array): Converter | null {
       return convertDBase;
     case 'pcx':
       return convertPcx;
+    case 'text':
+      return convertPlainText;
     default:
       return null;
   }
@@ -390,6 +407,108 @@ describe('Property 3: determinism and Buffer equivalence', () => {
           if (sharesMemory(a.output, img.rgba)) throw new Error('encodePng: output aliases rgba');
           if (a.output === (c as { output: unknown }).output) throw new Error('encodePng: output object reused');
         }
+      }),
+      { numRuns: numRuns(100) },
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Plain text Property 2
+// ---------------------------------------------------------------------------
+
+/** Returns a description of the first forbidden code point in `text`, or null. */
+function forbiddenTextChar(text: string): string | null {
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    if (c === 0x0d) return `CR at ${i}`;
+    if (c === 0x7f) return `DEL at ${i}`;
+    if (c < 0x20 && c !== 0x0a && c !== 0x09 && c !== 0x0c) {
+      return `control 0x${c.toString(16)} at ${i}`;
+    }
+  }
+  return null;
+}
+
+/**
+ * Feature: plain-text, Property 2: Output contract
+ *
+ * **Validates: Requirements 1.2, 1.13, 3.4, 3.8**
+ */
+describe('Plain text Property 2: output contract', () => {
+  const anyBytesArb = fc.oneof(
+    fc.uint8Array({ maxLength: 2048 }),
+    plainTextBytesArb,
+    hostileBytesArb('text', FAST_CAP),
+    hostileBytesArb('auto', FAST_CAP),
+  );
+
+  it('convertPlainText satisfies the contract and its text has no forbidden characters', () => {
+    fc.assert(
+      fc.property(anyBytesArb, (bytes) => {
+        const result = convertPlainText(bytes);
+        assertContract('convertPlainText', result, TEXT);
+        if (result.ok) {
+          if (typeof result.output !== 'string') throw new Error('convertPlainText: output is not a string');
+          const bad = forbiddenTextChar(result.output);
+          if (bad !== null) throw new Error(`convertPlainText: forbidden character, ${bad}`);
+        }
+      }),
+      { numRuns: numRuns(100) },
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Plain text Property 13
+// ---------------------------------------------------------------------------
+
+const AUTO_NAME_STEMS = ['README', 'NOTE', 'DATA', 'A', 'x.y', ''];
+const AUTO_NAME_EXTENSIONS = ['', '.TXT', '.txt', '.BAT', '.ASC', '.LOG', '.NFO', '.DIZ', '.1ST', '.ME',
+  '.WS', '.DBF', '.PCX', '.BIN', '.DOC'];
+
+const autoFileNameArb: fc.Arbitrary<string | undefined> = fc.oneof(
+  fc.constant(undefined),
+  fc.tuple(fc.constantFrom(...AUTO_NAME_STEMS), fc.constantFrom(...AUTO_NAME_EXTENSIONS)).map(([s, e]) => s + e),
+  fc.string({ maxLength: 16 }),
+);
+
+/**
+ * Feature: plain-text, Property 13: Auto conversion follows detection
+ *
+ * **Validates: Requirements 2.1, 2.9**
+ */
+describe('Plain text Property 13: auto conversion follows detection', () => {
+  const inputArb = fc.oneof(
+    fc.uint8Array({ maxLength: 256 }),
+    plainTextBytesArb,
+    hostileBytesArb('auto', FAST_CAP),
+    wsFixtureArb,
+    dbfFixtureArb,
+    pcxFixtureArb,
+  );
+
+  it('convertAuto equals the detected converter, or the no-converter failure for unknown', () => {
+    fc.assert(
+      fc.property(inputArb, autoFileNameArb, (bytes, name) => {
+        const auto = convertAuto(bytes, name);
+        const format = detectFormat(bytes, name).format;
+        const direct =
+          format === 'wordstar'
+            ? convertWordStar
+            : format === 'dbase'
+              ? convertDBase
+              : format === 'pcx'
+                ? convertPcx
+                : format === 'text'
+                  ? convertPlainText
+                  : null;
+        if (direct === null) {
+          if (auto.ok) throw new Error('convertAuto: succeeded although the format is unknown');
+          if (auto.warnings.length !== 0) throw new Error('convertAuto: unknown format carries warnings');
+          return;
+        }
+        return sameResult(auto, direct(bytes));
       }),
       { numRuns: numRuns(100) },
     );

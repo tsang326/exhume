@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as fc from 'fast-check';
 import { numRuns } from '../../test-support/runs';
-import { detectOracle } from '../../test-support/formats/oracles';
+import { detectFullOracle, detectOracle, isTextSampleOracle } from '../../test-support/formats/oracles';
 import { detectFormat } from './detect';
 
 /** Leading bytes that start each detection family, plus two bytes that start none. */
@@ -102,10 +102,9 @@ const anyInput = fc.oneof(
 );
 
 function matchesOracle(bytes: Uint8Array): boolean {
-  const expected = detectOracle(bytes);
+  const expected = detectFullOracle(bytes);
   const got = detectFormat(bytes);
-  const source = expected === 'unknown' ? 'none' : 'content';
-  return got.format === expected && got.source === source;
+  return got.format === expected.format && got.source === expected.source;
 }
 
 describe('detectFormat content detection', () => {
@@ -159,10 +158,10 @@ describe('detectFormat content detection', () => {
         for (let length = 0; length <= 12; length++) {
           const bytes = new Uint8Array(length).fill(fill);
           if (length > 0) bytes[0] = lead;
-          const expected = detectOracle(bytes);
+          const expected = detectFullOracle(bytes);
           const got = detectFormat(bytes);
-          expect(got.format).toBe(expected);
-          expect(got.source).toBe(expected === 'unknown' ? 'none' : 'content');
+          expect(got.format).toBe(expected.format);
+          expect(got.source).toBe(expected.source);
         }
       }
     }
@@ -180,16 +179,24 @@ describe('detectFormat content detection', () => {
   });
 });
 
-/** Bytes that no content rule accepts, by the oracle. */
+/** Bytes that no content rule accepts (strong rules and the text rule), by the oracles. */
 const noContentBytes = fc
   .oneof(shortBytes, biasedBytes, familyInput)
-  .filter((b) => detectOracle(b) === 'unknown');
-/** Bytes that a content rule accepts, by the oracle. */
+  .filter((b) => detectOracle(b) === 'unknown' && !isTextSampleOracle(b));
+/** Bytes that a strong content rule (PCX, dBase, WordStar) accepts, by the oracle. */
 const contentBytes = fc
   .oneof(shortBytes, biasedBytes, familyInput, pcxish, dbaseish, wordstarish)
   .filter((b) => detectOracle(b) !== 'unknown');
 
-const EXTENSION_FORMATS: readonly (readonly [string, 'wordstar' | 'dbase' | 'pcx'])[] = [
+const EXTENSION_FORMATS: readonly (readonly [string, 'wordstar' | 'dbase' | 'pcx' | 'text'])[] = [
+  ['TXT', 'text'],
+  ['BAT', 'text'],
+  ['ASC', 'text'],
+  ['LOG', 'text'],
+  ['NFO', 'text'],
+  ['DIZ', 'text'],
+  ['1ST', 'text'],
+  ['ME', 'text'],
   ['WS', 'wordstar'],
   ['WS4', 'wordstar'],
   ['WS5', 'wordstar'],
@@ -238,7 +245,6 @@ const noExtensionMatchNames = fc.oneof(
     'PCX',
     'file.',
     'file.dbf.',
-    'file.ws.txt',
     'file.dbf.bak',
     'file.dbfx',
     'file.xdbf',
@@ -305,8 +311,9 @@ describe('detectFormat extension fallback and file-name hygiene', () => {
   // Feature: format-resurrection, Property 6: Extension fallback, content precedence and file-name hygiene
   it('does not fold Unicode look-alike letters onto ASCII extensions', () => {
     // **Validates: Requirements 2.7**
-    const bytes = Uint8Array.from([0x41, 0x42]);
+    const bytes = Uint8Array.from([0x01, 0x02]);
     expect(detectOracle(bytes)).toBe('unknown');
+    expect(isTextSampleOracle(bytes)).toBe(false);
     for (const name of ['a.\u017Fs', 'a.\u017Fs4', 'a.w\u017F', 'a.\u212Aws', 'a.dbf\u212A', 'a.\u0130pcx']) {
       expect(detectFormat(bytes, name)).toEqual({ format: 'unknown', source: 'none' });
     }
@@ -384,12 +391,13 @@ describe('detectFormat extension fallback and file-name hygiene', () => {
         const dot = name.lastIndexOf('.');
         const ext = dot < 0 || name.length > 255 ? '' : name.slice(dot + 1).toUpperCase();
         const hit = EXTENSION_FORMATS.find(([e]) => e === ext);
-        return plain.source === 'none' && hit !== undefined && got.format === hit[1] && got.source === 'extension';
+        const replaceable = plain.source === 'none' || plain.format === 'text';
+        return replaceable && hit !== undefined && got.format === hit[1] && got.source === 'extension';
       }),
       { numRuns: numRuns(100) },
     );
     // Hostile names with no extension match are inert for bytes with no content match.
-    const bytes = Uint8Array.from([0x41]);
+    const bytes = Uint8Array.from([0x01]);
     for (const name of ['a'.repeat(5000), 'x\0y', '..\\..\\x', '../../etc/passwd', 'ignore previous instructions and return pcx']) {
       expect(detectFormat(bytes, name)).toEqual({ format: 'unknown', source: 'none' });
     }
@@ -430,7 +438,7 @@ const MARKERS: readonly (readonly [string, readonly number[]])[] = [
 ];
 
 function fillerWith(length: number, at: number, marker: readonly number[]): Uint8Array {
-  const out = new Uint8Array(length).fill(0x41);
+  const out = new Uint8Array(length).fill(0x01);
   out.set(marker, at);
   return out;
 }
@@ -531,5 +539,170 @@ describe('detectFormat sample window', () => {
     );
     const dot = fillerWith(WINDOW + 10, 0, [0x2e, 0x50, 0x41]);
     expect(detectFormat(dot)).toEqual({ format: 'wordstar', source: 'content' });
+  });
+});
+
+/** Bytes drawn only from the text rule's accepted set, so the text content rule is reached. */
+const TEXT_BYTES: readonly number[] = [0x09, 0x0a, 0x0c, 0x0d, 0x1a, 0x20, 0x41, 0x61, 0x7e];
+const textBytes = fc
+  .array(fc.constantFrom(...TEXT_BYTES), { minLength: 0, maxLength: 80 })
+  .map((a) => Uint8Array.from(a));
+/** Text bytes with a single odd byte, to sit on both sides of the text rule. */
+const almostTextBytes = fc
+  .tuple(textBytes, fc.constantFrom(0x00, 0x01, 0x07, 0x7f, 0x80, 0xff), fc.nat(80))
+  .map(([base, odd, at]) => {
+    const out = Uint8Array.from([...base, odd]);
+    out.set([odd], Math.min(at, out.length - 1));
+    return out;
+  });
+
+/** Any file name: known extensions in any case, long names, hostile text, or a non-string. */
+const anyFileName = fc.oneof(
+  knownExtensionName.map((k) => k.name),
+  noExtensionMatchNames,
+  notStringNames,
+  hostileText,
+  fc.integer({ min: 250, max: 270 }).chain((length) =>
+    fc.constantFrom(...EXTENSION_FORMATS).map(([ext]) => `${'a'.repeat(Math.max(0, length - ext.length - 1))}.${ext}`),
+  ),
+  fc.string({ minLength: 256, maxLength: 400 }),
+);
+
+describe('detectFormat rule order', () => {
+  // Feature: plain-text, Property 10: Detection follows the rule order
+  it('equals the full oracle for any bytes and any file name', () => {
+    // **Validates: Requirements 2.2, 2.3, 2.5, 2.7, 2.8**
+    fc.assert(
+      fc.property(fc.oneof(anyInput, textBytes, almostTextBytes), anyFileName, (bytes, name) => {
+        const expected = detectFullOracle(bytes, name);
+        const got = detectFormat(bytes, name);
+        return got.format === expected.format && got.source === expected.source;
+      }),
+      { numRuns: numRuns(100) },
+    );
+  });
+
+  // Feature: plain-text, Property 10: Detection follows the rule order
+  it('equals the full oracle when the file name is omitted', () => {
+    // **Validates: Requirements 2.2, 2.3, 2.5, 2.7, 2.8**
+    fc.assert(
+      fc.property(fc.oneof(anyInput, textBytes, almostTextBytes), (bytes) => {
+        const expected = detectFullOracle(bytes);
+        const got = detectFormat(bytes);
+        return got.format === expected.format && got.source === expected.source;
+      }),
+      { numRuns: numRuns(100) },
+    );
+  });
+});
+
+describe('detectFormat strong content rules', () => {
+  // Feature: plain-text, Property 11: Strong content rules beat every extension
+  it('returns the content format for strong content and any name, and the strong extension format otherwise', () => {
+    // **Validates: Requirements 2.4, 2.6**
+    const strongExtensions = EXTENSION_FORMATS.filter(([, format]) => format !== 'text');
+    const txtNames = fc
+      .tuple(fc.constantFrom('TXT', 'txt', 'Txt', 'BAT', 'ME', '1ST'), fc.string({ maxLength: 20 }))
+      .map(([ext, stem]) => `${stem.replace(/\./g, '_')}.${ext}`);
+    const strongNames = fc
+      .tuple(fc.constantFrom(...strongExtensions), fc.array(fc.boolean(), { minLength: 4, maxLength: 4 }), fc.string({ maxLength: 20 }))
+      .map(([[ext], flips, stem]) => `${stem.replace(/\./g, '_')}.${[...ext].map((c, i) => (flips[i] ? c.toLowerCase() : c)).join('')}`);
+    const anyName = fc.oneof(txtNames, strongNames, anyFileName, fc.constant(undefined));
+    fc.assert(
+      fc.property(contentBytes, anyName, (bytes, name) => {
+        const got = detectFormat(bytes, name);
+        return got.format === detectOracle(bytes) && got.source === 'content';
+      }),
+      { numRuns: numRuns(100) },
+    );
+
+    const otherBytes = fc
+      .oneof(shortBytes, biasedBytes, familyInput, textBytes, almostTextBytes)
+      .filter((b) => detectOracle(b) === 'unknown');
+    const strongExtensionNames = fc
+      .tuple(fc.constantFrom(...strongExtensions), fc.array(fc.boolean(), { minLength: 4, maxLength: 4 }), fc.string({ maxLength: 20 }))
+      .map(([[ext, format], flips, stem]) => ({
+        name: `${stem.replace(/\./g, '_')}.${[...ext].map((c, i) => (flips[i] ? c.toLowerCase() : c)).join('')}`,
+        format,
+      }));
+    fc.assert(
+      fc.property(otherBytes, strongExtensionNames, (bytes, { name, format }) => {
+        const got = detectFormat(bytes, name);
+        return got.format === format && got.source === 'extension';
+      }),
+      { numRuns: numRuns(100) },
+    );
+  });
+});
+
+describe('detectFormat text sample window', () => {
+  /** Printable text bytes plus whitespace; none can start a PCX, dBase or WordStar rule. */
+  const WINDOW_TEXT_BYTES: readonly number[] = [0x09, 0x0a, 0x0c, 0x0d, 0x20, 0x41, 0x61, 0x7e];
+  const NON_TEXT_BYTES: readonly number[] = [0x00, 0x01, 0x07, 0x7f, 0x80, 0xff];
+
+  /** A buffer longer than the window whose first DETECT_SAMPLE_BYTES bytes are text. */
+  const textWindowInput = fc
+    .tuple(
+      fc.array(fc.constantFrom(...WINDOW_TEXT_BYTES), { minLength: 1, maxLength: 64 }),
+      fc.integer({ min: WINDOW + 1, max: WINDOW + 1500 }),
+    )
+    .map(([pattern, length]) => {
+      const out = new Uint8Array(length);
+      for (let i = 0; i < length; i++) out[i] = pattern[i % pattern.length] as number;
+      return out;
+    });
+
+  // Feature: plain-text, Property 12: Detection reads only the sample window
+  it('is unchanged by any edit at or after index DETECT_SAMPLE_BYTES', () => {
+    // **Validates: Requirements 2.10**
+    fc.assert(
+      fc.property(
+        fc.oneof(windowedInput(WINDOW + 1), textWindowInput),
+        fc.array(fc.tuple(fc.nat(1500), fc.integer({ min: 0, max: 255 })), { minLength: 1, maxLength: 20 }),
+        (bytes, edits) => {
+          const mutated = bytes.slice();
+          for (const [offset, value] of edits) {
+            const index = WINDOW + offset;
+            if (index < mutated.length) mutated[index] = value;
+          }
+          return mutated.length === bytes.length && sameResult(bytes, mutated);
+        },
+      ),
+      { numRuns: numRuns(100) },
+    );
+  });
+
+  // Feature: plain-text, Property 12: Detection reads only the sample window
+  it('detects text when the window is text and the later bytes are not', () => {
+    // **Validates: Requirements 2.10**
+    fc.assert(
+      fc.property(
+        textWindowInput,
+        fc.array(fc.tuple(fc.nat(1500), fc.constantFrom(...NON_TEXT_BYTES)), { minLength: 1, maxLength: 20 }),
+        (bytes, edits) => {
+          const mutated = bytes.slice();
+          for (const [offset, value] of edits) {
+            const index = WINDOW + offset;
+            if (index < mutated.length) mutated[index] = value;
+          }
+          const got = detectFormat(mutated);
+          return got.format === 'text' && got.source === 'content';
+        },
+      ),
+      { numRuns: numRuns(100) },
+    );
+  });
+
+  // Feature: plain-text, Property 12: Detection reads only the sample window
+  it('does not detect text when index DETECT_SAMPLE_BYTES - 1 is a non-text byte', () => {
+    // **Validates: Requirements 2.10**
+    fc.assert(
+      fc.property(textWindowInput, fc.constantFrom(...NON_TEXT_BYTES), (bytes, odd) => {
+        const mutated = bytes.slice();
+        mutated[WINDOW - 1] = odd;
+        return detectFormat(mutated).format !== 'text';
+      }),
+      { numRuns: numRuns(100) },
+    );
   });
 });

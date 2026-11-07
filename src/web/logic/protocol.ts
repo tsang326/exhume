@@ -24,6 +24,7 @@ export type WorkerRequest = OpenRequest | ExhumeRequest;
 export type ExhumeResult =
   | { kind: 'markdown'; text: string; warnings: ConversionWarning[] }
   | { kind: 'csv'; text: string; warnings: ConversionWarning[] }
+  | { kind: 'text'; text: string; warnings: ConversionWarning[] }
   | { kind: 'png'; png: Uint8Array; warnings: ConversionWarning[] }
   | { kind: 'raw'; error: string; warnings: ConversionWarning[] }; // unknown format or conversion failure
 
@@ -55,5 +56,6 @@ export type WorkerResponse = OpenedResponse | ExhumedResponse | FailedResponse;
 export const OUTPUT_BY_KIND = {
   markdown: { mime: 'text/markdown', extension: '.md' },
   csv: { mime: 'text/csv', extension: '.csv' },
+  text: { mime: 'text/plain', extension: '.txt' },
   png: { mime: 'image/png', extension: '.png' },
 } as const;

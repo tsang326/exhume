@@ -8,6 +8,7 @@ import { decodePng, parseCsv } from '../../test-support/formats/index';
 import { timed } from '../../test-support/timed';
 import type { DiskPlan } from '../build';
 import { OFFICE_CUSTOMER_DBF, OFFICE_LOGO_PCX, LOGO } from '../content/office';
+import { MARKER_GENERATED, MARKER_WRITTEN } from '../content/readme';
 import type { DemoDiskId } from '../specs';
 import type { Expectation } from './expected';
 import type { CheckFailure } from './types';
@@ -65,7 +66,7 @@ export function checkReads(
   };
 
   try {
-    const noConverter = new Set(expectation.noConverter);
+    const textFiles = new Set(expectation.textFiles);
     const byPath = new Map<string, Grave>();
     for (const g of disk.report.files) byPath.set(g.path, g);
 
@@ -106,10 +107,16 @@ export function checkReads(
       }
 
       const converted = convertAuto(read.bytes, baseName(grave.path));
-      if (noConverter.has(grave.path)) {
-        if (converted.ok) fail(`${grave.path}: a plain text file must not convert`);
-      } else if (!converted.ok) {
+      if (!converted.ok) {
         fail(`${grave.path}: conversion failed`);
+      } else if (textFiles.has(grave.path)) {
+        if (converted.mime !== 'text/plain') fail(`${grave.path}: expected a plain text conversion`);
+        if (converted.warnings.length !== 0) fail(`${grave.path}: plain text conversion has warnings`);
+        if (grave.path === '/README.TXT') {
+          const text = typeof converted.output === 'string' ? converted.output : '';
+          if (!text.includes(MARKER_GENERATED)) fail(`${grave.path}: text lacks the generated-by marker phrase`);
+          if (!text.includes(MARKER_WRITTEN)) fail(`${grave.path}: text lacks the written-for-the-demo marker phrase`);
+        }
       }
     }
 

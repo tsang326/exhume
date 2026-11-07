@@ -126,6 +126,17 @@ describe('runSharedChecks mutations', () => {
     expect(groupsOf(failures)).toContain('shape');
   });
 
+  it('(g) a control byte planted in README.TXT is reported by reads', () => {
+    const layout = layoutOf('writers-disk');
+    const readme = node(layout, '/README.TXT');
+    const { dataStart, clusterBytes } = layout.offsets;
+    const at = dataStart + (readme.startCluster - 2) * clusterBytes;
+    layout.image[at] = 0x01;
+    const failures = runSharedChecks('writers-disk', layout.image);
+    expect(failures.length).toBeGreaterThan(0);
+    expect(groupsOf(failures)).toContain('reads');
+  });
+
   it('(f) a PHONE cell outside the reserved range is reported by texts', () => {
     const image = buildDemoDisk('office-disk').image.slice();
     const at = indexOfBytes(image, '555-0104');

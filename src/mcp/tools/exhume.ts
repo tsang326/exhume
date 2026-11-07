@@ -4,7 +4,7 @@ import { parseGraveArgs } from '../args';
 import { withEnvelope } from '../envelope';
 import type { Outcome } from '../errors';
 import { writeExhumed } from '../exhume-writer';
-import { prepareGrave } from '../grave-source';
+import { formatOf, prepareGrave } from '../grave-source';
 import type { ToolContext } from '../grave-source';
 import { MAX_REASON_CHARS_OUT } from '../limits';
 import { capUnits, sanitizeText } from '../sanitize';
@@ -19,8 +19,7 @@ export function runExhume(ctx: ToolContext, args: unknown): Outcome<unknown> {
   if (!written.ok) return written;
 
   const { grave, conversion } = prepared.value;
-  const format =
-    conversion.extension === '.csv' ? 'csv' : conversion.extension === '.png' ? 'png' : 'markdown';
+  const format = formatOf(conversion.extension);
   const body = {
     path: written.value.relPath,
     bytes: written.value.bytes,

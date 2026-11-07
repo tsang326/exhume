@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Fuzz after core task",
+      "trigger": "PostTaskExec",
+      "description": "After a spec task completes, run the hostile-input fuzz suite only if src/core changed.",
+      "action": {
+        "type": "command",
+        "command": "git diff --quiet HEAD -- src/core || npm run test:fuzz",
+        "timeout": 300
+      }
+    }
+  ]
+}

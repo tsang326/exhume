@@ -3,7 +3,7 @@
 Your old disks aren't dead. They're buried.
 
 Drop a DOS floppy image into the page and its files appear as a graveyard. Deleted files are open graves you can
-dig up. WordStar documents rise as Markdown, dBase tables as CSV, PCX pictures as PNG. Everything runs in your
+dig up. WordStar documents rise as Markdown, dBase tables as CSV, PCX pictures as PNG, plain text files as `.txt` text. Everything runs in your
 browser; nothing is uploaded.
 
 Also ships as an MCP server / Kiro Power and a Kiro Crew app, so an agent can open a floppy image and exhume files
@@ -62,7 +62,7 @@ the server fails with "Connection Failed" (details below). Whether to convert it
 ### Tools
 - `open_disk`: open a disk image inside the workspace and list its files with state (`alive`, `recovered`, `partial`,
   `lost`), size and date.
-- `read_grave`: convert one file and return a preview (Markdown or CSV text, or PNG dimensions). Takes `image`, `path`
+- `read_grave`: convert one file and return a preview (Markdown, CSV or plain text, or PNG dimensions). Takes `image`, `path`
   and an optional integer `id` from the `open_disk` listing, for when two entries share a path.
 - `exhume`: convert one file and write the full result into the `exhumed/` folder of the workspace. It never
   overwrites an existing file.

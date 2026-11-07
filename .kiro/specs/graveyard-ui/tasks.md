@@ -275,8 +275,8 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 11. Worker handler and glue
-  - [~] 11.1 Create `worker/disk-handler.ts`
+- [x] 11. Worker handler and glue
+  - [x] 11.1 Create `worker/disk-handler.ts`
     - Design: "Worker design", "Worker handler: `worker/disk-handler.ts`, `worker/disk.worker.ts`"
     - `WorkerSession { handle: DiskHandle | null }`, `createSession()`, total `handleRequest(session, raw)` that never throws and mutates only `session.handle`, and only on a successful `open`
     - `open`: `parseRequest`, `openDisk(image)`, install the new handle (this releases the old one); a report with geometry source `none` is a success; a throw becomes `failed` / `internal` and leaves the handle alone
@@ -285,25 +285,25 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
     - Imports from the core only `../../core/fat12/index` and `../../core/formats/index`
     - _Requirements: 3.1, 3.2, 3.9, 3.10, 3.11, 9.12, 9.13, 9.14, 9.15, 14.3, 14.4, 14.6_
 
-  - [~] 11.2 Replace the stub with the real `worker/disk.worker.ts` glue
+  - [x] 11.2 Replace the stub with the real `worker/disk.worker.ts` glue
     - Design: "Worker handler: `worker/disk.worker.ts`"
     - `self.onmessage = (e) => { const res = handleRequest(session, e.data); self.postMessage(res, transferablesOf(res)); }` and nothing else; no logic in the glue
     - Remove the stub marker; confirm the worker tsconfig and the root exclusion still typecheck
     - _Requirements: 3.1, 3.8, 3.10, 14.6_
 
-  - [ ]* 11.3 Write property tests for the worker handler
+  - [x]* 11.3 Write property tests for the worker handler
     - **Property 11: The worker keeps one handle and always answers once**
     - **Property 12: Exhume is bounded and safe for every id**
     - In `src/web/worker/disk-handler.test.ts`; generated disks from `src/test-support/fat12` with WordStar, dBase, PCX and unknown files; random, empty, truncated and over-cap images
     - **Validates: Requirements 3.9, 3.10, 3.11, 14.3, 14.4, 14.6**
 
-- [~] 12. Checkpoint - Worker handler complete
+- [x] 12. Checkpoint - Worker handler complete
   - Run `npm run typecheck`, `npm test`, `npm run test:fuzz` and `npm run build`. All must exit 0.
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 13. DOM modules
-  - [~] 13.1 Create `dom/h.ts`
+  - [x] 13.1 Create `dom/h.ts`
     - Design: "DOM helper: `dom/h.ts`"
     - `AttrName`, closed `AllowedTag` union, `h(tag, attrs?, ...children)` (string children become `Text` nodes), `clear(node)` (removeChild loop), `setDownloadHref(a, blobUrl, safeFileName)`, and `setSrcBlob(img, blobUrl, safeName)`, the only place that sets `src` and `alt`; it throws when `safeName` does not match `[A-Za-z0-9._-]{1,64}`
     - No HTML sink anywhere; `style`, `srcdoc`, `on*` and `alt` are not in `AttrName`

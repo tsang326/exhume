@@ -446,6 +446,16 @@
         "executionId": "28dd30b1-2402-4efa-b20d-c1b440a8198a",
         "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
         "timestamp": 1794025713265
+      },
+      {
+        "executionId": "542487f4-9c6e-4540-89ce-e88e0b215a51",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794028403811
+      },
+      {
+        "executionId": "542487f4-9c6e-4540-89ce-e88e0b215a51",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794028608449
       }
     ],
     "11.2 Replace the stub with the real `worker/disk.worker.ts` glue": [
@@ -453,6 +463,11 @@
         "executionId": "28dd30b1-2402-4efa-b20d-c1b440a8198a",
         "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
         "timestamp": 1794025713298
+      },
+      {
+        "executionId": "542487f4-9c6e-4540-89ce-e88e0b215a51",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794028618369
       }
     ],
     "12. Checkpoint - Worker handler complete": [
@@ -460,6 +475,16 @@
         "executionId": "28dd30b1-2402-4efa-b20d-c1b440a8198a",
         "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
         "timestamp": 1794025713330
+      },
+      {
+        "executionId": "542487f4-9c6e-4540-89ce-e88e0b215a51",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794028665034
+      },
+      {
+        "executionId": "542487f4-9c6e-4540-89ce-e88e0b215a51",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794028822267
       }
     ],
     "13.1 Create `dom/h.ts`": [
@@ -467,6 +492,16 @@
         "executionId": "28dd30b1-2402-4efa-b20d-c1b440a8198a",
         "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
         "timestamp": 1794025713362
+      },
+      {
+        "executionId": "542487f4-9c6e-4540-89ce-e88e0b215a51",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794028408646
+      },
+      {
+        "executionId": "542487f4-9c6e-4540-89ce-e88e0b215a51",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794028659260
       }
     ],
     "13.2 Create `dom/status.ts` and `dom/errors.ts`": [
@@ -822,6 +857,20 @@
         "executionId": "e78a0bce-2a23-450a-b64c-998d6a2dc5df",
         "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
         "timestamp": 1794028046523
+      }
+    ],
+    "11. Worker handler and glue": [
+      {
+        "executionId": "542487f4-9c6e-4540-89ce-e88e0b215a51",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794028618421
+      }
+    ],
+    "11.3 Write property tests for the worker handler": [
+      {
+        "executionId": "542487f4-9c6e-4540-89ce-e88e0b215a51",
+        "chatSessionId": "sess_5529feff-19e6-43b3-ab23-7403ea34712a",
+        "timestamp": 1794028652713
       }
     ]
   }

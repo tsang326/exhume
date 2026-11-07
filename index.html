@@ -4,10 +4,50 @@
     <meta charset="UTF-8" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>REVENANT.OS</title>
+    <title>Exhume - REVENANT.OS</title>
   </head>
   <body>
-    <h1>REVENANT.OS</h1>
+    <!--
+      Element contract for src/main.ts / app.ts (look up by id):
+        #fx-host         effects layer host; the effects module appends its canvas here. aria-hidden.
+        #app             page wrapper; gets the inert attribute while the preview dialog is open.
+        .content         wrapper for all page text (inside #app).
+        #drop-zone       drop target section (labelled); dragover and drop listeners go here.
+        #pick-button     visible button; click opens #file-input.
+        #file-input      hidden input type=file; change reads the chosen file.
+        #status          p with role=status, aria-live=polite, aria-atomic=true; the status module writes text here.
+        #cancel-button   hidden until a worker request is pending; click cancels it. Remove hidden to show.
+        #reopen-button   hidden until the disk is lost; click reopens the last file. Remove hidden to show.
+        #demo-slot       mount point for the demo disk list (spec 5 slot).
+        #graveyard       mount point for the graveyard display.
+        #preview-root    preview dialog root; sibling of #app, not inside it, so it is not inert.
+    -->
+    <div id="fx-host" aria-hidden="true"></div>
+    <div id="app">
+      <div class="content">
+        <header>
+          <h1>Exhume</h1>
+          <p id="privacy-note" class="note">Your files stay in this browser. Nothing is uploaded.</p>
+        </header>
+        <main>
+          <section id="drop-zone" class="drop-zone" aria-label="Drop a floppy image here">
+            <p>Drop a floppy image here</p>
+            <button id="pick-button" type="button">Choose a disk image</button>
+            <input id="file-input" type="file" hidden />
+          </section>
+          <p id="status" class="status" role="status" aria-live="polite" aria-atomic="true"></p>
+          <button id="cancel-button" type="button" hidden>Cancel</button>
+          <button id="reopen-button" type="button" hidden>Reopen disk</button>
+          <!-- SLOT for spec 5 demo disks: the demo slot module mounts its list here. Keep this container empty. -->
+          <div id="demo-slot"></div>
+          <section id="graveyard" aria-label="Graveyard"></section>
+        </main>
+        <footer>
+          <p id="honesty-note" class="note">Prior art: andete/disk-peek, an existing browser tool for FAT12 images and deleted-entry recovery.</p>
+        </footer>
+      </div>
+    </div>
+    <div id="preview-root"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

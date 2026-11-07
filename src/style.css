@@ -1,9 +1,730 @@
+/*
+  REVENANT.OS / Exhume: a lantern-lit graveyard in fog. CSS only, no external resources.
+
+  Contrast pairs are literal hex values (--pair-<id>-fg / --pair-<id>-bg) so tests can read them.
+  Ids ending -large or -ui need 3:1; all others 4.5:1.
+
+  Layers (z-index): .preview-backdrop 100, .content 10, fx glow 1 (opacity 0.45), .fx-canvas 0 (opacity 0.5).
+  Every .fx-* rule has pointer-events: none. Fallback contract (Req 11.4): an effect placed above
+  .content must have opacity <= 0.15 and keep text pairs at 4.5:1 under a black or white layer.
+*/
+
 :root {
   color-scheme: dark;
-  --phosphor: #7dff9a;
-  --bg: #050806;
-  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  /* Contrast pairs */
+  --pair-body-fg: #dfe6d8;
+  --pair-body-bg: #0b0f10;
+  --pair-body-panel-fg: #dfe6d8;
+  --pair-body-panel-bg: #141c1e;
+  --pair-muted-fg: #a9b7a8;
+  --pair-muted-bg: #141c1e;
+  --pair-muted-raised-fg: #a9b7a8;
+  --pair-muted-raised-bg: #1c2629;
+  --pair-lantern-fg: #ffbf5e;
+  --pair-lantern-bg: #141c1e;
+  --pair-state-recovered-fg: #8fe3a1;
+  --pair-state-recovered-bg: #141c1e;
+  --pair-state-partial-fg: #f0c36a;
+  --pair-state-partial-bg: #141c1e;
+  --pair-state-lost-fg: #ff9a8a;
+  --pair-state-lost-bg: #141c1e;
+  --pair-button-fg: #0b0f10;
+  --pair-button-bg: #ffbf5e;
+  --pair-focus-ui-fg: #ffd27a;
+  --pair-focus-ui-bg: #141c1e;
+  --pair-focus-ui-ground-fg: #ffd27a;
+  --pair-focus-ui-ground-bg: #0b0f10;
+  --pair-border-ui-fg: #5f7378;
+  --pair-border-ui-bg: #141c1e;
+
+  /* Tokens */
+  --ground: var(--pair-body-bg);
+  --panel: var(--pair-body-panel-bg);
+  --raised: var(--pair-muted-raised-bg);
+  --stone: #6d8085;
+  --earth: #0d1312;
+  --radius: 0.5rem;
+  --gap: 1rem;
+  --font-body: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --rise-ms: 900ms;
+
+  font-family: var(--font-body);
+  line-height: 1.5;
 }
-html, body { margin: 0; height: 100%; background: var(--bg); color: var(--phosphor); }
-#app { height: 100%; display: grid; place-items: center; }
-.boot { font-size: 1.25rem; text-shadow: 0 0 6px var(--phosphor); }
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--pair-body-bg);
+  color: var(--pair-body-fg);
+  overflow-x: hidden;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+/* ---------------------------------------------------------------- effect layers */
+
+#fx-host {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Lantern glow: CSS gradient on the host, translucent, behind all text. */
+#fx-host::before,
+.fx-glow {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0.45;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 15% 10%, rgb(255 191 94 / 0.45), transparent 45%),
+    radial-gradient(ellipse at 85% 90%, rgb(255 191 94 / 0.25), transparent 50%);
+}
+
+/* Static fog fallback when no canvas draws: gradients only. */
+#fx-host::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.3;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 30% 80%, rgb(169 183 168 / 0.3), transparent 55%),
+    radial-gradient(ellipse at 75% 30%, rgb(169 183 168 / 0.2), transparent 50%);
+}
+
+.fx-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.fx-canvas.is-static {
+  opacity: 0.4;
+}
+
+/* ---------------------------------------------------------------- page */
+
+.content {
+  position: relative;
+  z-index: 10;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+main {
+  display: block;
+}
+
+h1,
+h2 {
+  color: var(--pair-lantern-fg);
+  margin: 0 0 0.5rem;
+  overflow-wrap: anywhere;
+}
+
+h1 {
+  font-size: 2rem;
+  letter-spacing: 0.05em;
+}
+
+h2 {
+  font-size: 1.25rem;
+}
+
+.note {
+  margin: 0.25rem 0;
+  color: var(--pair-muted-fg);
+  overflow-wrap: anywhere;
+}
+
+footer {
+  margin-top: 2rem;
+}
+
+.content .note {
+  background: transparent;
+}
+
+/* ---------------------------------------------------------------- controls */
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+#pick-button,
+#cancel-button,
+#reopen-button,
+.preview-download,
+.graveyard-more {
+  background: var(--pair-button-bg);
+  color: var(--pair-button-fg);
+  border: 1px solid var(--pair-button-bg);
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  min-height: 2.5rem;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+#cancel-button,
+#reopen-button {
+  margin: 0.5rem 0.5rem 0.5rem 0;
+}
+
+button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+:focus-visible {
+  outline: 3px solid var(--pair-focus-ui-ground-fg);
+  outline-offset: 2px;
+}
+
+.drop-zone:focus-visible,
+.graveyard-list :focus-visible,
+.demo-slot :focus-visible,
+.preview :focus-visible {
+  outline-color: var(--pair-focus-ui-fg);
+}
+
+.drop-zone {
+  background: var(--pair-body-panel-bg);
+  color: var(--pair-body-panel-fg);
+  border: 2px dashed var(--pair-border-ui-fg);
+  border-radius: var(--radius);
+  padding: 1.5rem 1rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.drop-zone p {
+  margin: 0 0 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.drop-zone.is-dragover {
+  border-color: var(--pair-lantern-fg);
+}
+
+.status {
+  min-height: 1.5rem;
+  margin: 0.5rem 0;
+  color: var(--pair-body-fg);
+  overflow-wrap: anywhere;
+}
+
+/* ---------------------------------------------------------------- demo slot */
+
+.demo-slot {
+  background: var(--pair-body-panel-bg);
+  color: var(--pair-body-panel-fg);
+  border: 1px solid var(--pair-border-ui-fg);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.demo-slot-status {
+  margin: 0.25rem 0;
+  color: var(--pair-muted-fg);
+  min-height: 1.5rem;
+}
+
+.demo-slot-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
+  gap: var(--gap);
+}
+
+.demo-slot-list > * {
+  min-width: 0;
+}
+
+.demo-slot-button {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  background: var(--pair-muted-raised-bg);
+  color: var(--pair-body-panel-fg);
+  border: 1px solid var(--pair-border-ui-fg);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.demo-slot-title {
+  color: var(--pair-lantern-fg);
+}
+
+.demo-slot-description {
+  color: var(--pair-muted-raised-fg);
+}
+
+/* ---------------------------------------------------------------- graveyard */
+
+#graveyard {
+  margin: 1rem 0;
+}
+
+.graveyard-summary,
+.graveyard-message,
+.graveyard-progress {
+  margin: 0.5rem 0;
+  color: var(--pair-muted-fg);
+  overflow-wrap: anywhere;
+}
+
+.graveyard-warnings {
+  background: var(--pair-body-panel-bg);
+  color: var(--pair-body-panel-fg);
+  border: 1px solid var(--pair-border-ui-fg);
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  margin: 0.5rem 0;
+  overflow-wrap: anywhere;
+}
+
+.graveyard-list {
+  list-style: none;
+  margin: 1rem 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
+  gap: var(--gap);
+}
+
+.graveyard-list > * {
+  min-width: 0;
+}
+
+.graveyard-more {
+  display: block;
+  margin: 0.5rem 0;
+}
+
+.grave {
+  position: relative;
+  background: var(--pair-body-panel-bg);
+  color: var(--pair-body-panel-fg);
+  border: 1px solid var(--pair-border-ui-fg);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.grave-action,
+.grave-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0.75rem;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  border-radius: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.grave-action:hover:not([disabled]) {
+  background: var(--pair-muted-raised-bg);
+}
+
+.grave-action:focus-visible {
+  outline-offset: -4px;
+}
+
+.grave-action[disabled] {
+  cursor: not-allowed;
+}
+
+.grave-name,
+.grave-path,
+.preview-title,
+#preview-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.grave-name {
+  color: var(--pair-lantern-fg);
+  font-weight: bold;
+}
+
+.grave-path,
+.grave-meta,
+.grave-reason,
+.grave-marker {
+  color: var(--pair-muted-fg);
+  overflow-wrap: anywhere;
+}
+
+.grave-state {
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.grave--alive .grave-state {
+  color: var(--pair-body-panel-fg);
+}
+
+.grave--recovered .grave-state {
+  color: var(--pair-state-recovered-fg);
+}
+
+.grave--partial .grave-state {
+  color: var(--pair-state-partial-fg);
+}
+
+.grave--lost .grave-state {
+  color: var(--pair-state-lost-fg);
+}
+
+/* ---------------------------------------------------------------- grave art (CSS only) */
+
+.grave-art {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 2.5rem;
+  height: 3rem;
+  margin-bottom: 0.25rem;
+  pointer-events: none;
+}
+
+/* Tombstone: solid rounded-top slab with a cross-bar and base shadow. */
+.grave--tombstone .grave-art {
+  background:
+    radial-gradient(circle at 50% 120%, rgb(255 191 94 / 0.25), transparent 70%),
+    linear-gradient(var(--stone), var(--stone));
+  background-size: 100% 100%, 70% 100%;
+  background-repeat: no-repeat;
+  background-position: center, center;
+  border-radius: 1.25rem 1.25rem 0.125rem 0.125rem;
+}
+
+.grave--tombstone .grave-art::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0.6rem;
+  width: 1.1rem;
+  height: 0.2rem;
+  transform: translateX(-50%);
+  background: var(--earth);
+  box-shadow: 0 0.55rem 0 var(--earth);
+  opacity: 0.6;
+}
+
+.grave--tombstone .grave-art::after {
+  content: '';
+  position: absolute;
+  left: -0.25rem;
+  right: -0.25rem;
+  bottom: -0.2rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.5);
+}
+
+/* Open grave: dark earth slab, dashed top edge, small mound, glow tinted by state. */
+.grave--open-grave .grave-art {
+  height: 2rem;
+  width: 3.5rem;
+  background:
+    radial-gradient(ellipse at 50% 0, var(--grave-glow, rgb(255 191 94 / 0.4)), transparent 75%),
+    linear-gradient(var(--earth), var(--earth));
+  border-top: 2px dashed var(--stone);
+  border-radius: 0.25rem;
+}
+
+.grave--open-grave .grave-art::after {
+  content: '';
+  position: absolute;
+  right: -0.4rem;
+  bottom: 0;
+  width: 1.2rem;
+  height: 0.6rem;
+  border-radius: 1.2rem 1.2rem 0 0;
+  background: var(--earth);
+}
+
+.grave--recovered {
+  --grave-glow: rgb(143 227 161 / 0.45);
+}
+
+.grave--partial {
+  --grave-glow: rgb(240 195 106 / 0.45);
+}
+
+.grave--lost {
+  --grave-glow: rgb(255 154 138 / 0.4);
+}
+
+/* ---------------------------------------------------------------- rising animation (transform and opacity only) */
+
+.is-rising .grave-art {
+  animation: grave-fade var(--rise-ms) ease-out both;
+}
+
+.rise-ghost {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  width: 2rem;
+  height: 2.5rem;
+  border-radius: 1rem 1rem 0.5rem 0.5rem;
+  background: radial-gradient(ellipse at 50% 30%, rgb(223 230 216 / 0.8), transparent 75%);
+  pointer-events: none;
+  animation: ghost-rise var(--rise-ms) ease-out both;
+}
+
+@keyframes ghost-rise {
+  from {
+    transform: translateY(0);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateY(-3rem);
+    opacity: 0;
+  }
+}
+
+@keyframes grave-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.3;
+  }
+}
+
+/* ---------------------------------------------------------------- preview dialog */
+
+#preview-root {
+  position: relative;
+}
+
+.preview-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+  background: rgb(5 8 8 / 0.8);
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 48rem;
+  min-width: 0;
+  background: var(--pair-body-panel-bg);
+  color: var(--pair-body-panel-fg);
+  border: 1px solid var(--pair-border-ui-fg);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.preview > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.preview-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.preview-header h2 {
+  flex: 1 1 10rem;
+  margin: 0;
+}
+
+.preview-close {
+  background: var(--pair-muted-raised-bg);
+  color: var(--pair-body-panel-fg);
+  border: 1px solid var(--pair-border-ui-fg);
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  min-height: 2.5rem;
+}
+
+.preview-partial,
+.preview-shortened,
+.csv-note,
+.preview-status {
+  margin: 0;
+  color: var(--pair-muted-fg);
+  overflow-wrap: anywhere;
+}
+
+.preview-error {
+  margin: 0;
+  color: var(--pair-state-lost-fg);
+  overflow-wrap: anywhere;
+}
+
+.preview-warnings {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--pair-state-partial-fg);
+  overflow-wrap: anywhere;
+}
+
+.preview-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.scroll-x,
+.preview-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.preview-scroll {
+  max-height: 60vh;
+  overflow-y: auto;
+  background: var(--pair-muted-raised-bg);
+  color: var(--pair-body-panel-fg);
+  border: 1px solid var(--pair-border-ui-fg);
+  border-radius: var(--radius);
+  padding: 0.5rem;
+}
+
+.preview-markdown {
+  overflow-wrap: anywhere;
+}
+
+.preview-markdown p {
+  margin: 0 0 0.75rem;
+}
+
+.preview-markdown hr {
+  border: 0;
+  border-top: 1px solid var(--pair-border-ui-fg);
+}
+
+.preview-image {
+  text-align: center;
+}
+
+.preview-png {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.csv-table {
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.csv-table th,
+.csv-table td {
+  border: 1px solid var(--pair-border-ui-fg);
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.csv-table th {
+  color: var(--pair-lantern-fg);
+}
+
+.hex-view {
+  font-size: 0.8125rem;
+}
+
+.hex-row {
+  display: flex;
+  gap: 1rem;
+  white-space: pre;
+  width: max-content;
+}
+
+.hex-offset {
+  color: var(--pair-muted-raised-fg);
+}
+
+.hex-text {
+  color: var(--pair-lantern-fg);
+}
+
+/* ---------------------------------------------------------------- small screens */
+
+@media (max-width: 480px) {
+  .content {
+    padding: 0.75rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .preview-backdrop {
+    padding: 0.5rem;
+  }
+}
+
+/* ---------------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition: none !important;
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}

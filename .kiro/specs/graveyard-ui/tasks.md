@@ -302,83 +302,83 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 13. DOM modules
+- [x] 13. DOM modules
   - [x] 13.1 Create `dom/h.ts`
     - Design: "DOM helper: `dom/h.ts`"
     - `AttrName`, closed `AllowedTag` union, `h(tag, attrs?, ...children)` (string children become `Text` nodes), `clear(node)` (removeChild loop), `setDownloadHref(a, blobUrl, safeFileName)`, and `setSrcBlob(img, blobUrl, safeName)`, the only place that sets `src` and `alt`; it throws when `safeName` does not match `[A-Za-z0-9._-]{1,64}`
     - No HTML sink anywhere; `style`, `srcdoc`, `on*` and `alt` are not in `AttrName`
     - _Requirements: 1.2, 1.3, 1.4, 9.10_
 
-  - [~] 13.2 Create `dom/status.ts` and `dom/errors.ts`
+  - [x] 13.2 Create `dom/status.ts` and `dom/errors.ts`
     - Design: "Status, errors, effects, rising"
     - `StatusRegion` with `set` and `clear` (`textContent` on the `role="status"` element); `installGlobalErrorHandlers(status)` for window `error` and `unhandledrejection`: fixed message (at most 300 characters, no page text echoed), touches neither the graveyard nor the preview
     - _Requirements: 4.12, 12.11, 14.1_
 
-  - [~] 13.3 Create `dom/blob-urls.ts`
+  - [x] 13.3 Create `dom/blob-urls.ts`
     - Design: "Blob URLs, downloads"
     - `BlobUrlApi`, `BlobUrlManager` (`create`, `isOwned`, `revokeAll`, `liveCount`), `createBlobUrlManager(api?)` wrapping `URL.createObjectURL` and `revokeObjectURL`; revoking twice is harmless
     - _Requirements: 1.4, 9.11_
 
-  - [ ]* 13.4 Write property test for the Blob URL manager
+  - [x]* 13.4 Write property test for the Blob URL manager
     - **Property 29: Every Blob URL is revoked and only owned URLs are linkable**
     - In `src/web/dom/blob-urls.test.ts` with a fake `BlobUrlApi` (no DOM needed)
     - **Validates: Requirements 1.4, 9.11**
 
-  - [~] 13.5 Create `dom/download.ts`
+  - [x] 13.5 Create `dom/download.ts`
     - Design: "Blob URLs, downloads"
     - `Downloader.start(spec)`: `Blob` with the spec MIME, URL through the manager, temporary `a[download][href]` via `setDownloadHref`, click, remove, schedule revoke after `DOWNLOAD_REVOKE_MS` (500 ms); any thrown error returns `{ ok: false, message }` and starts nothing
     - _Requirements: 10.1, 10.8, 10.9_
 
-  - [~] 13.6 Write example tests for the downloader
+  - [x] 13.6 Write example tests for the downloader
     - In `src/web/dom/download.test.ts` with a fake URL api and scheduler: revoke delay is at most 1,000 ms; Blob creation failure starts nothing and returns the failure
     - _Requirements: 10.8, 10.9_
 
-  - [~] 13.7 Create `dom/intake.ts`
+  - [x] 13.7 Create `dom/intake.ts`
     - Design: "Intake: `dom/intake.ts`"
     - `createIntake(deps)` with `attach` and `detach`: document-level `dragenter`/`dragover`/`drop` with `preventDefault`; picker button and hidden `input[type=file]`; `classifyDrop`; `checkImageSize(file.size)` before any read; `await file.arrayBuffer()` guarded by a monotonically increasing token (the newest choice wins); length check after the read (1..cap) with "changed while being read"; "could not be read" on failure; `input.value` cleared after each pick; messages containing a file name use `toLabel` and `textContent` only
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 4.12, 4.13, 4.14, 12.1_
 
-  - [~] 13.8 Create `dom/graveyard.ts`
+  - [x] 13.8 Create `dom/graveyard.ts`
     - Design: "Graveyard renderer: `dom/graveyard.ts`"
     - `createGraveyardView(root, onActivate)` with `show`, `showMore`, `setActionsEnabled`, `itemElement`, `headingElement`
     - Item markup exactly as designed: `button.grave-action` only for exhumable files; directories and lost graves are plain `div.grave-body` with no button and no `tabindex`; state word, reason and markers as text; summary, "(no label)", empty-disk and unreadable-disk messages, collapsed `<details>` warnings list; paging appends only new `li` nodes, shows "X of Y" and the "Show more" button, hides it at the end, and moves focus to the first new item (programmatic `tabindex="-1"` on its `li` when it has no control)
     - All text through `h`
     - _Requirements: 1.2, 6.1, 6.2, 6.3, 6.4, 6.5, 6.10, 6.11, 6.12, 6.13, 6.14, 6.15, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.8, 7.9, 9.16, 12.2, 12.10_
 
-  - [~] 13.9 Create `dom/preview-content.ts` and `dom/focus-trap.ts`
+  - [x] 13.9 Create `dom/preview-content.ts` and `dom/focus-trap.ts`
     - Design: "Preview dialog: `dom/preview.ts`, `dom/preview-content.ts`, `dom/focus-trap.ts`"
     - `buildMarkdown(model)` creates only `p`, `br`, `strong`, `em`, `hr` and text nodes; `buildCsvTable(table)` (wrapper div with own scroll, first stored row as `th`, the rest `td`, "truncated" note with real row and column counts); `buildHexView(rows)` (own scroll)
     - `trapTab(root, e)` wraps focus with `nextFocusIndex` over visible focusable elements
     - Never creates `a`, `img`, `iframe`, `object`, `embed`, `form`, `script` or `link`
     - _Requirements: 5.5, 5.11, 9.8, 9.12, 12.8_
 
-  - [~] 13.10 Create `dom/preview.ts`
+  - [x] 13.10 Create `dom/preview.ts`
     - Design: "Preview dialog: `dom/preview.ts`, `dom/preview-content.ts`, `dom/focus-trap.ts`"
     - `createPreviewPanel(deps)` with `open`, `close`, `isOpen`: `div.preview-backdrop` > `div.preview[role=dialog][aria-modal=true][aria-labelledby]`; header with `h2[tabindex=-1]` and close button; partial note, error, warnings list, body, shortened-note, download buttons footer; background wrapper gets `inert`; Escape closes; focus to the heading on open and back to the opener on close, or to the graveyard heading when the opener is gone; Blob URLs revoked on close and when another preview opens; the PNG `img` comes from `setSrcBlob` only
     - _Requirements: 5.10, 9.7, 9.8, 9.10, 9.11, 9.12, 9.13, 9.14, 9.15, 9.17, 9.18, 9.20, 10.1, 12.5, 12.6, 12.7, 12.8, 12.9_
 
-  - [~] 13.11 Create `dom/demo-slot.ts`
+  - [x] 13.11 Create `dom/demo-slot.ts`
     - Design: "Demo validation: `logic/demo-validate.ts`, `demos.ts`", Requirement 8
     - Labelled container ("Demo disks" plus an accessible name) built from `selectValidDemos(DEMO_REGISTRY)`; hidden entirely with zero valid entries and no error; native buttons showing title and description as text; buttons disabled with a loading message while a demo loads, re-enabled with a cause message on failure; bytes go to the same `onBytes` pipeline as a dropped file
     - _Requirements: 8.6, 8.7, 8.8, 8.9, 8.10, 8.11, 8.12_
 
-  - [~] 13.12 Create `dom/effects.ts` and `dom/rising.ts`
+  - [x] 13.12 Create `dom/effects.ts` and `dom/rising.ts`
     - Design: "Rendering and effects", "Rising animation"
     - `createEffects(host)`: one `canvas.fx-canvas[aria-hidden]` with at most `FX_MAX_SHAPES` blobs per frame, `canvasBacking` sizing, `requestAnimationFrame` gated by `frameDue`, `visibilitychange` stop and resume, `matchMedia` reduced-motion change applied immediately (one static frame when on), `getContext('2d') === null` removes the canvas silently; class toggles only, no `style.*`
     - `playRise(item, reduced)`: `.is-rising` and `span.rise-ghost[aria-hidden]` added synchronously, `RISE_MS` timer, cleanup in `finally` so no animated element remains, instant resolve when reduced, `cancel()`
     - _Requirements: 11.1, 11.2, 11.5, 11.6, 11.7, 11.8, 11.9, 11.10, 9.1, 9.5_
 
-  - [~] 13.13 Create `dom/worker-client.ts`
+  - [x] 13.13 Create `dom/worker-client.ts`
     - Design: "Worker client: `dom/worker-client.ts`", "Main-thread bytes, transfer and recovery"
     - `Settled<T>`, `WorkerClient` with `open`, `exhume`, `cancel`, `supersedeAll`, `hasPending`, `dispose`, and `createWorkerClient(factory?)` with an injectable worker factory
     - The client owns the request id source so ids keep growing across worker replacements; `message` events go through `parseResponse` then `tracker.accept`; `error`, `messageerror`, the 15 s open timer, the 30 s exhume timer and `cancel` each terminate the worker, call `supersedeAll`, resolve pending promises as `lost`, and create a new worker on the next request; `open` sends `buildOpenMessage` with the transfer list
     - _Requirements: 3.5, 3.6, 3.7, 3.8, 3.12, 3.13, 3.14, 3.15, 3.16, 3.17_
 
-  - [~] 13.14 Write example tests for the worker client
+  - [x] 13.14 Write example tests for the worker client
     - In `src/web/dom/worker-client.test.ts` with an injected fake worker and fake timers: ids keep growing across a replacement; stale and invalid messages change nothing; `error`, `messageerror`, the 15 s open timeout, the 30 s exhume timeout and `cancel` each end as `lost` and the next request uses a new worker; `supersedeAll` resolves pending requests as `superseded`; the open request transfers a copy of the bytes
     - _Requirements: 3.5, 3.6, 3.7, 3.12, 3.13, 3.14, 3.15, 3.16_
 
-  - [~] 13.15 Create `app.ts` and wire `main.ts`
+  - [x] 13.15 Create `app.ts` and wire `main.ts`
     - Design: "App wiring and session: `app.ts`", "Session states (main thread)", "Data kept and released", Error Handling table
     - `startApp()`: find the elements declared in `index.html`, install the error handlers, create the effects, worker client (worker created at boot), intake, demo slot, graveyard view and preview panel; `Session { phase, held, report, items }`
     - `openImage(bytes, name)`: the client transfers a copy; on `ok` revoke all Blob URLs, close the preview, `held = candidate`, render the new graveyard and reset paging (an unreadable disk with geometry `none` is a successful open); on `failed` keep the previous graveyard, preview and Blob URLs and name the failure kind; on `lost` set phase `lost`, keep the list, disable exhume controls and show **Reopen disk** (re-sends `held`)
@@ -387,20 +387,20 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
     - `src/main.ts`: `import './style.css'` and `startApp()` only
     - _Requirements: 3.12, 3.13, 3.14, 3.15, 3.16, 4.14, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.16, 9.20, 14.1, 14.2, 14.3, 14.5_
 
-- [~] 14. Checkpoint - DOM modules complete
+- [x] 14. Checkpoint - DOM modules complete
   - Run `npm run typecheck`, `npm test`, `npm run test:fuzz` and `npm run build`. All must exit 0.
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 15. Page markup and stylesheet
-  - [~] 15.1 Write the full `index.html`
+  - [x] 15.1 Write the full `index.html`
     - Design: "The policy", "Accessibility and responsive layout"
     - `<html lang="en">`, `<meta charset>`, then the single CSP meta tag with the exact policy from the design as the next element (before any `script`, `link` or `style`), non-empty `<title>`, module script for `/src/main.ts`
     - `header` with exactly one `h1` ("Exhume") and the privacy note "Your files stay in this browser. Nothing is uploaded."; `main` with the drop zone `section[aria-label]` ("Drop a floppy image here"), the visible **Choose a disk image** button and hidden file input, `p#status[role=status][aria-live=polite][aria-atomic=true]`, the demo slot container, the graveyard section; the preview root next to (not inside) the main wrapper that gets `inert`; `footer` with the honesty note naming "andete/disk-peek" as an existing browser tool for FAT12 images and deleted-entry recovery
     - No inline script, no `on*` attribute, no `style` attribute, no `<style>`; no forbidden phrase in the visible text
     - _Requirements: 2.1, 2.2, 2.3, 8.7, 8.8, 12.1, 12.9, 12.10, 12.14, 13.1, 13.3, 13.4_
 
-  - [~] 15.2 Write `src/style.css`
+  - [x] 15.2 Write `src/style.css`
     - Design: "Visual identity", "Layers and z-index plan", "Tombstone and open-grave art (CSS only)", "Rising animation", "Accessibility and responsive layout"
     - Design tokens as CSS custom properties; contrast pairs as literal hex values named `--pair-<id>-fg` and `--pair-<id>-bg` with the ids and values from the design table, and rules using `var(--pair-...)`
     - Layers: `.preview-backdrop` 100, `.content` 10, `.fx-glow` 1 (opacity 0.45), `.fx-canvas` 0 (opacity 0.5); every `.fx-*` rule has `pointer-events: none`; effective opacity at most 0.6

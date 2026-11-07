@@ -1,0 +1,309 @@
+{
+  "pbtResults": {
+    "2.5 Write property test for the warning collector": {
+      "status": "passed",
+      "lastRunTimestamp": 1794016676288
+    },
+    "5.1 Write property test for checksums": {
+      "status": "passed",
+      "lastRunTimestamp": 1794017180776
+    },
+    "5.2 Write property test for the PNG round trip": {
+      "status": "passed",
+      "lastRunTimestamp": 1794017382542
+    },
+    "5.3 Write property test for agreement with Node zlib": {
+      "status": "passed",
+      "lastRunTimestamp": 1794017466909
+    }
+  },
+  "executionHistory": {
+    "1.1 Re-export `decodeCp437` from the FAT12 index": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794001364882
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794015716215
+      }
+    ],
+    "1.2 Extract the purity scanners into `src/test-support/scan.ts`": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794015716538
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016081753
+      }
+    ],
+    "1. Approved prerequisites": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016081807
+      }
+    ],
+    "2.1 Create `limits.ts` and `types.ts`": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016081888
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016172441
+      }
+    ],
+    "2.2 Create `templates.ts` and `chars.ts`": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016177819
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016329839
+      }
+    ],
+    "4.1 Create `errors.ts`, `png-decoder.ts`, `csv-parser.ts` and `png-oracle.ts`": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016345118
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016445022
+      }
+    ],
+    "2.3 Create `warnings.ts`, `guard.ts` and `result.ts`": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016449610
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016600933
+      }
+    ],
+    "3.1 Create `checksums.ts`": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016449971
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016601162
+      }
+    ],
+    "4.2 Create `wordstar-writer.ts`, `dbase-writer.ts`, `pcx-encoder.ts` and the barrel `index.ts`": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016450776
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016602025
+      }
+    ],
+    "2.4 Write example tests for limits, templates and guards": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016609808
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017003213
+      }
+    ],
+    "2.5 Write property test for the warning collector": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016613746
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017003240
+      }
+    ],
+    "3.2 Create `png.ts` with `encodePng`": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016613986
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017003602
+      }
+    ],
+    "4.3 Create `oracles.ts` and `invariants.ts`": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794016614045
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017004440
+      }
+    ],
+    "4.4 Create `arbitraries.ts` and `hostile.ts`": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017041176
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017284174
+      }
+    ],
+    "3.3 Write example tests for the encoder": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017041224
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017279633
+      }
+    ],
+    "4.5 Write tests for the fixture writers, parsers and decoder": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017041906
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017288632
+      }
+    ],
+    "5.1 Write property test for checksums": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017042347
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017313968
+      }
+    ],
+    "3. Checksums and PNG encoder": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017279684
+      }
+    ],
+    "4. Test-support writers, parsers and oracles (`src/test-support/formats/`)": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017288676
+      }
+    ],
+    "5.2 Write property test for the PNG round trip": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017314796
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017422333
+      }
+    ],
+    "5.4 Write property test for exact PNG size": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017316117
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017423121
+      }
+    ],
+    "5.6 Write property test for invalid PNG input": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017316735
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017423774
+      }
+    ],
+    "5.3 Write property test for agreement with Node zlib": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017428581
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017635287
+      }
+    ],
+    "5.5 Write property test for stored-block boundaries": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017429223
+      },
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017636286
+      }
+    ],
+    "5. Checksum and PNG property tests": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017636319
+      }
+    ],
+    "6. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "80f23fa8-d5e1-424f-af11-66149bb90027",
+        "chatSessionId": "sess_7d842874-772d-4cb0-aada-082107859eb2",
+        "timestamp": 1794017661735
+      }
+    ]
+  }
+}

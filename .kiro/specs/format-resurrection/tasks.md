@@ -8,75 +8,75 @@ Every task in this plan is required, including all test and property sub-tasks. 
 
 ## Tasks
 
-- [ ] 1. Approved prerequisites
-  - [ ] 1.1 Re-export `decodeCp437` from the FAT12 index
+- [x] 1. Approved prerequisites
+  - [x] 1.1 Re-export `decodeCp437` from the FAT12 index
     - Add the single line `export { decodeCp437 } from './cp437';` to `src/core/fat12/index.ts`
     - Add `decodeCp437` to the import list in `src/core/fat12/index.test.ts` with one assertion: `decodeCp437(Uint8Array.of(0x80))` equals `Ç`
     - Do not change anything else in the completed `fat12-core` code
     - _Requirements: 6.9, 12.8_
 
-  - [ ] 1.2 Extract the purity scanners into `src/test-support/scan.ts`
+  - [x] 1.2 Extract the purity scanners into `src/test-support/scan.ts`
     - Move the scanner helpers from `src/test-support/purity.test.ts` unchanged into the new `src/test-support/scan.ts` and export them
     - `purity.test.ts` imports them from `scan.ts`; its rules, file walk and results stay exactly as they are (behavior-preserving refactor)
     - Run the existing suite and confirm the purity test results are unchanged
     - _Requirements: 12.2, 12.8, 14.11_
 
 - [ ] 2. Foundation modules in `src/core/formats/`
-  - [ ] 2.1 Create `limits.ts` and `types.ts`
+  - [x] 2.1 Create `limits.ts` and `types.ts`
     - `limits.ts`: every Limit and internal constant from the design (`U16_MAX`, `MAX_CONVERT_INPUT_BYTES`, `DETECT_SAMPLE_BYTES`, `MAX_WARNINGS`, `MAX_MARKDOWN_OUTPUT_BYTES`, `MAX_DBF_FIELDS`, `MAX_DBF_RECORDS`, `MAX_CSV_OUTPUT_BYTES`, `MAX_IMAGE_DIMENSION`, `MAX_IMAGE_PIXELS`, `MAX_PCX_BYTES_PER_LINE`, `MAX_PCX_DECODED_BYTES`, the PNG layout constants, `CONVERT_TIME_BUDGET_MS`, and the DBF and PCX header constants). Use the arithmetic spelling for the two 4,194,304 values.
     - Export `pngBytesForFiltered(filteredBytes)` and define `MAX_PNG_BYTES` as a computed constant from its inputs, never as a literal
     - Export the `LimitName` union
     - `types.ts`: `ConversionWarningCode` (`as const` object, no `enum`), `ConversionWarning`, `OutputMime`, `OutputExtension`, `ConversionSuccess`, `ConversionFailure`, `MarkdownResult`, `CsvResult`, `PngResult`, `ConversionResult`, `RgbaImage`, `DetectedFormat`, `DetectSource`, `DetectResult`
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.14, 1.17_
 
-  - [ ] 2.2 Create `templates.ts` and `chars.ts`
+  - [x] 2.2 Create `templates.ts` and `chars.ts`
     - `templates.ts`: the closed table of warning and error templates from the design (numbers only, digit-free constant names for limits), the `errInternal` template, and `fill(template, ...values)` using `split`/`join` (no regular expression)
     - `chars.ts`: `isAsciiLetter`, `asciiUpper`, `isDigit` on numeric code points
     - _Requirements: 1.5, 1.13, 1.15, 12.4_
 
-  - [ ] 2.3 Create `warnings.ts`, `guard.ts` and `result.ts`
+  - [x] 2.3 Create `warnings.ts`, `guard.ts` and `result.ts`
     - `warnings.ts`: `makeWarningCollector()` with `add`, `addOnce` (keyed by code and key, duplicates do not count toward the cap) and `list`; after `MAX_WARNINGS` stored warnings the next add stores one `warnings-capped` and later adds are ignored
     - `guard.ts`: `assertUint8Array` (the `Object.prototype.toString` check used by `fat12/disk.ts`, throwing `TypeError('invalid input type: expected Uint8Array')`), `limitInput` (subarray plus one `input-truncated` warning), and `guarded(fn, collector)` that turns an unexpected throw (for example a `RangeError`) into the `conversion failed` failure while keeping earlier warnings
     - `result.ts`: `okResult` and `failResult`
     - _Requirements: 1.4, 1.5, 1.6, 1.8, 1.12, 1.13, 1.15, 12.3, 12.12_
 
-  - [ ] 2.4 Write example tests for limits, templates and guards
+  - [x] 2.4 Write example tests for limits, templates and guards
     - `limits.test.ts`: every value from Requirement 1 criterion 2; `MAX_PNG_BYTES` equals 16,782,660; `MAX_CONVERT_INPUT_BYTES` equals `MAX_FILE_OUTPUT_BYTES` imported from the FAT12 core
     - `guard.test.ts`: `assertUint8Array` rejects `null`, `undefined`, a string, a number, an array, an `ArrayBuffer` and a `DataView` with the exact message, and accepts a `Buffer`; `limitInput` truncation and warning; `guarded` converts a throwing function into `conversion failed` and keeps earlier warnings
     - `templates.test.ts`: every template, after each run of digits is replaced by `#`, is at most 200 characters and holds no input text
     - _Requirements: 1.2, 1.5, 1.6, 1.8, 1.13, 1.17, 14.10, 14.12_
 
-  - [ ] 2.5 Write property test for the warning collector
+  - [x] 2.5 Write property test for the warning collector
     - **Property 4: The warning collector is bounded**
     - In `src/core/formats/warnings.test.ts`; N from 0 to 300 additions; check exactly 100 adds give 100 warnings and 101 adds give 100 plus one `warnings-capped`
     - **Validates: Requirements 1.12**
 
-- [ ] 3. Checksums and PNG encoder
-  - [ ] 3.1 Create `checksums.ts`
+- [x] 3. Checksums and PNG encoder
+  - [x] 3.1 Create `checksums.ts`
     - Table-driven CRC-32 (`0xEDB88320`, 256-entry `Uint32Array` built at module load) with `crc32Update` and `crc32`
     - Adler-32 with deferred modulus (`ADLER_NMAX = 5552`, modulus 65521) with `adler32Update` and `adler32`
     - Both chainable across segments
     - _Requirements: 11.5, 11.6, 11.7, 12.3_
 
-  - [ ] 3.2 Create `png.ts` with `encodePng`
+  - [x] 3.2 Create `png.ts` with `encodePng`
     - Validate first (object, integer width and height in `[1, MAX_IMAGE_DIMENSION]`, pixel cap checked only after both dimensions are in range, `Uint8Array` check, `rgba.length === width * height * 4`) and return `PNG input invalid` without allocating or throwing; add `limit-exceeded` when a Limit caused the failure
     - Compute the exact output size with `pngBytesForFiltered` from validated dimensions, allocate once, write signature, IHDR, one IDAT of stored blocks (zlib header `78 01`, blocks of at most `PNG_STORED_BLOCK_MAX`, final flag on the last, `NLEN` as one's complement, row copies with `set(subarray)`), the Adler-32 trailer, CRCs, and IEND
     - Never modify the input `rgba`; identical input gives identical bytes
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.8, 11.9, 11.10, 11.11, 11.14, 11.15, 11.16, 11.17, 12.2, 12.12_
 
-  - [ ] 3.3 Write example tests for the encoder
+  - [x] 3.3 Write example tests for the encoder
     - `png.examples.test.ts`: the 1 by 1 image gives a 5-byte filtered stream, the zlib header check value, signature and chunk order; rejects each invalid-image shape without throwing; width 4096 by height 1 and the 2048 by 2048 pixel cap encode within `MAX_PNG_BYTES`
     - _Requirements: 11.1, 11.8, 11.15, 11.16, 14.10_
 
-- [ ] 4. Test-support writers, parsers and oracles (`src/test-support/formats/`)
-  - [ ] 4.1 Create `errors.ts`, `png-decoder.ts`, `csv-parser.ts` and `png-oracle.ts`
+- [x] 4. Test-support writers, parsers and oracles (`src/test-support/formats/`)
+  - [x] 4.1 Create `errors.ts`, `png-decoder.ts`, `csv-parser.ts` and `png-oracle.ts`
     - `FixtureError` naming the offending field (no constructor parameter properties)
     - `decodePng`: stored blocks, filter 0, colour type 6 only; returns pixels, IDAT bytes, stored-block list, the stored Adler-32 and the stored CRCs without recomputing them; throws `FixtureError` naming the unsupported feature
     - `parseCsv` (RFC 4180 subset, throws on an unterminated quote) and an independent `serializeCsvRow`
     - `png-oracle.ts`: Node-only cross-checks with `zlib.inflateSync` and `zlib.crc32` (tests only, never reachable from the barrel)
     - _Requirements: 13.1, 13.5, 13.6, 13.11, 11.13_
 
-  - [ ] 4.2 Create `wordstar-writer.ts`, `dbase-writer.ts`, `pcx-encoder.ts` and the barrel `index.ts`
+  - [x] 4.2 Create `wordstar-writer.ts`, `dbase-writer.ts`, `pcx-encoder.ts` and the barrel `index.ts`
     - `writeWordStar` (high bit on the last letter of each word, `0x8D 0x0A` soft returns, `0x0D 0x0A` hard returns, style toggles, 0 to 1,000 paragraphs)
     - `writeDbf` (32-byte header, descriptors, `0x0D` terminator, fixed-width records, final `0x1A`; field lengths 1 to 254, 0 to 65,535 records)
     - `encodePcx` (all five modes, one continuous RLE stream so runs cross scanlines, optional padding, 769-byte trailer for 256 colours)
@@ -84,56 +84,56 @@ Every task in this plan is required, including all test and property sub-tasks. 
     - `index.ts` re-exports only writers and parsers and imports no `vitest`, `fast-check` or Node module
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.7, 13.8, 13.10_
 
-  - [ ] 4.3 Create `oracles.ts` and `invariants.ts`
+  - [x] 4.3 Create `oracles.ts` and `invariants.ts`
     - `oracles.ts`: independent models for expected cells (own calendar and number-form check), the detector rules, the dBase header conditions, the PCX header conditions, the Markdown marker decompositions with the hugging rule, the style-per-character check, the balanced-marker check, `pngSizeFromFirstPrinciples`, a per-byte-reduction Adler-32 reference and a plain two-branch RLE reference
     - `invariants.ts`: `checkResultInvariants(result)` returning a list of violation strings (mime and extension pairs, output type, `error` length 1 to 200, warning count, digit-skeleton check of every message against the template table, JSON-shape check, no NUL in text, output caps, PNG dimensions)
     - _Requirements: 1.4, 1.5, 1.13, 1.14, 8.7, 12.7, 14.7, 14.8_
 
-  - [ ] 4.4 Create `arbitraries.ts` and `hostile.ts`
+  - [x] 4.4 Create `arbitraries.ts` and `hostile.ts`
     - `arbitraries.ts` (not exported from the barrel): WordStar paragraphs, dBase tables (including the needs-repair family), PCX sources of 1 to 64 pixels per side (up to 300 by 100 for block-boundary use), RGBA images, and `{ seed, length }` large-input generators expanded with `expandContent`
     - `hostile.ts`: per format, random bytes with planted prefixes, grammar-aware bytes, mutated fixture files (one mutation per run: 1 to 64 changed bytes or truncation), and fuzzed headers drawn from boundary values
     - Generators only produce inputs; they never call a converter and never use `timed()`
     - _Requirements: 14.3, 14.4, 13.2, 13.3, 13.4_
 
-  - [ ] 4.5 Write tests for the fixture writers, parsers and decoder
+  - [x] 4.5 Write tests for the fixture writers, parsers and decoder
     - **Property 36: Fixture writers are deterministic**
     - In `src/test-support/formats/writers.test.ts`; writing the same description twice returns identical bytes for the WordStar, dBase and PCX writers
     - Example tests: out-of-bounds descriptions throw `FixtureError` naming the field; the decoder and parser reject a compressed deflate block, a filter other than 0, a colour type other than 6 and an unterminated quoted cell
     - Import-graph test: the transitive closure of the barrel contains no `vitest`, `fast-check`, `src/core` or `node:` module, and `arbitraries.ts`, `oracles.ts` and `png-oracle.ts` are not reachable
     - **Validates: Requirements 13.7, 13.8, 13.10, 13.11**
 
-- [ ] 5. Checksum and PNG property tests
-  - [ ] 5.1 Write property test for checksums
+- [x] 5. Checksum and PNG property tests
+  - [x] 5.1 Write property test for checksums
     - **Property 35: Checksums match references**
     - In `src/core/formats/checksums.test.ts`; include all-`0xFF` arrays longer than 5,552 bytes and split chaining; plus the example vectors `crc32('123456789') = 0xCBF43926` and `adler32('Wikipedia') = 0x11E60398`
     - **Validates: Requirements 11.5, 11.6, 11.7**
 
-  - [ ] 5.2 Write property test for the PNG round trip
+  - [x] 5.2 Write property test for the PNG round trip
     - **Property 30: PNG round trip**
     - In `src/core/formats/png.test.ts`; width and height 1 to 64; check chunk order, IHDR fields and that the input `rgba` is unchanged
     - **Validates: Requirements 11.1, 11.2, 11.12, 11.15**
 
-  - [ ] 5.3 Write property test for agreement with Node zlib
+  - [x] 5.3 Write property test for agreement with Node zlib
     - **Property 31: PNG agrees with Node zlib**
     - Add to `png.test.ts`, using `png-oracle.ts`
     - **Validates: Requirements 11.3, 11.4, 11.5, 11.13**
 
-  - [ ] 5.4 Write property test for exact PNG size
+  - [x] 5.4 Write property test for exact PNG size
     - **Property 32: PNG size is exact and bounded**
     - In `src/core/formats/png.layout.test.ts`, using `pngSizeFromFirstPrinciples`
     - **Validates: Requirements 11.9, 11.10**
 
-  - [ ] 5.5 Write property test for stored-block boundaries
+  - [x] 5.5 Write property test for stored-block boundaries
     - **Property 33: Stored-block boundaries**
     - Add to `png.layout.test.ts`; images up to 300 by 100
     - **Validates: Requirements 11.14**
 
-  - [ ] 5.6 Write property test for invalid PNG input
+  - [x] 5.6 Write property test for invalid PNG input
     - **Property 34: Invalid PNG input is rejected without allocation**
     - In `src/core/formats/png.invalid.test.ts`; include huge dimensions with a short `rgba`
     - **Validates: Requirements 11.8**
 
-- [ ] 6. Checkpoint - Ensure all tests pass
+- [x] 6. Checkpoint - Ensure all tests pass
   - Run `npm test` and `npm run typecheck`. Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 7. Format detector

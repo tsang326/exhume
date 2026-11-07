@@ -3,6 +3,7 @@ import {
   openDisk,
   readDisk,
   readGraveBytes,
+  decodeCp437,
   FALLBACK_GEOMETRIES,
   GraveState,
   GraveKind,
@@ -65,6 +66,7 @@ describe('fat12 public index', () => {
       FAT12_MAX_DATA_CLUSTERS, DIR_ENTRY_BYTES, SCAN_TIME_BUDGET_MS,
     ];
     for (const l of limits) expect(typeof l).toBe('number');
+    expect(decodeCp437(Uint8Array.of(0x80))).toBe('Ç');
   });
 
   it('exposes the public types', () => {

@@ -4,6 +4,7 @@ export { openDisk, readDisk, readGraveBytes } from './disk';
 export type { DiskHandle } from './disk';
 export { FALLBACK_GEOMETRIES } from './geometry';
 export * from './limits';
+export { decodeCp437 } from './cp437';
 
 // Value objects whose names are shared with a type of the same name.
 export { GraveState, GraveKind, GeometrySource, WarningCode } from './types';

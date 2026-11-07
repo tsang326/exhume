@@ -9,8 +9,9 @@ inclusion: always
     undelete grading, format converters (`wordstar`, `dbase`, `pcx`), PNG encoder (stored/deflate via
     `CompressionStream` or a tiny pure encoder). Input is `Uint8Array`. No DOM, no Node APIs, no I/O.
   - `src/web/` — the graveyard page. Uses `core` only.
-  - `src/mcp/` — stdio MCP server on the official `@modelcontextprotocol/sdk`; thin wrapper over `core` + a
-    workspace-confined file reader/writer.
+  - `src/mcp/` — a hand-written JSON-RPC 2.0 stdio server (one message per line), no SDK and no runtime
+    dependency; a thin wrapper over `core` plus a workspace-confined file reader and writer, built with
+    `npm run build:mcp` into the committed `power/server/exhume-mcp.mjs`.
   - `power/` — Kiro Power packaging (manifest, `mcp.json`, skill docs).
   - `scripts/make-demo-disks.ts` — deterministic generator for the demo floppy images (with deleted files and
     sample WordStar/dBase/PCX files we author ourselves).

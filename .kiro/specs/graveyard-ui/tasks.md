@@ -445,7 +445,7 @@ Checkpoint tasks are the explicit gates. Each one runs `npm run typecheck`, `npm
   - Run `git diff --stat 4d7f5e7 -- src/core`. It must print nothing (empty).
   - Ensure all tests pass, ask the user if questions arise.
 
-- [~] 19. MANUAL (for the user, not a coding-agent task): checks in a real browser
+- [ ] 19. MANUAL (for the user, not a coding-agent task): checks in a real browser
   - Run `npm run build`, then `npm run preview` yourself, and use the built page (never `vite dev`). The coding agent does not do this task; record the results in `docs/KIRO_LOG.md`.
   - CSP (Req 2.7, 14.8): load an image, open each preview kind (Markdown, CSV, PNG, hex), download, and read the console. Expect zero CSP violations. In the Network tab confirm `assets/disk.worker-*.js` loads from the page origin and no other request is made after the initial load.
   - CSSOM probe (Req 2.8): in the console with the CSP active, run `document.body.style.setProperty('--probe', '1')`, `document.body.style.color = 'red'` and `document.body.setAttribute('style', 'color:blue')`. Record all three outcomes with the browser name and version (the first two are expected to be allowed, the third blocked).

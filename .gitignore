@@ -7,3 +7,4 @@ dist
 .DS_Store
 *.log
 # Do NOT ignore /.kiro — the hackathon rules require it in the repo.
+exhumed/

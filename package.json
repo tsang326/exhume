@@ -1,13 +1,14 @@
 {
-  "name": "revenant-os",
+  "name": "exhume",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit && tsc -p src/core/tsconfig.json --noEmit && tsc -p src/web/logic/tsconfig.json --noEmit && tsc -p src/web/worker/tsconfig.json --noEmit",
+    "build:mcp": "vite build --config vite.mcp.config.ts",
+    "typecheck": "tsc --noEmit && tsc -p src/core/tsconfig.json --noEmit && tsc -p src/web/logic/tsconfig.json --noEmit && tsc -p src/web/worker/tsconfig.json --noEmit && tsc -p src/mcp/tsconfig.json --noEmit",
     "test": "vitest run",
     "test:dom": "vitest run --config vitest.dom.config.ts",
     "test:watch": "vitest",

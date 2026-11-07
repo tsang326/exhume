@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "exhume": {
+      "command": "node",
+      "args": ["power/server/exhume-mcp.mjs"]
+    }
+  }
+}

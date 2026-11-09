@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
-import { decodeDosDateTime } from './dates';
+import { decodeDosDateTime, isZeroDosDateTime } from './dates';
 import { numRuns } from '../../test-support/runs';
 
 /** Independent oracle: calendar validity via a Date.UTC round-trip. */
@@ -55,5 +55,18 @@ describe('decodeDosDateTime', () => {
     expect(decodeDosDateTime(0x10000, 0)).toBeNull();
     expect(decodeDosDateTime(0x0021, -1)).toBeNull();
     expect(decodeDosDateTime(NaN, 0)).toBeNull();
+  });
+});
+
+describe('isZeroDosDateTime', () => {
+  it('is true only when both words are zero', () => {
+    expect(isZeroDosDateTime(0, 0)).toBe(true);
+    expect(isZeroDosDateTime(0, 1)).toBe(false);
+    expect(isZeroDosDateTime(0x0021, 0)).toBe(false);
+    expect(isZeroDosDateTime(0xffff, 0xffff)).toBe(false);
+  });
+
+  it('leaves decodeDosDateTime(0, 0) as null, so only the caller exempts the pair', () => {
+    expect(decodeDosDateTime(0, 0)).toBeNull();
   });
 });

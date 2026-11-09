@@ -384,6 +384,9 @@ function pad(value, width) {
 function isWord(value) {
   return Number.isInteger(value) && value >= 0 && value <= 65535;
 }
+function isZeroDosDateTime(dateWord, timeWord) {
+  return dateWord === 0 && timeWord === 0;
+}
 function decodeDosDateTime(dateWord, timeWord) {
   if (typeof dateWord !== "number" || typeof timeWord !== "number") return null;
   if (!isWord(dateWord) || !isWord(timeWord)) return null;
@@ -642,6 +645,15 @@ const ATTR_DIRECTORY = 16;
 const ATTR_ARCHIVE = 32;
 const DELETED_MARK = 229;
 const PLACEHOLDER = 95;
+const NEVER_USED_FILL_F6 = 246;
+const NEVER_USED_FILL_ZERO = 0;
+function isNeverUsedSlot(rec) {
+  if (rec.length < DIR_ENTRY_BYTES || rec[0] !== DELETED_MARK) return false;
+  const fill2 = rec[1];
+  if (fill2 !== NEVER_USED_FILL_F6 && fill2 !== NEVER_USED_FILL_ZERO) return false;
+  for (let i = 2; i < DIR_ENTRY_BYTES; i++) if (rec[i] !== fill2) return false;
+  return true;
+}
 function childPath(parent, name) {
   return parent === "/" ? "/" + name : parent + "/" + name;
 }
@@ -728,6 +740,7 @@ function walkDirectories(ctx, out) {
       continue;
     }
     const deleted = first === DELETED_MARK;
+    if (deleted && isNeverUsedSlot(rec)) continue;
     if ((attr & 63) === 15) {
       if (!deleted) lfnFeed(frame.lfn, rec);
       continue;
@@ -761,8 +774,13 @@ function walkDirectories(ctx, out) {
     }
     const size = u32(rec, 28);
     const startCluster = u16$1(rec, 26);
-    const date = decodeDosDateTime(u16$1(rec, 24), u16$1(rec, 22));
-    if (date === null) sink.add(WarningCode.DateInvalid, "modification date or time is invalid", entryPath);
+    const dateWord = u16$1(rec, 24);
+    const timeWord = u16$1(rec, 22);
+    let date = null;
+    if (!isZeroDosDateTime(dateWord, timeWord)) {
+      date = decodeDosDateTime(dateWord, timeWord);
+      if (date === null) sink.add(WarningCode.DateInvalid, "modification date or time is invalid", entryPath);
+    }
     let state = GraveState.Alive;
     let reason;
     let plan = { kind: "none" };
@@ -1803,8 +1821,13 @@ function convert$1(input, outputCap, w) {
   let tokKind = 0;
   let tokC = 0;
   let tokLen = 0;
+  let tokSoftSpace = false;
+  let prevHyphen = false;
+  let runOrdinary = 0;
+  let runSoft = 0;
   function readToken(pos) {
     const raw = input[pos];
+    tokSoftSpace = false;
     if ((raw === 141 || raw === 13) && pos + 1 < n && (input[pos + 1] === 10 || input[pos + 1] === 138)) {
       tokKind = raw === 141 ? KIND_SOFT : KIND_HARD;
       tokC = 0;
@@ -1815,6 +1838,7 @@ function convert$1(input, outputCap, w) {
     tokLen = 1;
     tokC = c;
     tokKind = c === 13 || c === CHAR_LF ? KIND_HARD : KIND_CHAR;
+    tokSoftSpace = raw === 160;
   }
   function wanted(style) {
     return style === STYLE_BOLD$1 ? wantBold : wantEm;
@@ -1870,6 +1894,8 @@ function convert$1(input, outputCap, w) {
     pushMarkers(open, k, open.length, true);
     pushSpaces(pendingSpaces);
     pendingSpaces = 0;
+    runOrdinary = 0;
+    runSoft = 0;
     pushMarkers(newOpen, k, newOpen.length, false);
     open = newOpen;
     if (escape) sink.push(CHAR_BACKSLASH);
@@ -1888,6 +1914,8 @@ function convert$1(input, outputCap, w) {
     open = [];
     pushSpaces(pendingSpaces);
     pendingSpaces = 0;
+    runOrdinary = 0;
+    runSoft = 0;
     sink.push(CHAR_LF);
     textCol = 0;
     leadingDigit = false;
@@ -1935,6 +1963,8 @@ function convert$1(input, outputCap, w) {
     }
     readToken(i);
     i += tokLen;
+    const afterHyphen = prevHyphen;
+    prevHyphen = false;
     if (tokKind === KIND_HARD) {
       writeHard();
       if (capped) break;
@@ -1942,8 +1972,9 @@ function convert$1(input, outputCap, w) {
     }
     if (tokKind === KIND_SOFT) {
       lineStart = false;
-      if (!atBreak) {
+      if (!atBreak && !afterHyphen) {
         pendingSpaces++;
+        runOrdinary++;
         atBreak = true;
       }
       continue;
@@ -1951,7 +1982,11 @@ function convert$1(input, outputCap, w) {
     const c = tokC;
     lineStart = false;
     if (c === 26) break;
-    if (c === 0 || c === 31) continue;
+    if (c === 0) continue;
+    if (c === 31) {
+      prevHyphen = true;
+      continue;
+    }
     if (c === 2) {
       wantBold = !wantBold;
       continue;
@@ -1961,7 +1996,19 @@ function convert$1(input, outputCap, w) {
       continue;
     }
     if (c === 9 || c === CHAR_SPACE) {
-      pendingSpaces++;
+      if (tokSoftSpace) {
+        if (runOrdinary === 0) {
+          pendingSpaces++;
+          runSoft++;
+        }
+      } else {
+        if (runOrdinary === 0) {
+          pendingSpaces -= runSoft;
+          runSoft = 0;
+        }
+        pendingSpaces++;
+        runOrdinary++;
+      }
       atBreak = true;
       continue;
     }
@@ -2834,6 +2881,12 @@ const TEXT_PRINTABLE_MAX = 126;
 const TEXT_TAB = 9;
 const TEXT_FF = 12;
 const TEXT_EOF = 26;
+const TEXT_SOFT_HYPHEN = 31;
+const LOW_7_MASK = 127;
+const ODD_BYTE_SHIFT = 4;
+const NUL_BYTE_SHIFT = 6;
+const MZ_FIRST = 77;
+const MZ_SECOND = 90;
 function isPcx(s) {
   if (s.length < PCX_MIN_BYTES || s[0] !== PCX_MAGIC) return false;
   const v = s[1];
@@ -2849,31 +2902,48 @@ function isDbase(s, totalLength) {
   const recordLength = s[10] + s[11] * (1 << BYTE_SHIFT);
   return headerLength >= DBF_MIN_HEADER_BYTES && headerLength <= DBF_MAX_HEADER_BYTES && recordLength >= DBF_MIN_RECORD_BYTES && headerLength < totalLength;
 }
+function isTextLow(low) {
+  return low >= TEXT_PRINTABLE_MIN && low <= TEXT_PRINTABLE_MAX || low === TEXT_TAB || low === LF || low === TEXT_FF || low === HARD_CR || low === TEXT_EOF || low === STYLE_BOLD || low === STYLE_UNDERLINE || low === STYLE_ITALIC || low === TEXT_SOFT_HYPHEN;
+}
 function isWordStar(s) {
   const n = s.length;
+  if (n >= 2 && (s[0] === MZ_FIRST && s[1] === MZ_SECOND || s[0] === MZ_SECOND && s[1] === MZ_FIRST)) {
+    return false;
+  }
+  const oddBudget = n >> ODD_BYTE_SHIFT;
+  const nulBudget = n >> NUL_BYTE_SHIFT;
+  let odd = 0;
+  let nul = 0;
+  let trait = false;
   let toggle = false;
   let hard = false;
   let atLineStart = true;
   for (let i = 0; i < n; i++) {
     const b = s[i];
+    const low = b & LOW_7_MASK;
+    if (!isTextLow(low)) {
+      odd++;
+      if (low === 0) nul++;
+      if (odd > oddBudget || nul > nulBudget) return false;
+    }
     if (atLineStart && b === DOT && i + DOT_PREFIX_BYTES <= n && isAsciiLetter(s[i + 1]) && isAsciiLetter(s[i + 2])) {
-      return true;
+      trait = true;
     }
     atLineStart = false;
-    if (b === SOFT_CR && i + 1 < n && (s[i + 1] === LF || s[i + 1] === SOFT_LF)) return true;
+    if (b === SOFT_CR && i + 1 < n && (s[i + 1] === LF || s[i + 1] === SOFT_LF)) trait = true;
     if (b === HARD_CR && i + 1 < n && s[i + 1] === LF) {
       hard = true;
       atLineStart = true;
       i++;
-      if (toggle) return true;
+      if (toggle) trait = true;
       continue;
     }
     if (b === STYLE_BOLD || b === STYLE_UNDERLINE || b === STYLE_ITALIC) {
       toggle = true;
-      if (hard) return true;
+      if (hard) trait = true;
     }
   }
-  return false;
+  return trait;
 }
 function isTextSample(s) {
   if (s.length === 0) return false;
@@ -2890,6 +2960,39 @@ function foldAscii(text) {
     out += String.fromCharCode(asciiUpper(text.charCodeAt(i)));
   }
   return out;
+}
+function hasKnownBinaryExtension(fileName) {
+  if (typeof fileName !== "string" || fileName.length > MAX_FILE_NAME_CHARS) return false;
+  const dot = fileName.lastIndexOf(".");
+  if (dot < 0) return false;
+  const ext = foldAscii(fileName.slice(dot + 1));
+  switch (ext) {
+    case "COM":
+    case "EXE":
+    case "SYS":
+    case "OVR":
+    case "BIN":
+    case "DLL":
+    case "DRV":
+    case "BGI":
+    case "CHR":
+    case "FON":
+    case "CPI":
+    case "NDX":
+    case "NTX":
+    case "MDX":
+    case "DBF":
+    case "ZIP":
+    case "ARC":
+    case "LZH":
+      return true;
+  }
+  if (ext.length === 0) return false;
+  for (let i = 0; i < ext.length; i++) {
+    const c = ext.charCodeAt(i);
+    if (c < 48 || c > 57) return false;
+  }
+  return true;
 }
 function formatFromExtension(fileName) {
   const dot = fileName.lastIndexOf(".");
@@ -2924,7 +3027,7 @@ function detectFormat(input, fileName) {
   const sample = input.subarray(0, DETECT_SAMPLE_BYTES);
   if (isPcx(sample)) return { format: "pcx", source: "content" };
   if (isDbase(sample, input.length)) return { format: "dbase", source: "content" };
-  if (isWordStar(sample)) return { format: "wordstar", source: "content" };
+  if (!hasKnownBinaryExtension(fileName) && isWordStar(sample)) return { format: "wordstar", source: "content" };
   if (typeof fileName === "string" && fileName.length <= MAX_FILE_NAME_CHARS) {
     const format = formatFromExtension(fileName);
     if (format !== "unknown") return { format, source: "extension" };

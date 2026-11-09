@@ -16,6 +16,7 @@ import {
   MAX_REASON_CHARS,
   MAX_TOTAL_ENTRIES,
   WarningCode,
+  openDisk,
   readDisk,
   readGraveBytes,
 } from './index';
@@ -625,6 +626,102 @@ function buildEntryLimitCase(f: number, big: number, seed: number): EntryLimitCa
   const bigReads = big + (big % RECORDS_PER_CLUSTER !== 0 ? 1 : 0);
   return { image, examined: rootReads + bigReads, expectedPaths };
 }
+
+// ---------------------------------------------------------------------------
+// Property 12 (reader part): fill-pattern directory regions
+// ---------------------------------------------------------------------------
+
+/** Slot kinds: 0 keep the real record, 1 `E5 F6...`, 2 `E5 00...`, 3 noise, 4 `E5` + mixed tail. */
+const fillSlotArb = fc.record({
+  kind: fc.nat({ max: 4 }),
+  noise: fc.uint8Array({ minLength: RECORD_BYTES, maxLength: RECORD_BYTES }),
+});
+
+function applySlots(
+  image: Uint8Array,
+  regionStart: number,
+  slots: ReadonlyArray<{ kind: number; noise: Uint8Array }>,
+): void {
+  for (let i = 0; i < slots.length; i++) {
+    const s = slots[i] as { kind: number; noise: Uint8Array };
+    const at = regionStart + i * RECORD_BYTES;
+    if (s.kind === 0) continue;
+    if (s.kind === 3) {
+      image.set(s.noise, at);
+      continue;
+    }
+    image[at] = 0xe5;
+    if (s.kind === 1) image.fill(0xf6, at + 1, at + RECORD_BYTES);
+    else if (s.kind === 2) image.fill(0x00, at + 1, at + RECORD_BYTES);
+    else image.set(s.noise.subarray(1), at + 1);
+  }
+}
+
+describe('Property 12: Totality on hostile input', () => {
+  // Feature: real-disk-hardening, Property 12: Totality on hostile input
+  // **Validates: Requirements 3.8, 11.4**
+  //
+  // Timing: images are built before the timer; only openDisk is inside timed().
+  it(
+    'directory regions of E5 F6 / E5 00 fills mixed with real entries and noise never break openDisk',
+    () => {
+      const arb = fc.record({
+        rootSlots: fc.array(fillSlotArb, { minLength: 0, maxLength: ROOT_SLOTS }),
+        subSlots: fc.array(fillSlotArb, { minLength: 0, maxLength: RECORDS_PER_CLUSTER }),
+        neverUsed: fc.array(
+          fc.record({
+            beforeChild: fc.nat({ max: 3 }),
+            fill: fc.constantFrom<'f6' | 'zero'>('f6', 'zero'),
+          }),
+          { maxLength: 3 },
+        ),
+      });
+      fc.assert(
+        fc.property(arb, ({ rootSlots, subSlots, neverUsed }) => {
+          const tree: FileTree = {
+            children: [
+              mkFile('A.TXT'),
+              { kind: 'directory', name: 'SUB', children: [mkFile('B.TXT'), mkFile('C.TXT')] },
+              mkFile('D.TXT'),
+            ],
+            slots: neverUsed.map((s) => ({ beforeChild: Math.min(s.beforeChild, 3), fill: s.fill })),
+          };
+          const layout = writeFat12ImageWithLayout(tree, '1440K');
+          const image = layout.image;
+          const { offsets } = layout;
+          applySlots(image, offsets.rootStart, rootSlots);
+          const sub = layout.nodes.get('/SUB');
+          if (sub !== undefined) {
+            applySlots(image, offsets.dataStart + (sub.startCluster - 2) * 512, subSlots);
+          }
+          const before = image.slice();
+
+          let report: ReturnType<typeof readDisk>;
+          let results: ReadResult[] = [];
+          try {
+            const handle = timed(() => openDisk(image));
+            report = handle.report;
+            results = report.files.map((g) => timed(() => handle.readBytes(g)));
+          } catch (e) {
+            if (e instanceof Error && e.message.startsWith('Time budget exceeded')) throw e;
+            return false;
+          }
+
+          if (report.warnings.some((w) => (w.code as string) === 'internal-error')) return false;
+          if (report.files.length > MAX_TOTAL_ENTRIES) return false;
+          for (const r of results) {
+            if (r.ok && r.bytes.length > MAX_FILE_OUTPUT_BYTES) return false;
+          }
+          if (image.length !== before.length) return false;
+          for (let i = 0; i < image.length; i++) if (image[i] !== before[i]) return false;
+          return true;
+        }),
+        { numRuns: numRuns(100) },
+      );
+    },
+    300_000,
+  );
+});
 
 describe('Property 19: Entry limit', () => {
   // Feature: fat12-core, Property 19: Entry limit

@@ -150,6 +150,15 @@ export function detectOracle(bytes: Uint8Array): OracleFormat {
     }
   }
 
+  // Independent model: gate on the low-7 view, then line-based traits.
+  if ((sample[0] === 0x4d && sample[1] === 0x5a) || (sample[0] === 0x5a && sample[1] === 0x4d)) return 'unknown';
+  const low = Array.from(sample, (b) => b & 0x7f);
+  const textLike = new Set<number>([0x09, 0x0a, 0x0c, 0x0d, 0x1a, 0x02, 0x13, 0x19, 0x1f]);
+  for (let c = 0x20; c <= 0x7e; c++) textLike.add(c);
+  const oddCount = low.filter((v) => !textLike.has(v)).length;
+  const nulCount = low.filter((v) => v === 0).length;
+  if (oddCount > Math.floor(n / 16) || nulCount > Math.floor(n / 64)) return 'unknown';
+
   let soft = false;
   let dot = false;
   let toggle = false;
@@ -613,6 +622,20 @@ const EXTENSION_FORMATS: Readonly<Record<string, OracleFormat | 'text'>> = {
   PCX: 'pcx',
 };
 
+const BINARY_EXTENSIONS: readonly string[] = [
+  'COM', 'EXE', 'SYS', 'OVR', 'BIN', 'DLL', 'DRV', 'BGI', 'CHR', 'FON', 'CPI', 'NDX', 'NTX', 'MDX', 'DBF', 'ZIP', 'ARC', 'LZH',
+];
+
+/** Own copy of the closed Known_Binary_Extension list; digits-only extensions count too. */
+export function hasBinaryExtensionOracle(fileName: unknown): boolean {
+  if (typeof fileName !== 'string' || fileName.length > 255) return false;
+  const dot = fileName.lastIndexOf('.');
+  if (dot < 0) return false;
+  let ext = '';
+  for (const ch of fileName.slice(dot + 1)) ext += ch >= 'a' && ch <= 'z' ? ch.toUpperCase() : ch;
+  return BINARY_EXTENSIONS.includes(ext) || (ext.length > 0 && [...ext].every((ch) => ch >= '0' && ch <= '9'));
+}
+
 export interface FullOracleVerdict {
   format: OracleFormat | 'text';
   source: 'content' | 'extension' | 'none';
@@ -624,7 +647,8 @@ export interface FullOracleVerdict {
  */
 export function detectFullOracle(bytes: Uint8Array, fileName?: unknown): FullOracleVerdict {
   const content = detectOracle(bytes);
-  if (content !== 'unknown') return { format: content, source: 'content' };
+  const vetoed = content === 'wordstar' && hasBinaryExtensionOracle(fileName);
+  if (content !== 'unknown' && !vetoed) return { format: content, source: 'content' };
 
   if (typeof fileName === 'string' && fileName.length <= 255) {
     const dot = fileName.lastIndexOf('.');

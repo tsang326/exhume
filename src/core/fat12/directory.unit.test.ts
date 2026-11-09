@@ -7,6 +7,9 @@ import {
   lfnChecksum,
   writeFatEntry,
 } from '../../test-support/fat12/encode';
+import { writeFat12Image } from '../../test-support/fat12';
+import type { FileTree } from '../../test-support/fat12';
+import { openDisk } from './index';
 import { makeByteView } from './bytes';
 import { makeScanContext } from './chain';
 import { walkDirectories } from './directory';
@@ -308,6 +311,133 @@ describe('walkDirectories', () => {
     const img = new Img().root(rec('A.TXT', { date: (22 << 9) | (13 << 5) | 1 }));
     const { graves, warnings } = img.scan();
     expect(graves[0]?.date).toBeNull();
+    expect(warnings).toEqual([expect.objectContaining({ code: 'date-invalid', path: '/A.TXT' })]);
+  });
+});
+
+describe('never-used directory slots', () => {
+  const fileNode = (name: string, n = 20) => ({ kind: 'file' as const, name, content: new Uint8Array(n).fill(7) });
+  const paths = (tree: FileTree) => {
+    const handle = openDisk(writeFat12Image(tree, '1440K'));
+    return { paths: handle.report.files.map((g) => g.path), report: handle.report };
+  };
+
+  it.each(['f6', 'zero'] as const)('skips an E5 + 31 %s slot in the root: no grave, no warning', (fill) => {
+    const { paths: p, report } = paths({
+      children: [fileNode('A.TXT'), fileNode('B.TXT')],
+      slots: [{ beforeChild: 1, fill }],
+    });
+    expect(p).toEqual(['/A.TXT', '/B.TXT']);
+    expect(report.warnings).toEqual([]);
+  });
+
+  it('skips slots before, between and after real entries and still lists later entries', () => {
+    const { paths: p, report } = paths({
+      children: [fileNode('A.TXT'), fileNode('B.TXT'), fileNode('C.TXT')],
+      slots: [
+        { beforeChild: 0, fill: 'f6' },
+        { beforeChild: 1, fill: 'zero' },
+        { beforeChild: 1, fill: 'f6' },
+        { beforeChild: 3, fill: 'zero' },
+      ],
+    });
+    expect(p).toEqual(['/A.TXT', '/B.TXT', '/C.TXT']);
+    expect(report.warnings).toEqual([]);
+    expect(report.files.every((g) => g.state === 'alive')).toBe(true);
+  });
+
+  it('skips slots in a subdirectory and keeps the entries after them', () => {
+    const { paths: p, report } = paths({
+      children: [
+        {
+          kind: 'directory',
+          name: 'SUB',
+          children: [fileNode('IN1.TXT'), fileNode('IN2.TXT')],
+          slots: [
+            { beforeChild: 0, fill: 'f6' },
+            { beforeChild: 1, fill: 'zero' },
+            { beforeChild: 2, fill: 'f6' },
+          ],
+        },
+        fileNode('Z.TXT'),
+      ],
+    });
+    expect(p).toEqual(['/SUB', '/SUB/IN1.TXT', '/SUB/IN2.TXT', '/Z.TXT']);
+    expect(report.warnings).toEqual([]);
+  });
+
+  it('keeps a slot whose 31 bytes mix F6 and 00 as a deleted grave', () => {
+    const mixed = new Uint8Array(32).fill(0xf6);
+    mixed[0] = 0xe5;
+    mixed[20] = 0x00;
+    const mixedZeroFirst = new Uint8Array(32);
+    mixedZeroFirst[0] = 0xe5;
+    mixedZeroFirst[31] = 0xf6;
+    const img = new Img().root(mixed, mixedZeroFirst, rec('A.TXT'));
+    const { graves } = img.scan();
+    expect(graves).toHaveLength(3);
+    expect(graves.slice(0, 2).every((g) => g.state !== 'alive')).toBe(true);
+    expect(graves[2]?.path).toBe('/A.TXT');
+  });
+
+  it('does not treat an E5 slot with one different fill byte as never used', () => {
+    for (const fill of [0xf6, 0x00]) {
+      for (const at of [1, 15, 31]) {
+        const r = new Uint8Array(32).fill(fill);
+        r[0] = 0xe5;
+        r[at] = fill === 0xf6 ? 0xf7 : 0x01;
+        expect(new Img().root(r).scan().graves).toHaveLength(1);
+      }
+    }
+  });
+
+  it('still stops at the record budget when slots fill the directory', () => {
+    const clusters: number[] = [];
+    for (let c = 2; c <= 300; c++) clusters.push(c);
+    const slot = new Uint8Array(32).fill(0xf6);
+    slot[0] = 0xe5;
+    const img = new Img().root(dirRec('BIG', 2), rec('LATE.TXT'));
+    img.chain(...clusters);
+    for (const c of clusters) for (let i = 0; i < 16; i++) img.sub(c, slot);
+    const { graves, warnings } = img.scan();
+    expect(codes(warnings)).toEqual(['entry-limit']);
+    expect(graves.map((g) => g.path)).toEqual(['/BIG']);
+  });
+});
+
+describe('zero and invalid dates', () => {
+  const dateOf = (o: { date?: number; time?: number }) => {
+    const { graves, warnings } = new Img().root(rec('A.TXT', o)).scan();
+    return { date: graves[0]?.date, warnings };
+  };
+
+  it('gives date null and no warning when date and time words are both zero', () => {
+    expect(dateOf({ date: 0, time: 0 })).toEqual({ date: null, warnings: [] });
+  });
+
+  it('gives date null and no warning for a deleted entry with both words zero', () => {
+    const r = rec('XA.TXT', { date: 0, time: 0 });
+    r[0] = 0xe5;
+    const { graves, warnings } = new Img().root(r).scan();
+    expect(graves[0]?.date).toBeNull();
+    expect(warnings).toEqual([]);
+  });
+
+  it('keeps the existing rule when only the date word is zero and the time is not', () => {
+    const { date, warnings } = dateOf({ date: 0, time: encodeDosTime(WHEN) });
+    expect(date).toBeNull();
+    expect(warnings).toEqual([expect.objectContaining({ code: 'date-invalid', path: '/A.TXT' })]);
+  });
+
+  it('keeps the existing rule when only the time word is zero and the date is valid', () => {
+    const { date, warnings } = dateOf({ date: encodeDosDate(WHEN), time: 0 });
+    expect(date).toBe('2001-02-03T00:00:00');
+    expect(warnings).toEqual([]);
+  });
+
+  it('still warns date-invalid for an invalid month', () => {
+    const { date, warnings } = dateOf({ date: (22 << 9) | (13 << 5) | 1, time: 0 });
+    expect(date).toBeNull();
     expect(warnings).toEqual([expect.objectContaining({ code: 'date-invalid', path: '/A.TXT' })]);
   });
 });

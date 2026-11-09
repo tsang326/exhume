@@ -314,14 +314,18 @@ const escapeBytesArb: fc.Arbitrary<Uint8Array> = fc
   .array(fc.constantFrom(...ESCAPE_BYTES), { minLength: 0, maxLength: 80 })
   .map((a) => Uint8Array.from(a));
 
-/** Printable bytes (high bit random) with no toggles or returns: the simple text model. */
+/**
+ * Printable bytes (high bit random, except on 0x20) with no toggles or returns: the simple text model.
+ * A raw 0xA0 is a soft space and adds nothing next to an ordinary space (Requirement 5.3), so spaces keep
+ * their high bit clear and stay one output space each.
+ */
 const PLAIN_PRINTABLE = [
   0x5c, 0x60, 0x2a, 0x5f, 0x3c, 0x3e, 0x5b, 0x5d, 0x23, 0x2b, 0x2d, 0x30, 0x31, 0x39, 0x2e, 0x29, 0x20, 0x61, 0x62, 0x28,
 ];
 
 const plainTextArb: fc.Arbitrary<Uint8Array> = fc
   .array(fc.tuple(fc.constantFrom(...PLAIN_PRINTABLE), fc.boolean()), { minLength: 0, maxLength: 80 })
-  .map((a) => Uint8Array.from(a.map(([b, hi]) => (hi ? b | 0x80 : b))))
+  .map((a) => Uint8Array.from(a.map(([b, hi]) => (hi && b !== 0x20 ? b | 0x80 : b))))
   // A '.' first byte at line start would be read as a dot command.
   .filter((b) => b.length === 0 || ((b[0] as number) & 0x7f) !== 0x2e);
 

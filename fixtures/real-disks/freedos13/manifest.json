@@ -1,0 +1,603 @@
+{
+ "source": "FreeDOS 1.3 Floppy Edition, FD13-FloppyEdition.zip, https://www.ibiblio.org/pub/micro/pc-stuff/freedos/files/distributions/1.3/official/FD13-FloppyEdition.zip",
+ "zipSha256": "75a4e11a7fce6f124e20927b3022b4b715a2a3f7324c5f5bfea42d90d80eb072",
+ "oracle": "files listed by macOS hdiutil read-only mount (msdos driver), sha256 via shasum; independent of Exhume",
+ "images": [
+  {
+   "file": "fd13-720k-dsk01.img",
+   "zipPath": "720k/x86DSK01.img",
+   "bytes": 737280,
+   "sha256": "b32b99efca106fecf1f361358d3187a35b1475ca9bfe12526f985bb7295d291a",
+   "volumeLabel": "FD13DSK01",
+   "directories": [],
+   "files": [
+    {
+     "path": "/freedos.001",
+     "size": 60416,
+     "sha256": "8dcc5efbf9de4901a655be91e81e08688ff87445b9249a0b81d3d90c7399af80"
+    },
+    {
+     "path": "/freedos.002",
+     "size": 60416,
+     "sha256": "fb689390d9ac3e3340a4c1c7947d850c244579ff56a4b6c35c0a1eca6c751ad5"
+    },
+    {
+     "path": "/freedos.003",
+     "size": 60416,
+     "sha256": "df1e3d5137895a24a143f2f6b5bfa0dc1a099f1b2eaefe29f9206a04b42d8bb2"
+    },
+    {
+     "path": "/freedos.004",
+     "size": 60416,
+     "sha256": "6b49fe505d5d419f04bbda147b8048d5723cfab1735af063c0083bb3be54e324"
+    },
+    {
+     "path": "/freedos.005",
+     "size": 60416,
+     "sha256": "eb4a9abafa46859550cd4b1596dd79f197c9393f608a6be395e3102825eb0c51"
+    },
+    {
+     "path": "/freedos.006",
+     "size": 60416,
+     "sha256": "f3cee5b0bdfdb67f73e4aed54bdf291b41470b9acd6d073b6963a37801a50c52"
+    },
+    {
+     "path": "/freedos.007",
+     "size": 60416,
+     "sha256": "ea3fa293b86a22cc7b4f09553e1b9140e3bf4c3dcca5a8214e7aee5623e6fd77"
+    },
+    {
+     "path": "/freedos.008",
+     "size": 60416,
+     "sha256": "b2dc845af1c7a680313106c75deaab0a5862852c7963b7a176e5166d85af0668"
+    },
+    {
+     "path": "/freedos.009",
+     "size": 60416,
+     "sha256": "94be5ae71f89e00c34351efb92be8cdaa570ace5f83af1e9d2960a9374618114"
+    },
+    {
+     "path": "/freedos.010",
+     "size": 60416,
+     "sha256": "eb5cc8d606dba5d834a6f8659873e0d7279df277afa8727dea28120d66336fa6"
+    },
+    {
+     "path": "/freedos.011",
+     "size": 60416,
+     "sha256": "2fd3c064535ffa85834fc3cb5e96315379f458934ac3de7bcce729a250757b60"
+    },
+    {
+     "path": "/freedos.saf",
+     "size": 60416,
+     "sha256": "e7d2794fc7b0b02078f9edb258d5ae2cd8b1bb7af7995a02d686331b45f5ca1b"
+    }
+   ],
+   "deletedEntries": [
+    {
+     "path": "/_REEDOS.012",
+     "size": 0
+    }
+   ],
+   "note_wordstarFalsePositivesBeforeFix": 5
+  },
+  {
+   "file": "fd13-1200k-dsk01.img",
+   "zipPath": "120m/x86DSK01.img",
+   "bytes": 1228800,
+   "sha256": "64c4d020b380994bbe4a83a595e56948513e5b0c4cede81a0c1e476183b9debf",
+   "volumeLabel": "FD13DSK01",
+   "directories": [],
+   "files": [
+    {
+     "path": "/freedos.001",
+     "size": 60416,
+     "sha256": "8dcc5efbf9de4901a655be91e81e08688ff87445b9249a0b81d3d90c7399af80"
+    },
+    {
+     "path": "/freedos.002",
+     "size": 60416,
+     "sha256": "fb689390d9ac3e3340a4c1c7947d850c244579ff56a4b6c35c0a1eca6c751ad5"
+    },
+    {
+     "path": "/freedos.003",
+     "size": 60416,
+     "sha256": "df1e3d5137895a24a143f2f6b5bfa0dc1a099f1b2eaefe29f9206a04b42d8bb2"
+    },
+    {
+     "path": "/freedos.004",
+     "size": 60416,
+     "sha256": "6b49fe505d5d419f04bbda147b8048d5723cfab1735af063c0083bb3be54e324"
+    },
+    {
+     "path": "/freedos.005",
+     "size": 60416,
+     "sha256": "eb4a9abafa46859550cd4b1596dd79f197c9393f608a6be395e3102825eb0c51"
+    },
+    {
+     "path": "/freedos.006",
+     "size": 60416,
+     "sha256": "f3cee5b0bdfdb67f73e4aed54bdf291b41470b9acd6d073b6963a37801a50c52"
+    },
+    {
+     "path": "/freedos.007",
+     "size": 60416,
+     "sha256": "ea3fa293b86a22cc7b4f09553e1b9140e3bf4c3dcca5a8214e7aee5623e6fd77"
+    },
+    {
+     "path": "/freedos.008",
+     "size": 60416,
+     "sha256": "b2dc845af1c7a680313106c75deaab0a5862852c7963b7a176e5166d85af0668"
+    },
+    {
+     "path": "/freedos.009",
+     "size": 60416,
+     "sha256": "94be5ae71f89e00c34351efb92be8cdaa570ace5f83af1e9d2960a9374618114"
+    },
+    {
+     "path": "/freedos.010",
+     "size": 60416,
+     "sha256": "eb5cc8d606dba5d834a6f8659873e0d7279df277afa8727dea28120d66336fa6"
+    },
+    {
+     "path": "/freedos.011",
+     "size": 60416,
+     "sha256": "2fd3c064535ffa85834fc3cb5e96315379f458934ac3de7bcce729a250757b60"
+    },
+    {
+     "path": "/freedos.012",
+     "size": 60416,
+     "sha256": "e04860dcbf8d782fbe3be180521725a7e25f0d592d84fc0e4d2b7219def304de"
+    },
+    {
+     "path": "/freedos.013",
+     "size": 60416,
+     "sha256": "0b17417c824bbc647345fad12016062ac900237553295810b1074d51955337e3"
+    },
+    {
+     "path": "/freedos.014",
+     "size": 60416,
+     "sha256": "06f0276b7cb111397d3ba66f878d9bfe2a066b9fc1fc7d82eafe54e5db5a6248"
+    },
+    {
+     "path": "/freedos.015",
+     "size": 60416,
+     "sha256": "9c8c44022f5e71250dbc1143841eb93c011010f16c9df7ab875e94a604a2445b"
+    },
+    {
+     "path": "/freedos.016",
+     "size": 60416,
+     "sha256": "64ee4df8b07cc5c930a010ed955bd6df7e2d1fcfbeb84c54bc3ceff8f293510c"
+    },
+    {
+     "path": "/freedos.017",
+     "size": 60416,
+     "sha256": "fb1d75f0551df8bd29370864e6a62eeb2a59458241d1122f639b64251900535e"
+    },
+    {
+     "path": "/freedos.018",
+     "size": 60416,
+     "sha256": "67ed3d0fce5b8996ae136cc2062a89b9c3198bce2d09832d48b25f8836387a17"
+    },
+    {
+     "path": "/freedos.019",
+     "size": 60416,
+     "sha256": "c6a3801ba1deccbfa33a8bf14bc8a7eefd7828d5aa02bba38a7ec5f490a674f4"
+    },
+    {
+     "path": "/freedos.saf",
+     "size": 60416,
+     "sha256": "e7d2794fc7b0b02078f9edb258d5ae2cd8b1bb7af7995a02d686331b45f5ca1b"
+    }
+   ],
+   "deletedEntries": [
+    {
+     "path": "/_REEDOS.020",
+     "size": 0
+    }
+   ],
+   "note_wordstarFalsePositivesBeforeFix": 5
+  },
+  {
+   "file": "fd13-1440k-boot.img",
+   "zipPath": "144m/x86BOOT.img",
+   "bytes": 1474560,
+   "sha256": "3f7834ea4575ba05d106e4b8f59f886da7bfb1979ee386be2a2deba8df518925",
+   "volumeLabel": "FD13-BOOT",
+   "directories": [
+    "/freedos",
+    "/freedos/bin",
+    "/freedos/configs",
+    "/freedos/nls"
+   ],
+   "files": [
+    {
+     "path": "/KERNEL.SYS",
+     "size": 46485,
+     "sha256": "f34a7483c575fcf2709d9a7d0bc3db81c6211c279530f9e1bf78576b9233924d"
+    },
+    {
+     "path": "/fdauto.bat",
+     "size": 1476,
+     "sha256": "11a04dade844f59a13576e457a2e507b5d752138db494137b528165222dd3478"
+    },
+    {
+     "path": "/fdconfig.sys",
+     "size": 392,
+     "sha256": "8caa8e7777f6aeacc4cd6925460735e9f96cc535a782ebc87a04937dfc69b372"
+    },
+    {
+     "path": "/freedos/bin/attrib.com",
+     "size": 5044,
+     "sha256": "63e5932a6f6604c584f77691ba55f882439f1c4c8637fb6e45f4ee5bc41f0414"
+    },
+    {
+     "path": "/freedos/bin/command.com",
+     "size": 85480,
+     "sha256": "93ed257d3aa2454821aa305b731544550dcccff898865b590deb972c47b48610"
+    },
+    {
+     "path": "/freedos/bin/country.sys",
+     "size": 30250,
+     "sha256": "f94c77a8fb7a7bfaef4be0d6701eadee536346133e1e4e4658cfb4dcdb3c1edf"
+    },
+    {
+     "path": "/freedos/bin/cp850.v8f",
+     "size": 3103,
+     "sha256": "69a7bac2cb83201d2e59d624bcbc675cded04bfbc0a48d90c850f5817f79bf69"
+    },
+    {
+     "path": "/freedos/bin/cp857.v8f",
+     "size": 3132,
+     "sha256": "bef70f051f22a61c6748ee8146ed24b834ebfa8ceae05d49d3a4b1699518f575"
+    },
+    {
+     "path": "/freedos/bin/cp858.v8f",
+     "size": 1060,
+     "sha256": "4e9bbdebb5fb9dd3db09c4b6cbfe6af31e4c59fe21a1a2c88822a078530bf3d8"
+    },
+    {
+     "path": "/freedos/bin/cp866.v8f",
+     "size": 1277,
+     "sha256": "f94336d043119e0db9327b4e5a8238f1541980bcbd0376f95d5fe4f65f91365f"
+    },
+    {
+     "path": "/freedos/bin/deltree.com",
+     "size": 3339,
+     "sha256": "72b6b5596048979a7a8526c73753892e0b13408821441cd3154e8d0b5fb013cb"
+    },
+    {
+     "path": "/freedos/bin/fasthelp.bat",
+     "size": 64,
+     "sha256": "e237660bb4053e6e3c28227d0fcc5472109eae4ffcfcc0935c27c118c9f3fa38"
+    },
+    {
+     "path": "/freedos/bin/fc.exe",
+     "size": 14835,
+     "sha256": "f6f03ca1aaa4874049f05de1289f7a8b55e5a23ff94709345983f156ffb2f39f"
+    },
+    {
+     "path": "/freedos/bin/fdapm.com",
+     "size": 7434,
+     "sha256": "8e670866c16c9cfb10796f33a785aa55e4ae94f4eabcff3fea0cfd5449a8ac73"
+    },
+    {
+     "path": "/freedos/bin/fdbanner.com",
+     "size": 475,
+     "sha256": "0c9c7d565c28416cf08133485ae717fab170dd495bb15415dcf5e1f9967d5ebf"
+    },
+    {
+     "path": "/freedos/bin/fdisk.exe",
+     "size": 34445,
+     "sha256": "3d2d79f972f0e4cc36c0ed33f854d4fb0eb23bb6d73d7a05307cdb8590c0c76b"
+    },
+    {
+     "path": "/freedos/bin/fdisk.ini",
+     "size": 8447,
+     "sha256": "0befdac5f902a1ddb47c489dfea548ef184fc7738ed9f7a27e47021a5b5a0d44"
+    },
+    {
+     "path": "/freedos/bin/fdiskpt.ini",
+     "size": 21232,
+     "sha256": "1e9e08957a0b305869df78db1593fd1ec61827912b77a0e20865878accfa35b6"
+    },
+    {
+     "path": "/freedos/bin/fdwrapup.bat",
+     "size": 757,
+     "sha256": "450a4b2b47577403ef2746bc12d57bf4a66b12094b9289ec0013718e753cf894"
+    },
+    {
+     "path": "/freedos/bin/format.exe",
+     "size": 34113,
+     "sha256": "a049ce59cadace4c38a9a997b080c9f1f552a1c890198620ffdc606d5088258b"
+    },
+    {
+     "path": "/freedos/bin/kernl386.sys",
+     "size": 46256,
+     "sha256": "932c0c155701eddb7b902f7269a1b2ce31f5c82a6dc195172f2336d18a74e1fb"
+    },
+    {
+     "path": "/freedos/bin/mem.exe",
+     "size": 15144,
+     "sha256": "358d4ca8a7286ed5e22d79b095283ee7727f773727fc88145c6e948eb90f3fd8"
+    },
+    {
+     "path": "/freedos/bin/more.exe",
+     "size": 6942,
+     "sha256": "d57bba5d16674ed48f6bb5bf8634bc55f33d14d1171df9d52e4a425fc6a57239"
+    },
+    {
+     "path": "/freedos/bin/setlang.bat",
+     "size": 5322,
+     "sha256": "dd15099d8e4efeaa806ecac08953ed7cdaad9439be4a361c2811b4ea3ca6eb35"
+    },
+    {
+     "path": "/freedos/bin/setver.sys",
+     "size": 109,
+     "sha256": "bc67a19e687fc9a01f1c9e27ca7f9f17b7970822d10278d1d8198e74f7ea0ba7"
+    },
+    {
+     "path": "/freedos/bin/slicerex.exe",
+     "size": 29234,
+     "sha256": "650f14748153869b1a1eef968cac4441621b5167437fd9b1ae8bbe5cf6629aad"
+    },
+    {
+     "path": "/freedos/bin/sys.com",
+     "size": 11727,
+     "sha256": "74e663071019cf6447d43af8245e65948d8b864ffb4f08842467c579fdf89bdd"
+    },
+    {
+     "path": "/freedos/bin/vask.com",
+     "size": 3158,
+     "sha256": "95f76660352ec5200a71a5afd124ecf71960fe8c3afe76ada8d8658a560d576a"
+    },
+    {
+     "path": "/freedos/bin/vchoice.com",
+     "size": 2902,
+     "sha256": "03817a737b1ace0458ad08040a33c200fe26783a34f4aaed9de1d59a0af50dc1"
+    },
+    {
+     "path": "/freedos/bin/vcls.com",
+     "size": 1976,
+     "sha256": "86f0f881b164b0af472ecd90e873a5a03814835164aa5b74e6ec0c8173fefe53"
+    },
+    {
+     "path": "/freedos/bin/vcursor.com",
+     "size": 1342,
+     "sha256": "c5ee4f90278514ba2924da51cd4cdcf623a5137a360719ffe13c936aa4ac1ae2"
+    },
+    {
+     "path": "/freedos/bin/vdelay.com",
+     "size": 1360,
+     "sha256": "7daa53d304b0992cbeaa768dfbb0b9377f96170c6b4263f62642debd5d928f38"
+    },
+    {
+     "path": "/freedos/bin/veach.com",
+     "size": 3166,
+     "sha256": "11b763ce4099467b6b8039d89d03762fbe8ac20c77a56b657e8a59d4a7377313"
+    },
+    {
+     "path": "/freedos/bin/vecho.com",
+     "size": 2196,
+     "sha256": "439aae3fa2e4c4345259da426c596588c21ed7f4021910487c113fc956d78280"
+    },
+    {
+     "path": "/freedos/bin/verrlvl.com",
+     "size": 1083,
+     "sha256": "274a8b6abe0c278770d986e06d57ffb34afbb197883d79e02c47dd3eb020ced2"
+    },
+    {
+     "path": "/freedos/bin/vfdutil.com",
+     "size": 2413,
+     "sha256": "aadc4415112472c058f9226fa1c398753f7043876b6b19ea1c69b75b76a61d56"
+    },
+    {
+     "path": "/freedos/bin/vfont.com",
+     "size": 1970,
+     "sha256": "8acb7a777cfac75619fad9562170c569b1554c6fd441268e01bf48e4d8ce7ac4"
+    },
+    {
+     "path": "/freedos/bin/vframe.com",
+     "size": 2494,
+     "sha256": "c1fc0d5473d79c98a324f61a08842bc8489002138da54e03ce96ae0b04363b9f"
+    },
+    {
+     "path": "/freedos/bin/vgotoxy.com",
+     "size": 2085,
+     "sha256": "908671805e0929a8bcdd9f95bc26c8fe71b18ae1e19d6e01d2dd69baebc5764e"
+    },
+    {
+     "path": "/freedos/bin/vinfo.com",
+     "size": 3009,
+     "sha256": "cea351060681eefc6303d4232432b00cf0a59d986da46474ca2b161e342eb78f"
+    },
+    {
+     "path": "/freedos/bin/vline.com",
+     "size": 2144,
+     "sha256": "1972ec10bcd5c9d60056356a18b78a4cba92eae4e65c36a99c920f2812098326"
+    },
+    {
+     "path": "/freedos/bin/vpause.com",
+     "size": 2012,
+     "sha256": "e98cac140c50331ff51ce779217dcfeabdf58c7752d46a6822a140fb451c1e63"
+    },
+    {
+     "path": "/freedos/bin/vprogres.com",
+     "size": 2424,
+     "sha256": "0a688188075b6831ed9ece8a0e34aa57a4e0930876fe220ecc288a548bba8a58"
+    },
+    {
+     "path": "/freedos/bin/vstr.com",
+     "size": 2387,
+     "sha256": "6ec188c88bfcd5aa7f6973c47e17a507496c04508cbdef01c90253097d0fde8b"
+    },
+    {
+     "path": "/freedos/bin/welcome.bat",
+     "size": 923,
+     "sha256": "b9b570389d951b217c8a2c06f60ceca2aac21dbb6b213bbccaa9879b640ce8cc"
+    },
+    {
+     "path": "/freedos/bin/xcopy.exe",
+     "size": 15538,
+     "sha256": "1303f6ebb1df95c66e1dac570f651614ec9dfd41da7bfc8ca86524e159a7fa72"
+    },
+    {
+     "path": "/freedos/configs/autoexec.dbx",
+     "size": 1434,
+     "sha256": "c1529feacf93cd9002393bd31a712266c1fb8f00f8921cf8663e8b4a15d638dd"
+    },
+    {
+     "path": "/freedos/configs/autoexec.def",
+     "size": 1723,
+     "sha256": "3a016b257a88720d4396eab773a1fcedfa7dfabcd13993625e857c6cb5e26892"
+    },
+    {
+     "path": "/freedos/configs/autoexec.vbx",
+     "size": 1723,
+     "sha256": "ddf19a455865efef6edfe8d50cd7cab60353173a35f0a4269dfbfc8bc129d746"
+    },
+    {
+     "path": "/freedos/configs/config.086",
+     "size": 327,
+     "sha256": "805d70480ad08cda30f5fc03ece8da3fc9d7c55b1071a371c08f2f7f61ace703"
+    },
+    {
+     "path": "/freedos/configs/config.186",
+     "size": 327,
+     "sha256": "805d70480ad08cda30f5fc03ece8da3fc9d7c55b1071a371c08f2f7f61ace703"
+    },
+    {
+     "path": "/freedos/configs/config.286",
+     "size": 545,
+     "sha256": "58f68cdbed484c175aed4c2daea77187bf24a480604a62a88c1779fa7c6ed9f1"
+    },
+    {
+     "path": "/freedos/configs/config.dbx",
+     "size": 45,
+     "sha256": "7ce5d288e92ade1f856d7f032bb6875f0270e049975da2392e48ad22313b1bbf"
+    },
+    {
+     "path": "/freedos/configs/config.def",
+     "size": 880,
+     "sha256": "2f3d876103fde3a037601752692dd7a524a152d0291d35585a1fac3fd08b02b2"
+    },
+    {
+     "path": "/freedos/configs/config.vbx",
+     "size": 779,
+     "sha256": "28d0e717d424024aeb55efd786a11f0997b4d52b2f23a32f24016d048a763ea9"
+    },
+    {
+     "path": "/freedos/nls/setup.de",
+     "size": 8784,
+     "sha256": "27d2250adc5901c766fff8cf53f357c35aa03651a7bfcbd586f8b45f89393f56"
+    },
+    {
+     "path": "/freedos/nls/setup.en",
+     "size": 7948,
+     "sha256": "caee16a04c46b5c8d719e9693ab3610a2210659e511f46a6bcc2a9f082692512"
+    },
+    {
+     "path": "/freedos/nls/setup.es",
+     "size": 7877,
+     "sha256": "30268f4b2cf0559f8e0f70cdf9caeb26f85a565dafa7ab375f3517a1532d140d"
+    },
+    {
+     "path": "/freedos/nls/setup.fr",
+     "size": 8660,
+     "sha256": "b3ef0f3c9d5980ff561fef2ed240f51c5c2c4249c472dcfca1f8bd1b0c72373c"
+    },
+    {
+     "path": "/freedos/nls/setup.sv",
+     "size": 8096,
+     "sha256": "485b0bb505bb59395465204430523fd0e7d6ce1038f86b0dd03933a408e7e646"
+    },
+    {
+     "path": "/freedos/nls/setup.tr",
+     "size": 7773,
+     "sha256": "a16ddffc1be3fa6824c32dc49b50d4d6413fedc2e4274f1d3f1657fc38146d85"
+    },
+    {
+     "path": "/freedos/nls/slicer.de",
+     "size": 7030,
+     "sha256": "52c2a44f6368dffef5e2d1e77f38e4664515cf26ef99bfcdaba6c3ea8b992045"
+    },
+    {
+     "path": "/freedos/nls/slicer.en",
+     "size": 6321,
+     "sha256": "2b5ed4e87fa0ad4cbc588950c9c7faa91130b866d184d4b71a995f4708d4879a"
+    },
+    {
+     "path": "/freedos/nls/slicer.es",
+     "size": 6880,
+     "sha256": "f2e760a837bceb1cedbafc9df7c513f35a03d486be12314ea0b4684c430af555"
+    },
+    {
+     "path": "/freedos/nls/slicer.fr",
+     "size": 7233,
+     "sha256": "3b55c8081c816b73b6501e07fefd24c49c0a98d6fda88b2fceebb2840311d8a6"
+    },
+    {
+     "path": "/freedos/nls/slicer.sv",
+     "size": 6311,
+     "sha256": "781cc610fb1a533c79d5de9cf56aa40193691e6d09e0ac4a4e86de21cf248d0f"
+    },
+    {
+     "path": "/freedos/nls/slicer.tr",
+     "size": 6778,
+     "sha256": "f60abe885304165ae9b5b75911f94bd13f4f8e49f01bc4d5cf06a38a53ab5aa1"
+    },
+    {
+     "path": "/freedos/nls/welcome.de",
+     "size": 294,
+     "sha256": "62c0a646afea7b44bb6a2cf6e7d79649079ae9e1624c4ceb661d8e3fcc823221"
+    },
+    {
+     "path": "/freedos/nls/welcome.en",
+     "size": 253,
+     "sha256": "dd7e2e91107cb11bb1c3d65a2866940330e6d32953e6a97b6b7710b799533762"
+    },
+    {
+     "path": "/freedos/nls/welcome.eo",
+     "size": 274,
+     "sha256": "760dfafa6bd4ba86603e7fc95b0abf49fc0863ca01add63d76dd2e355208d5b6"
+    },
+    {
+     "path": "/freedos/nls/welcome.es",
+     "size": 295,
+     "sha256": "76ea3b0697773334ab56246e4ced5a5f3d61294edda40282d8dcec304a9c1684"
+    },
+    {
+     "path": "/freedos/nls/welcome.fr",
+     "size": 305,
+     "sha256": "0cc9c8faad9c677b5f85f07b2793958202183c607e6754e35e9432a42105ac5a"
+    },
+    {
+     "path": "/freedos/nls/welcome.nl",
+     "size": 270,
+     "sha256": "10f81ba6c09ead4f28386e2a115d33a6ee1f844df643c1e2db179d282509a402"
+    },
+    {
+     "path": "/freedos/nls/welcome.sv",
+     "size": 260,
+     "sha256": "c88f26a2215cd2566e14099f77885f4dcd16a024e583b1e21396b53a2086095b"
+    },
+    {
+     "path": "/freedos/nls/welcome.tr",
+     "size": 251,
+     "sha256": "1e1550fe417f46e5f8d8ffbf5836eca95fa2808de396ae9f52b6bd59ffbd3457"
+    },
+    {
+     "path": "/freedos/version.fdi",
+     "size": 51,
+     "sha256": "5009df7929e56d07b1ffe549145460eac66a6e074107c43409267414adc65cae"
+    },
+    {
+     "path": "/setup.bat",
+     "size": 39641,
+     "sha256": "13457a9f152a52c4d68c848aed5aa8ccf5d3a1b20bd650823628f9583b025d5b"
+    }
+   ],
+   "deletedEntries": [],
+   "note_wordstarFalsePositivesBeforeFix": 29
+  }
+ ]
+}

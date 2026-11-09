@@ -1,0 +1,461 @@
+{
+  "pbtResults": {
+    "2.8 Extend the hostile reader test with the new fill families": {
+      "status": "passed",
+      "lastRunTimestamp": 1794213247977
+    },
+    "2.5 Write property test for never-used slots": {
+      "status": "passed",
+      "lastRunTimestamp": 1794213301672
+    }
+  },
+  "executionHistory": {
+    "1.1 Record the baseline, with no code changes": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212385204
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212396288
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212492277
+      }
+    ],
+    "2.1 Add `slots` to the test-only image writer": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212385249
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212506489
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212716839
+      }
+    ],
+    "2.2 Write example tests for the writer change": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212385295
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212724089
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212921526
+      }
+    ],
+    "2.3 Implement never-used slots and zero dates in the reader": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212385348
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212929254
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794213065749
+      }
+    ],
+    "2.4 Write example tests for slots and zero dates": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212385401
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794213065802
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794213411464
+      }
+    ],
+    "2.5 Write property test for never-used slots": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212385443
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794213108679
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794213411829
+      }
+    ],
+    "2.8 Extend the hostile reader test with the new fill families": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212385491
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794213108912
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794213412603
+      }
+    ],
+    "3.1 Implement the gate and the veto with the independent oracle and the listed existing-test edits": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212385549
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794213465643
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794213610983
+      }
+    ],
+    "3.2 Widen the hostile grammar and add oracle examples": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212385599
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794213611138
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794213741690
+      }
+    ],
+    "3.3 Write example tests for the detector": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212385670
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794213741733
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794213944342
+      }
+    ],
+    "4.1 Record the golden Markdown before the converter changes": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212385711
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794213989359
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794214245763
+      }
+    ],
+    "4.2 Implement soft hyphen joining and soft space runs": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212385755
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794214245816
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794214403283
+      }
+    ],
+    "4.3 Write example tests for the converter": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212385799
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794214403511
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794214540194
+      }
+    ],
+    "4.6 Extend the formats hostile test": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212385847
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794214541042
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794214679942
+      }
+    ],
+    "5.1 Add the test-only SHA-256 helper": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212385919
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794214720318
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794214826708
+      }
+    ],
+    "5.2 Write `src/core/realdisks.test.ts`": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212385973
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794214826892
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794214988758
+      }
+    ],
+    "5.3 Add negative controls and fixture handling checks to `realdisks.test.ts`": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212386020
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794214989009
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794215106462
+      }
+    ],
+    "5.4 Write `src/core/extra-corpus.test.ts`": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212386086
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794215106961
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794215294130
+      }
+    ],
+    "6.1 Add the \"Tested on real disks\" section to `README.md`": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212386140
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794215339484
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794215400186
+      }
+    ],
+    "6.2 Add README examples to `src/demo-disks/readme.test.ts`": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212386184
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794215400378
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794215524602
+      }
+    ],
+    "7. Checkpoint - all source changes": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212386238
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794215524839
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794216005375
+      }
+    ],
+    "8.1 Check the build configuration, then STOP and ask for approval": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212386315
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794216005543
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794216551612
+      }
+    ],
+    "8.2 After approval only: rebuild and verify the bundle": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212386389
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794216551777
+      },
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794216865284
+      }
+    ],
+    "10. Final checkpoint": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212386434
+      }
+    ],
+    "1. Baseline": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794212492313
+      }
+    ],
+    "2. FAT12 fixes and the writer `slots` extension": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794213418164
+      }
+    ],
+    "3. Detection: WordStar gate, extension veto, oracle": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794213945115
+      }
+    ],
+    "4. WordStar converter: soft hyphen and soft space": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794214679985
+      }
+    ],
+    "5. Real-disk regression tests": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794215294197
+      }
+    ],
+    "6. README": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794215524657
+      }
+    ],
+    "8. MCP bundle rebuild (needs the user's approval)": [
+      {
+        "executionId": "9c3c6cf7-61a1-4118-b606-de51e0791829",
+        "chatSessionId": "sess_8635b273-2b4f-4790-a14f-36d7b7e9595d",
+        "timestamp": 1794216865364
+      }
+    ]
+  }
+}

@@ -78,6 +78,37 @@ describe('header oracles', () => {
     expect(detectOracle(new Uint8Array(0))).toBe('unknown');
   });
 
+  it('detectOracle: MZ veto, NUL and odd-byte budgets, traits', () => {
+    expect(detectOracle(Uint8Array.of(0x4d, 0x5a, 0x41, 0x8d, 0x0a))).toBe('unknown');
+    expect(detectOracle(Uint8Array.of(0x5a, 0x4d, 0x41, 0x8d, 0x0a))).toBe('unknown');
+    expect(detectOracle(Uint8Array.of(0x41, 0x4d, 0x5a, 0x8d, 0x0a))).toBe('wordstar');
+    // 64 bytes: one NUL is within n >> 6, two are not.
+    const nul = (count: number) => {
+      const b = new Uint8Array(64).fill(0x41);
+      b[0] = 0x2e;
+      b[1] = 0x50;
+      b[2] = 0x41;
+      for (let i = 0; i < count; i++) b[10 + i] = 0;
+      return b;
+    };
+    expect(detectOracle(nul(1))).toBe('wordstar');
+    expect(detectOracle(nul(2))).toBe('unknown');
+    // 16 bytes: one odd byte is within n >> 4, two are not; 0xA0 is a space (low 7 bits 0x20).
+    const odd = (count: number) => {
+      const b = new Uint8Array(16).fill(0x41);
+      b[0] = 0x41;
+      b[1] = 0x8d;
+      b[2] = 0x0a;
+      for (let i = 0; i < count; i++) b[8 + i] = 0x01;
+      return b;
+    };
+    expect(detectOracle(odd(1))).toBe('wordstar');
+    expect(detectOracle(odd(2))).toBe('unknown');
+    const soft = Uint8Array.of(0x41, 0x41, 0x1f, 0x8d, 0x0a, 0xa0, 0x41, 0x41);
+    expect(detectOracle(soft)).toBe('wordstar');
+    expect(detectOracle(Uint8Array.of(0x41, 0x42, 0x43))).toBe('unknown');
+  });
+
   it('dBase header verdicts', () => {
     expect(dbfHeaderOracle(new Uint8Array(10))).toEqual({ accepted: false, kind: 'invalid', condition: 2 });
     const h = new Uint8Array(65);
@@ -167,6 +198,17 @@ describe('plain text oracles', () => {
     expect(detectFullOracle(new Uint8Array(0))).toEqual({ format: 'unknown', source: 'none' });
     expect(detectFullOracle(new Uint8Array(0), 'E.TXT')).toEqual({ format: 'text', source: 'extension' });
     expect(detectFullOracle(Uint8Array.of(1), 42)).toEqual({ format: 'unknown', source: 'none' });
+  });
+
+  it('detectFullOracle: binary extension vetoes WordStar content', () => {
+    const doc = bytesOf('.PA\r\nhi');
+    expect(detectFullOracle(doc, 'A.TXT')).toEqual({ format: 'wordstar', source: 'content' });
+    expect(detectFullOracle(doc, 'README')).toEqual({ format: 'wordstar', source: 'content' });
+    expect(detectFullOracle(doc, 'RUN.COM')).toEqual({ format: 'text', source: 'content' });
+    expect(detectFullOracle(doc, 'FREEDOS.001')).toEqual({ format: 'text', source: 'content' });
+    expect(detectFullOracle(Uint8Array.of(0x41, 0x8d, 0x0a), 'X.EXE')).toEqual({ format: 'unknown', source: 'none' });
+    // the veto is for WordStar only: PCX content survives a binary extension
+    expect(detectFullOracle(Uint8Array.of(0x0a, 5, 1, 8), 'P.COM')).toEqual({ format: 'pcx', source: 'content' });
   });
 
   it('encodeCp437: round trip and null for an unmappable character', () => {

@@ -74,3 +74,14 @@ what had to be fixed by hand. Be honest — the write-up is built from this.
   only when `src/core` changed) and this session log (`Stop`, agent prompt). Nothing was run; JSON was only read back.
 - Helped: the `createHook` schema (trigger names checked, `PostTaskExec` exists so no file-save fallback); no spec or steering file.
 - By hand: nothing yet. The self-trigger guard of the log hook is prompt-only and still unverified.
+## 2026-11-09 — real-disk-hardening (spec 7)
+- Reason: on 35 real DOS disks (24 FreeDOS 1.3, 11 PCjs) the reader matched independent references on all 942 files,
+  but 197 files rose as fake WordStar, 641 never-used directory slots showed as graves and zero dates raised warnings.
+- Kiro wrote the spec (11 requirements, 12 properties, 10 task groups) and the fixes: WordStar gate (MZ veto, NUL and
+  odd-byte budgets) plus a known-binary-extension veto, never-used `E5 F6…`/`E5 00…` slots skipped, zero date = no
+  date, soft hyphen join and soft space padding; writer `slots`, a golden test, `realdisks.test.ts` on three committed
+  FreeDOS fixtures graded against a macOS-mount manifest, an opt-in local corpus test. 1626 tests.
+- Afterwards on the 35 disks: WordStar detections 197 → 11 (10 real WordStar documents and one Intel HEX text file),
+  phantom graves 641 → 0, `date-invalid` warnings → 0.
+- By hand: the fixtures and their manifest, measuring the WordStar thresholds on the 35 disks before implementation,
+  approving `build:mcp` after the config-hash check. Optional property tasks and item 5 (deleted long names) were skipped.

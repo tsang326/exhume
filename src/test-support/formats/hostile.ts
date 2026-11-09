@@ -105,14 +105,21 @@ const WS_TOKENS: number[][] = [
   [0x00], [0x1f], [0x1a], [0x7f], [0x01], [0x2e, 0x50, 0x41, 0x0d, 0x0a], [0x2e, 0x2e, 0x20, 0x78, 0x0d, 0x0a],
   [0x2e, 0x35, 0x0d, 0x0a], [0x2a], [0x5f], [0x5c], [0x3c], [0x23, 0x20], [0x31, 0x2e, 0x20],
   [0xe1], [0xff], [0x41, 0x42, 0xc3], [0x20], [0x20, 0x20],
+  [0xa0], [0x1f, 0x8d, 0x0a], [0x4d, 0x5a],
 ];
 
+// MZ/ZM only vetoes at offset 0, so it is also offered as a sequence prefix (exercises the MZ veto).
+const WS_PREFIXES: number[][] = [[], [], [], [0x4d, 0x5a], [0x5a, 0x4d]];
+
 const wsGrammarArb: fc.Arbitrary<Uint8Array> = fc
-  .array(fc.oneof(fc.constantFrom(...WS_TOKENS), fc.integer({ min: 0, max: 255 }).map((n) => [n])), {
-    minLength: 0,
-    maxLength: 400,
-  })
-  .map((tokens) => Uint8Array.from(tokens.flat()));
+  .tuple(
+    fc.constantFrom(...WS_PREFIXES),
+    fc.array(fc.oneof(fc.constantFrom(...WS_TOKENS), fc.integer({ min: 0, max: 255 }).map((n) => [n])), {
+      minLength: 0,
+      maxLength: 400,
+    }),
+  )
+  .map(([prefix, tokens]) => Uint8Array.from([...prefix, ...tokens.flat()]));
 
 const DBF_FIELD_TYPES = 'CNFDLMXcnfdlm?0'.split('').map((c) => c.charCodeAt(0));
 

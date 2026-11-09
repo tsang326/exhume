@@ -58,9 +58,19 @@ export interface FileNode extends NodeBase {
   content: Uint8Array;
 }
 
+/** A directory record DOS never used: 0xE5 followed by 31 bytes of 0xF6 or 0x00. */
+export interface NeverUsedSlot {
+  /** Insert the slot before this child (0..children.length; children.length puts it after the last child). */
+  beforeChild: number;
+  /** Fill of bytes 1..31. */
+  fill: 'f6' | 'zero';
+}
+
 export interface DirNode extends NodeBase {
   kind: 'directory';
   children: TreeNode[];
+  /** Never-used slots written among the children's records. */
+  slots?: NeverUsedSlot[];
 }
 
 export type TreeNode = FileNode | DirNode;
@@ -68,6 +78,8 @@ export type TreeNode = FileNode | DirNode;
 export interface FileTree {
   volumeLabel?: string;
   children: TreeNode[];
+  /** Never-used slots written among the root's records. */
+  slots?: NeverUsedSlot[];
 }
 
 export type DamageSpec =

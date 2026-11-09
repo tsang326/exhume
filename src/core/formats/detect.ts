@@ -28,6 +28,12 @@ const TEXT_PRINTABLE_MAX = 0x7e;
 const TEXT_TAB = 0x09;
 const TEXT_FF = 0x0c;
 const TEXT_EOF = 0x1a;
+const TEXT_SOFT_HYPHEN = 0x1f;
+const LOW_7_MASK = 0x7f;
+const ODD_BYTE_SHIFT = 4; // odd bytes allowed: floor(n / 16)
+const NUL_BYTE_SHIFT = 6; // NUL bytes allowed: floor(n / 64)
+const MZ_FIRST = 0x4d;
+const MZ_SECOND = 0x5a;
 
 function isPcx(s: Uint8Array): boolean {
   if (s.length < PCX_MIN_BYTES || s[0] !== PCX_MAGIC) return false;
@@ -51,14 +57,46 @@ function isDbase(s: Uint8Array, totalLength: number): boolean {
   );
 }
 
-/** One bounded pass: soft return, dot command line, or style toggle plus hard return. */
+function isTextLow(low: number): boolean {
+  return (
+    (low >= TEXT_PRINTABLE_MIN && low <= TEXT_PRINTABLE_MAX) ||
+    low === TEXT_TAB ||
+    low === LF ||
+    low === TEXT_FF ||
+    low === HARD_CR ||
+    low === TEXT_EOF ||
+    low === STYLE_BOLD ||
+    low === STYLE_UNDERLINE ||
+    low === STYLE_ITALIC ||
+    low === TEXT_SOFT_HYPHEN
+  );
+}
+
+/**
+ * One bounded pass. Gate: no MZ/ZM prefix, and on the low 7 bits at most n/16 odd bytes and n/64 NUL bytes.
+ * Traits: soft return, dot command line, or style toggle plus hard return.
+ */
 function isWordStar(s: Uint8Array): boolean {
   const n = s.length;
+  if (n >= 2 && ((s[0] === MZ_FIRST && s[1] === MZ_SECOND) || (s[0] === MZ_SECOND && s[1] === MZ_FIRST))) {
+    return false;
+  }
+  const oddBudget = n >> ODD_BYTE_SHIFT;
+  const nulBudget = n >> NUL_BYTE_SHIFT;
+  let odd = 0;
+  let nul = 0;
+  let trait = false;
   let toggle = false;
   let hard = false;
   let atLineStart = true;
   for (let i = 0; i < n; i++) {
     const b = s[i];
+    const low = b & LOW_7_MASK;
+    if (!isTextLow(low)) {
+      odd++;
+      if (low === 0) nul++;
+      if (odd > oddBudget || nul > nulBudget) return false;
+    }
     if (
       atLineStart &&
       b === DOT &&
@@ -66,23 +104,23 @@ function isWordStar(s: Uint8Array): boolean {
       isAsciiLetter(s[i + 1]) &&
       isAsciiLetter(s[i + 2])
     ) {
-      return true;
+      trait = true;
     }
     atLineStart = false;
-    if (b === SOFT_CR && i + 1 < n && (s[i + 1] === LF || s[i + 1] === SOFT_LF)) return true;
+    if (b === SOFT_CR && i + 1 < n && (s[i + 1] === LF || s[i + 1] === SOFT_LF)) trait = true;
     if (b === HARD_CR && i + 1 < n && s[i + 1] === LF) {
       hard = true;
       atLineStart = true;
-      i++; // the pair is one hard return; the next byte starts a line
-      if (toggle) return true;
+      i++; // the pair is one hard return; the next byte starts a line (LF is text-like)
+      if (toggle) trait = true;
       continue;
     }
     if (b === STYLE_BOLD || b === STYLE_UNDERLINE || b === STYLE_ITALIC) {
       toggle = true;
-      if (hard) return true;
+      if (hard) trait = true;
     }
   }
-  return false;
+  return trait;
 }
 
 /** One bounded pass: non-empty and only text content bytes (printable ASCII, TAB, LF, FF, CR, EOF). */
@@ -108,6 +146,43 @@ function foldAscii(text: string): string {
     out += String.fromCharCode(asciiUpper(text.charCodeAt(i)));
   }
   return out;
+}
+
+/** True for a name whose extension is in the closed binary list, or is made only of digits. */
+function hasKnownBinaryExtension(fileName: unknown): boolean {
+  if (typeof fileName !== 'string' || fileName.length > MAX_FILE_NAME_CHARS) return false;
+  const dot = fileName.lastIndexOf('.');
+  if (dot < 0) return false;
+  const ext = foldAscii(fileName.slice(dot + 1));
+  switch (ext) {
+    case 'COM':
+    case 'EXE':
+    case 'SYS':
+    case 'OVR':
+    case 'BIN':
+    case 'DLL':
+    case 'DRV':
+    case 'BGI':
+    case 'CHR':
+    case 'FON':
+    case 'CPI':
+    case 'NDX':
+    case 'NTX':
+    case 'MDX':
+    case 'DBF':
+    case 'ZIP':
+    case 'ARC':
+    case 'LZH':
+      return true;
+    default:
+      break;
+  }
+  if (ext.length === 0) return false;
+  for (let i = 0; i < ext.length; i++) {
+    const c = ext.charCodeAt(i);
+    if (c < 0x30 || c > 0x39) return false;
+  }
+  return true;
 }
 
 function formatFromExtension(fileName: string): DetectResult['format'] {
@@ -145,7 +220,7 @@ export function detectFormat(input: Uint8Array, fileName?: unknown): DetectResul
 
   if (isPcx(sample)) return { format: 'pcx', source: 'content' };
   if (isDbase(sample, input.length)) return { format: 'dbase', source: 'content' };
-  if (isWordStar(sample)) return { format: 'wordstar', source: 'content' };
+  if (!hasKnownBinaryExtension(fileName) && isWordStar(sample)) return { format: 'wordstar', source: 'content' };
 
   if (typeof fileName === 'string' && fileName.length <= MAX_FILE_NAME_CHARS) {
     const format = formatFromExtension(fileName);

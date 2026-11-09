@@ -23,6 +23,7 @@ export type {
   DirNode,
   DosDateTime,
   FileNode,
+  NeverUsedSlot,
   FileTree,
   Geometry,
   Measure,

@@ -5,7 +5,7 @@
  */
 
 import { walkChain, type ChainResult, type ScanContext } from './chain';
-import { decodeDosDateTime } from './dates';
+import { decodeDosDateTime, isZeroDosDateTime } from './dates';
 import { gradeDeleted, gradeLive, type Grade } from './grade';
 import { DIR_ENTRY_BYTES, MAX_DIR_DEPTH, MAX_TOTAL_ENTRIES } from './limits';
 import { decodeShortName, lfnReset, lfnTake, lfnFeed, makeLfnState, type LfnState } from './names';
@@ -55,6 +55,17 @@ const ATTR_DIRECTORY = 0x10;
 const ATTR_ARCHIVE = 0x20;
 const DELETED_MARK = 0xe5;
 const PLACEHOLDER = 0x5f; // '_'
+const NEVER_USED_FILL_F6 = 0xf6;
+const NEVER_USED_FILL_ZERO = 0x00;
+
+/** E5 followed by 31 bytes that are all F6 or all 00: a slot DOS never used. One pass over at most 31 bytes. */
+export function isNeverUsedSlot(rec: Uint8Array): boolean {
+  if (rec.length < DIR_ENTRY_BYTES || rec[0] !== DELETED_MARK) return false;
+  const fill = rec[1];
+  if (fill !== NEVER_USED_FILL_F6 && fill !== NEVER_USED_FILL_ZERO) return false;
+  for (let i = 2; i < DIR_ENTRY_BYTES; i++) if (rec[i] !== fill) return false;
+  return true;
+}
 
 function childPath(parent: string, name: string): string {
   return parent === '/' ? '/' + name : parent + '/' + name;
@@ -170,6 +181,7 @@ export function walkDirectories(
     }
 
     const deleted = first === DELETED_MARK;
+    if (deleted && isNeverUsedSlot(rec)) continue;
 
     // 4. Long-name record.
     if ((attr & 0x3f) === 0x0f) {
@@ -212,8 +224,13 @@ export function walkDirectories(
 
     const size = u32(rec, 28);
     const startCluster = u16(rec, 26);
-    const date = decodeDosDateTime(u16(rec, 24), u16(rec, 22));
-    if (date === null) sink.add(WarningCode.DateInvalid, 'modification date or time is invalid', entryPath);
+    const dateWord = u16(rec, 24);
+    const timeWord = u16(rec, 22);
+    let date: string | null = null;
+    if (!isZeroDosDateTime(dateWord, timeWord)) {
+      date = decodeDosDateTime(dateWord, timeWord);
+      if (date === null) sink.add(WarningCode.DateInvalid, 'modification date or time is invalid', entryPath);
+    }
 
     // 8. Grade and descend.
     let state: GraveState = GraveState.Alive;

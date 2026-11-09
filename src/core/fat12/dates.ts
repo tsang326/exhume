@@ -17,6 +17,11 @@ function isWord(value: number): boolean {
   return Number.isInteger(value) && value >= 0 && value <= 0xffff;
 }
 
+/** True only for the pair of two zero words (DOS 1.x files without a date). */
+export function isZeroDosDateTime(dateWord: number, timeWord: number): boolean {
+  return dateWord === 0 && timeWord === 0;
+}
+
 /**
  * Decode a DOS date word and time word to `YYYY-MM-DDTHH:MM:SS`, or null when any
  * field is out of range. Never throws; non-integer or non-16-bit inputs give null.

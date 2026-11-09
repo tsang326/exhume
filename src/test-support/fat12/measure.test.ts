@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { capacityOf, fitTree, measureTree, pickGeometry, standardGeometry } from './measure';
+import { FitError } from './errors';
+import { layoutImage } from './layout';
 import type { FileTree } from './types';
 
 const file = (name: string, size: number) => ({
@@ -78,5 +80,16 @@ describe('pickGeometry / fitTree', () => {
   it('leaves a fitting tree unchanged', () => {
     const t: FileTree = { children: [file('A.TXT', 10)] };
     expect(fitTree(t)).toBe(t);
+  });
+
+  it('counts slots as root entries and throws FitError(root-entry-count) when they overflow the root', () => {
+    const children = Array.from({ length: 200 }, (_, i) => file(`F${i}.TXT`, 0));
+    const slots = Array.from({ length: 25 }, () => ({ beforeChild: 0, fill: 'zero' as const }));
+    const tree: FileTree = { children, slots };
+    expect(measureTree(tree, standardGeometry('1440K')).rootEntries).toBe(225);
+    expect(() => layoutImage(tree, standardGeometry('1440K'))).toThrow(
+      expect.objectContaining({ limit: 'root-entry-count', limitValue: 224, requestedValue: 225 }),
+    );
+    expect(() => layoutImage(tree, standardGeometry('1440K'))).toThrow(FitError);
   });
 });

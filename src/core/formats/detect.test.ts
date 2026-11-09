@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as fc from 'fast-check';
 import { numRuns } from '../../test-support/runs';
-import { detectFullOracle, detectOracle, isTextSampleOracle } from '../../test-support/formats/oracles';
+import { detectFullOracle, detectOracle, hasBinaryExtensionOracle, isTextSampleOracle } from '../../test-support/formats/oracles';
 import { detectFormat } from './detect';
 
 /** Leading bytes that start each detection family, plus two bytes that start none. */
@@ -329,8 +329,12 @@ describe('detectFormat extension fallback and file-name hygiene', () => {
       notStringNames,
       hostileText,
     );
+    // WordStar content is vetoed by a binary extension (Requirement 1.5); PCX and dBase content keep any name.
+    const contentAndName = fc
+      .tuple(contentBytes, anyName)
+      .filter(([bytes, name]) => detectOracle(bytes) !== 'wordstar' || !hasBinaryExtensionOracle(name));
     fc.assert(
-      fc.property(contentBytes, anyName, (bytes, name) => {
+      fc.property(contentAndName, ([bytes, name]) => {
         const expected = detectOracle(bytes);
         const got = detectFormat(bytes, name);
         return got.format === expected && got.source === 'content';
@@ -438,7 +442,7 @@ const MARKERS: readonly (readonly [string, readonly number[]])[] = [
 ];
 
 function fillerWith(length: number, at: number, marker: readonly number[]): Uint8Array {
-  const out = new Uint8Array(length).fill(0x01);
+  const out = new Uint8Array(length).fill(0xc1);
   out.set(marker, at);
   return out;
 }
@@ -608,8 +612,12 @@ describe('detectFormat strong content rules', () => {
       .tuple(fc.constantFrom(...strongExtensions), fc.array(fc.boolean(), { minLength: 4, maxLength: 4 }), fc.string({ maxLength: 20 }))
       .map(([[ext], flips, stem]) => `${stem.replace(/\./g, '_')}.${[...ext].map((c, i) => (flips[i] ? c.toLowerCase() : c)).join('')}`);
     const anyName = fc.oneof(txtNames, strongNames, anyFileName, fc.constant(undefined));
+    // WordStar content is vetoed by a binary extension (Requirement 1.5); PCX and dBase content keep any name.
+    const contentAndName = fc
+      .tuple(contentBytes, anyName)
+      .filter(([bytes, name]) => detectOracle(bytes) !== 'wordstar' || !hasBinaryExtensionOracle(name));
     fc.assert(
-      fc.property(contentBytes, anyName, (bytes, name) => {
+      fc.property(contentAndName, ([bytes, name]) => {
         const got = detectFormat(bytes, name);
         return got.format === detectOracle(bytes) && got.source === 'content';
       }),

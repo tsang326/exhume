@@ -13,7 +13,7 @@ import {
 } from './encode';
 import { FitError } from './errors';
 import { capacityOf, measureTree } from './measure';
-import type { DirNode, DosDateTime, FileTree, Geometry, TreeNode } from './types';
+import type { DirNode, DosDateTime, FileTree, Geometry, NeverUsedSlot, TreeNode } from './types';
 
 const DEFAULT_DATE: DosDateTime = {
   year: 1980,
@@ -112,6 +112,37 @@ function lfnCount(node: TreeNode): number {
   return node.longName === undefined ? 0 : Math.ceil(node.longName.length / LFN_UNITS_PER_RECORD);
 }
 
+function validateSlotList(
+  slots: NeverUsedSlot[] | undefined,
+  childCount: number,
+  where: string,
+): void {
+  if (slots === undefined) return;
+  for (const slot of slots) {
+    if (!Number.isInteger(slot.beforeChild) || slot.beforeChild < 0 || slot.beforeChild > childCount) {
+      throw new RangeError(`bad slot beforeChild ${slot.beforeChild} in ${where}`);
+    }
+    if (slot.fill !== 'f6' && slot.fill !== 'zero') {
+      throw new RangeError(`unknown slot fill ${String(slot.fill)} in ${where}`);
+    }
+  }
+}
+
+/** Check every `slots` list in the tree (iterative walk); throws RangeError. */
+function validateSlots(tree: FileTree): void {
+  validateSlotList(tree.slots, tree.children.length, '/');
+  const stack: Array<{ node: TreeNode; path: string }> = tree.children.map((node) => ({
+    node,
+    path: `/${node.name}`,
+  }));
+  while (stack.length > 0) {
+    const { node, path } = stack.pop() as { node: TreeNode; path: string };
+    if (node.kind !== 'directory') continue;
+    validateSlotList(node.slots, node.children.length, path);
+    for (const child of node.children) stack.push({ node: child, path: `${path}/${child.name}` });
+  }
+}
+
 /**
  * Build the complete image for `tree` on `geometry`.
  * All fit checks run before any byte is written; throws FitError.
@@ -121,6 +152,7 @@ export function layoutImage(
   geometry: Geometry,
   options: LayoutOptions = {},
 ): LayoutResult {
+  validateSlots(tree);
   // ---- Fit checks (no bytes written yet) --------------------------------
   const measure = measureTree(tree, geometry);
   const cap = capacityOf(geometry);
@@ -181,7 +213,8 @@ export function layoutImage(
     if (node.kind === 'file') {
       need = Math.ceil(node.content.length / clusterBytes);
     } else {
-      const records = 2 + node.children.reduce((s, c) => s + 1 + lfnCount(c), 0);
+      const records =
+        2 + node.children.reduce((s, c) => s + 1 + lfnCount(c), 0) + (node.slots?.length ?? 0);
       need = Math.max(1, Math.ceil((records * ENTRY_BYTES) / clusterBytes));
     }
     const placed = node.placement !== undefined;
@@ -304,7 +337,19 @@ export function layoutImage(
       put(dir.info.dotOffset, dot);
       put(dir.info.dotDotOffset, dotdot);
     }
-    for (const child of children) {
+    const slots = dir === undefined ? tree.slots : (dir.node as DirNode).slots;
+    const writeSlotsBefore = (childIndex: number): void => {
+      if (slots === undefined) return;
+      for (const slot of slots) {
+        if (slot.beforeChild !== childIndex) continue;
+        const rec = new Uint8Array(ENTRY_BYTES).fill(slot.fill === 'f6' ? 0xf6 : 0x00);
+        rec[0] = DELETED_MARK;
+        put(recordAt(index++), rec);
+      }
+    };
+    for (let ci = 0; ci < children.length; ci++) {
+      writeSlotsBefore(ci);
+      const child = children[ci] as Plan;
       const name11 = encodeShortName(child.node.name);
       const isDeleted = child.info.deleted;
       if (child.node.longName !== undefined) {
@@ -322,6 +367,7 @@ export function layoutImage(
         encodeEntry(name11, child.node, child.info.startCluster, child.info.size, isDeleted),
       );
     }
+    writeSlotsBefore(children.length);
   };
 
   const parentStartOf = (parentPath: string): number =>

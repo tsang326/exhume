@@ -91,9 +91,15 @@ function convert(
   let tokKind = 0;
   let tokC = 0;
   let tokLen = 0;
+  let tokSoftSpace = false;
+
+  let prevHyphen = false; // the previous token was a soft hyphen
+  let runOrdinary = 0; // ordinary spaces, tabs and soft-return spaces in the pending run
+  let runSoft = 0; // soft spaces (raw 0xA0) in the pending run
 
   function readToken(pos: number): void {
     const raw = input[pos];
+    tokSoftSpace = false;
     if (
       (raw === 0x8d || raw === 0x0d) &&
       pos + 1 < n &&
@@ -108,6 +114,7 @@ function convert(
     tokLen = 1;
     tokC = c;
     tokKind = c === 0x0d || c === CHAR_LF ? KIND_HARD : KIND_CHAR;
+    tokSoftSpace = raw === 0xa0;
   }
 
   function wanted(style: number): boolean {
@@ -180,6 +187,8 @@ function convert(
     pushMarkers(open, k, open.length, true);
     pushSpaces(pendingSpaces);
     pendingSpaces = 0;
+    runOrdinary = 0;
+    runSoft = 0;
     pushMarkers(newOpen, k, newOpen.length, false);
     open = newOpen;
     if (escape) sink.push(CHAR_BACKSLASH);
@@ -201,6 +210,8 @@ function convert(
     open = [];
     pushSpaces(pendingSpaces);
     pendingSpaces = 0;
+    runOrdinary = 0;
+    runSoft = 0;
     sink.push(CHAR_LF);
     textCol = 0;
     leadingDigit = false;
@@ -254,6 +265,8 @@ function convert(
 
     readToken(i);
     i += tokLen;
+    const afterHyphen = prevHyphen;
+    prevHyphen = false;
 
     if (tokKind === KIND_HARD) {
       writeHard();
@@ -262,8 +275,9 @@ function convert(
     }
     if (tokKind === KIND_SOFT) {
       lineStart = false;
-      if (!atBreak) {
+      if (!atBreak && !afterHyphen) {
         pendingSpaces++;
+        runOrdinary++;
         atBreak = true;
       }
       continue;
@@ -272,7 +286,11 @@ function convert(
     const c = tokC;
     lineStart = false;
     if (c === 0x1a) break;
-    if (c === 0x00 || c === 0x1f) continue;
+    if (c === 0x00) continue;
+    if (c === 0x1f) {
+      prevHyphen = true;
+      continue;
+    }
     if (c === 0x02) {
       wantBold = !wantBold;
       continue;
@@ -282,7 +300,19 @@ function convert(
       continue;
     }
     if (c === 0x09 || c === CHAR_SPACE) {
-      pendingSpaces++;
+      if (tokSoftSpace) {
+        if (runOrdinary === 0) {
+          pendingSpaces++;
+          runSoft++;
+        }
+      } else {
+        if (runOrdinary === 0) {
+          pendingSpaces -= runSoft;
+          runSoft = 0;
+        }
+        pendingSpaces++;
+        runOrdinary++;
+      }
       atBreak = true;
       continue;
     }

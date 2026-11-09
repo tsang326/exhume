@@ -75,7 +75,9 @@ describe('WordStar text pass-through', () => {
           const plain = joinBytes(lines, [0x0d, 0x0a]);
           let k = 0;
           const high = joinBytes(
-            lines.map((l) => l.map((b) => (mask[k++] ? b | 0x80 : b))),
+            // 0x20 is excluded: a raw 0xA0 is a soft space, which adds nothing next to an ordinary
+            // space (real-disk-hardening Requirement 5.3), so it is not equivalent to 0x20.
+            lines.map((l) => l.map((b) => (mask[k++] && b !== 0x20 ? b | 0x80 : b))),
             [0x0d, 0x0a],
           );
           const a = convertWordStar(plain);

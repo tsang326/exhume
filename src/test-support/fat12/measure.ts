@@ -87,8 +87,8 @@ export function measureTree(tree: FileTree, geometry: Geometry): Measure {
   let fileCount = 0;
   let maxDepth = 0;
 
-  const entriesOf = (nodes: TreeNode[]): number =>
-    nodes.reduce((sum, n) => sum + 1 + lfnRecordCount(n), 0);
+  const entriesOf = (nodes: TreeNode[], slots?: readonly unknown[]): number =>
+    nodes.reduce((sum, n) => sum + 1 + lfnRecordCount(n), 0) + (slots?.length ?? 0);
 
   const walk = (nodes: TreeNode[], path: string, depth: number, live: boolean): void => {
     const seen = new Set<string>();
@@ -108,7 +108,7 @@ export function measureTree(tree: FileTree, geometry: Geometry): Measure {
       } else {
         maxDepth = Math.max(maxDepth, depth + 1);
         if (takesClusters) {
-          const records = 2 + entriesOf(node.children);
+          const records = 2 + entriesOf(node.children, node.slots);
           clusters += Math.max(1, Math.ceil((records * 32) / clusterBytes));
         }
         walk(node.children, full, depth + 1, isLive);
@@ -119,7 +119,7 @@ export function measureTree(tree: FileTree, geometry: Geometry): Measure {
 
   const labelEntry = tree.volumeLabel === undefined ? 0 : 1;
   return {
-    rootEntries: labelEntry + entriesOf(tree.children),
+    rootEntries: labelEntry + entriesOf(tree.children, tree.slots),
     clusters,
     fileCount,
     maxDepth,

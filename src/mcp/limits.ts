@@ -62,3 +62,6 @@ export const CP_HIGH_SURROGATE_MIN = 0xd800;
 export const CP_HIGH_SURROGATE_MAX = 0xdbff;
 export const CP_LOW_SURROGATE_MIN = 0xdc00;
 export const CP_LOW_SURROGATE_MAX = 0xdfff;
+
+/** Upper bound on the number of path segments of the Home_Directory realpath that the identity test walks. */
+export const MAX_HOME_SEGMENTS = 64;

@@ -22,7 +22,7 @@ attacker-controlled.
   The page never sends disk bytes anywhere.
 
 ## MCP server (the agent boundary)
-- Tools take an image path that must resolve (realpath) inside the workspace root; refuse symlinks and anything outside.
+- Tools take an image path that must resolve (realpath) inside the workspace root; refuse symlinks and anything outside. In default mode the root is fixed when the server starts (`--root <dir>` or the working directory). In workspace mode (`--workspace-from-agent`, used only by the Power's `mcp.json`) the root is given on every call by the agent as the `workspace` argument and is shown to the user in the chat's record of each tool call (and in the approval prompt when Kiro asks for one); the server rejects the filesystem root, the user's home directory and every directory above it, then applies the same confinement inside the realpath of the given folder.
 - The only write tool exhumes into one fixed folder (`exhumed/`). No destination argument. File names are rebuilt
   from an allowlist (`[A-Za-z0-9._-]`, max 64 chars), the extension is chosen by the converter, never overwrite.
 - Output to the agent is structured JSON with caps (entries, text length). Converted text is wrapped and labeled as

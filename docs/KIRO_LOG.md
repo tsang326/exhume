@@ -85,3 +85,25 @@ what had to be fixed by hand. Be honest — the write-up is built from this.
   phantom graves 641 → 0, `date-invalid` warnings → 0.
 - By hand: the fixtures and their manifest, measuring the WordStar thresholds on the 35 disks before implementation,
   approving `build:mcp` after the config-hash check. Optional property tasks and item 5 (deleted long names) were skipped.
+
+## 2026-11-09 — power-workspace (spec 8)
+- Reason: the hand checks of 2026-11-07 showed the Power could not work: a legacy install leaves out `server/`, and
+  a plugin install runs in its own folder and cannot see the workspace (no `${workspaceFolder}`, no `roots/list`).
+- Kiro wrote the spec (Home_Ancestor rule added on review; design researched the Kiro and Agent Plugins docs) and ran
+  all tasks: `--workspace-from-agent` launch flag, a per-call `workspace` argument validated in nine steps (segment-wise
+  home-ancestor test plus a device/inode identity test for case variants), a `ModeStrategy` in `server.ts` with the
+  default tool list kept byte-identical (snapshot test), `plugin.json` + `${PLUGIN_ROOT}` `mcp.json` + a skill, docs.
+  1751 tests.
+- By hand: restoring `design.md` and `requirements.md` from Kiro's session snapshot after they were reverted mid-review,
+  starting the tasks from the task list (the chat session had no file-edit tool), approving `build:mcp` after the
+  config-hash check.
+
+## 2026-11-10 — power-exhume tool check
+- Kiro used the installed Exhume Power: listed `public/disks/writers-disk.img` and exhumed `/CHAPTER1.WS` to `exhumed/CHAPTER1.md` (2686 bytes). I did not open that file to check its content.
+- Safety test: `open_disk` with workspace `/Users/os` returned `PATH_REJECTED`, but the message names the image path, so it is unproven that the home-folder check fired. Earlier, the FreeDOS 720k disk had no text file, so nothing was exhumed from it.
+- Helped: the Power's tool docs; no spec or steering file. By hand: nothing.
+- Added by hand afterwards: a direct run of the bundle shows the rejection comes from the `workspace` check (with a
+  missing image, `/` or the home folder gives `PATH_REJECTED`, an allowed folder gives `IMAGE_NOT_FOUND`). The Power
+  installed as an Agent Plugin and shows as `power-exhume`, Connected, 4 tools. `CHAPTER1.md` is readable Markdown.
+  Autopilot was on and no approval prompt appeared, so the prompt wording is unverified. README and `POWER.md` record
+  the result.

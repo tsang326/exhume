@@ -6,8 +6,9 @@ import { nodeFs, SUPPORTS_NOFOLLOW } from './fs-layer';
 import { tooLargeLine } from './jsonrpc';
 import { createLineReader } from './line-reader';
 import type { LineEvent } from './line-reader';
-import { resolveRoot } from './paths';
-import { createServer } from './server';
+import { homedir } from 'node:os';
+import { resolveLaunch } from './launch';
+import { createServer, createWorkspaceServer } from './server';
 import type { Server } from './server';
 
 const START_FAILURE = 'exhume-mcp: cannot start (invalid arguments or workspace root)';
@@ -34,10 +35,10 @@ async function emit(server: Server, ev: LineEvent): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const root = SUPPORTS_NOFOLLOW
-    ? resolveRoot(process.argv.slice(2), process.cwd(), nodeFs)
+  const launch = SUPPORTS_NOFOLLOW
+    ? resolveLaunch(process.argv.slice(2), process.cwd(), nodeFs)
     : { ok: false as const };
-  if (!root.ok) {
+  if (!launch.ok) {
     process.stderr.write(START_FAILURE + '\n');
     process.exitCode = 1;
     return;
@@ -47,7 +48,10 @@ async function main(): Promise<void> {
     outputBroken = true;
   });
 
-  const server = createServer(root.value);
+  const server =
+    launch.value.kind === 'workspace'
+      ? createWorkspaceServer({ homedir })
+      : createServer(launch.value.root);
   const reader = createLineReader();
 
   try {

@@ -111,11 +111,16 @@ describe('WordStar styles against the fixture description', () => {
       fc.property(docs, (paragraphs) => {
         const result = convertWordStar(writeWordStar(paragraphs));
         if (!result.ok) return false;
-        const lines = result.output.split('\n');
-        if (lines.pop() !== '') return false;
-        if (lines.length !== paragraphs.length) return false;
-        for (let i = 0; i < paragraphs.length; i++) {
-          const expected = expectedLine(paragraphs[i] as WsParagraph);
+        // Changed on purpose (Item C, mcp-root-and-flaky): the converter now separates paragraphs by one
+        // blank line and writes nothing for a paragraph with no visible text (empty or only spaces).
+        // So the model keeps only paragraphs with visible text, and the output is split on '\n\n'
+        // instead of '\n'. Per-paragraph text and style checks are unchanged.
+        const visible = paragraphs.filter((p) => p.spans.some((s) => s.text.split('').some((c) => c !== ' ')));
+        if (!result.output.endsWith('\n')) return visible.length === 0 && result.output === '';
+        const lines = result.output.slice(0, -1).split('\n\n');
+        if (lines.length !== visible.length) return false;
+        for (let i = 0; i < visible.length; i++) {
+          const expected = expectedLine(visible[i] as WsParagraph);
           const line = lines[i] as string;
           if (markdownLineText(line) !== expected.text) return false;
           if (!lineMatchesStyles(line, expected.styles, true)) return false;

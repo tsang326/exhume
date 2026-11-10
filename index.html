@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Exhume - REVENANT.OS</title>
+    <meta name="description" content="Open old DOS floppy disk images in your browser. Read WordStar, dBase III and PCX files and see deleted files. Nothing is uploaded." />
+    <title>Exhume - read old floppy disks in your browser</title>
   </head>
   <body>
     <!--
@@ -21,13 +22,25 @@
         #demo-slot       mount point for the demo disk list (spec 5 slot).
         #graveyard       mount point for the graveyard display.
         #preview-root    preview dialog root; sibling of #app, not inside it, so it is not inert.
+        #intro           static intro block in the header (summary, capability list, privacy note).
+        #repo-link       footer link to the GitHub repository.
     -->
     <div id="fx-host" aria-hidden="true"></div>
     <div id="app">
       <div class="content">
         <header>
           <h1>Exhume</h1>
-          <p id="privacy-note" class="note">Your files stay in this browser. Nothing is uploaded.</p>
+          <section id="intro" class="intro" aria-label="About Exhume">
+            <p class="intro-lead">Exhume opens old DOS floppy disk images in your browser, so you can read what is on them.</p>
+            <ul class="intro-list">
+              <li>WordStar documents are read as Markdown.</li>
+              <li>dBase III tables are read as CSV.</li>
+              <li>PCX pictures are read as PNG.</li>
+              <li>Plain text files are read as text.</li>
+              <li>Deleted files are shown as open graves, with how much of each can come back.</li>
+            </ul>
+            <p id="privacy-note" class="note">Your files stay in this browser. Nothing is uploaded.</p>
+          </section>
         </header>
         <main>
           <section id="drop-zone" class="drop-zone" aria-label="Drop a floppy image here">
@@ -44,6 +57,7 @@
         </main>
         <footer>
           <p id="honesty-note" class="note">Prior art: andete/disk-peek, an existing browser tool for FAT12 images and deleted-entry recovery.</p>
+          <a id="repo-link" class="repo-link" href="https://github.com/tsang326/exhume" rel="noopener noreferrer" aria-label="Exhume on GitHub">Exhume on GitHub</a>
         </footer>
       </div>
     </div>

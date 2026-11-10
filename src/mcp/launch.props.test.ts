@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import fc from 'fast-check';
 import { afterAll, beforeAll, describe, it } from 'vitest';
 import { numRuns } from '../test-support/runs';
-import { nodeFs } from './fs-layer';
+import { type FileLayer, nodeFs } from './fs-layer';
 import { WORKSPACE_FLAG, resolveLaunch } from './launch';
 
 let tmp = '';
@@ -27,9 +27,9 @@ afterAll(() => {
 });
 
 function isExistingDir(path: string): boolean {
-  // Default_Mode is unchanged: realpath('') is the process working directory, so `--root ""`
-  // has always started the server there. The model must agree with that, not with a stricter rule.
-  if (path === '') return true;
+  // An empty or whitespace-only value is a launcher mistake (an unset variable), not a request
+  // for the working directory, so the server must refuse to start.
+  if (path.trim() === '') return false;
   try {
     return statSync(path).isDirectory();
   } catch {
@@ -61,6 +61,7 @@ function token(): fc.Arbitrary<string> {
     fc.constant(dir),
     fc.constant(file),
     fc.constant(join(tmp, 'missing')),
+    fc.constantFrom('', ' ', '\t', '  \n', '\u00a0'),
     fc.string({ maxLength: 20 }),
   );
 }
@@ -95,6 +96,34 @@ describe('launch classification', () => {
           const r = resolveLaunch(argv, dir, nodeFs);
           if (argv.length === 1) return r.ok && r.value.kind === 'workspace';
           return !r.ok && r.code === 'INVALID_ARGUMENTS';
+        },
+      ),
+      { numRuns: numRuns(100) },
+    );
+  });
+
+  it('rejects an empty or whitespace-only --root without touching the file system', () => {
+    fc.assert(
+      fc.property(
+        fc
+          .array(fc.constantFrom(' ', '\t', '\n', '\r', '\u00a0', '\u2003', '\ufeff'))
+          .map((parts) => parts.join('')),
+        (w) => {
+          const calls: string[] = [];
+          const recordingFs: FileLayer = {
+            lstat: (p) => (calls.push('lstat'), nodeFs.lstat(p)),
+            realpath: (p) => (calls.push('realpath'), nodeFs.realpath(p)),
+            openRead: (p) => (calls.push('openRead'), nodeFs.openRead(p)),
+            openExclusive: (p) => (calls.push('openExclusive'), nodeFs.openExclusive(p)),
+            fstat: (fd) => (calls.push('fstat'), nodeFs.fstat(fd)),
+            read: (fd, b, o, l) => (calls.push('read'), nodeFs.read(fd, b, o, l)),
+            write: (fd, b, o, l) => (calls.push('write'), nodeFs.write(fd, b, o, l)),
+            close: (fd) => (calls.push('close'), nodeFs.close(fd)),
+            mkdir: (p) => (calls.push('mkdir'), nodeFs.mkdir(p)),
+            unlink: (p) => (calls.push('unlink'), nodeFs.unlink(p)),
+          };
+          const r = resolveLaunch(['--root', w], dir, recordingFs);
+          return !r.ok && calls.length === 0;
         },
       ),
       { numRuns: numRuns(100) },

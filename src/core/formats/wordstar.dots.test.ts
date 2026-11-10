@@ -83,6 +83,41 @@ function outputOf(bytes: number[]): string | null {
   return r.ok ? r.output : null;
 }
 
+/**
+ * Reference model of the converter output for a document of lines (Item C, mcp-root-and-flaky).
+ * Rewritten on purpose: the old model converted each run of text lines alone and put the rule block between
+ * runs. That cannot describe the lazy rule, so the model is now a function of the whole document:
+ * - a text line with a visible character is a content line; its text is what the converter gives for that line
+ *   alone (escaping is not re-modelled here). Empty and space-only text lines are dropped;
+ * - content lines are joined by one blank line (the previous content line ends with a line feed, then '\n');
+ * - `.PA` makes a rule due only if some content came before; the rule is written when the next content line
+ *   arrives, so repeated `.PA` give one rule and a `.PA` before the first or after the last content writes nothing;
+ * - other dot commands and `..` comments write nothing and do not interrupt the blank-line state;
+ * - a content line ends with a line feed exactly when a hard return follows it in the input.
+ * Returns null when a per-line conversion fails.
+ */
+function referenceOutput(lines: Line[], finalTerminator: boolean): string | null {
+  let out = '';
+  let hasContent = false;
+  let ruleDue = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i] as Line;
+    if (line.kind === 'cmd') {
+      if (line.pa && hasContent) ruleDue = true;
+      continue;
+    }
+    if (line.kind === 'comment') continue;
+    if (!line.bytes.some((b) => b !== 0x20)) continue;
+    const piece = outputOf(line.bytes);
+    if (piece === null) return null;
+    if (hasContent) out += ruleDue ? '\n---\n\n' : '\n';
+    out += piece + (i < lines.length - 1 || finalTerminator ? '\n' : '');
+    hasContent = true;
+    ruleDue = false;
+  }
+  return out;
+}
+
 describe('Property 15: dot-command lines are removed and counted', () => {
   it('removes dot lines, turns .PA into a rule, and counts the rest once', () => {
     fc.assert(
@@ -91,31 +126,9 @@ describe('Property 15: dot-command lines are removed and counted', () => {
         const result = convertWordStar(Uint8Array.from(input));
         if (!result.ok) return false;
 
-        // Expected: runs of text lines converted alone, .PA lines become the rule block.
-        let expected = '';
-        let run: Line[] = [];
-        let count = 0;
-        const flush = (isLast: boolean): boolean => {
-          if (run.length === 0) return true;
-          const out = outputOf(terminated(run, isLast ? finalTerminator : true));
-          run = [];
-          if (out === null) return false;
-          expected += out;
-          return true;
-        };
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-          if (line.kind === 'text') {
-            run.push(line);
-            continue;
-          }
-          if (!flush(false)) return false;
-          if (line.kind === 'cmd') {
-            if (line.pa) expected += '\n---\n\n';
-            else count++;
-          }
-        }
-        if (!flush(lines.length > 0 && lines[lines.length - 1].kind === 'text')) return false;
+        const expected = referenceOutput(lines, finalTerminator);
+        if (expected === null) return false;
+        const count = lines.filter((l) => l.kind === 'cmd' && !l.pa).length;
 
         if (result.output !== expected) return false;
 

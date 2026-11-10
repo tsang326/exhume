@@ -2,6 +2,7 @@
 // Nothing here reads a disk; the worker client moves messages and this file shows the results.
 import { createBlobUrlManager } from './dom/blob-urls';
 import { createDemoSlot } from './dom/demo-slot';
+import type { DemoSlot } from './dom/demo-slot';
 import { createDownloader } from './dom/download';
 import { createEffects } from './dom/effects';
 import { installGlobalErrorHandlers } from './dom/errors';
@@ -97,6 +98,8 @@ export function startApp(): void {
   let session: Session = createSession();
   let openToken = 0;
   let exhumeToken = 0;
+  let slot: DemoSlot | null = null;
+  let pendingSource: string | null = null;
   let rise: { state: RiseState; handle: RiseHandle | null; outcome: ExhumeOutcome | null; item: ItemViewModel; opener: HTMLElement | null } | null = null;
 
   const blobs = createBlobUrlManager();
@@ -142,6 +145,7 @@ export function startApp(): void {
 
   // ----- Opening a disk -----
   function openBytes(bytes: Uint8Array): void {
+    const source = pendingSource; // set only while a demo card's bytes are handed in synchronously
     const mine = ++openToken;
     client.supersedeAll();
     abandonRise();
@@ -156,11 +160,15 @@ export function startApp(): void {
         case 'ok': {
           const report = settled.value.report;
           const items = toItemViewModels(report);
+          const previewWasOpen = preview.isOpen();
           preview.close();
           blobs.revokeAll();
           graveyard.show(report, items);
           session = applyOpened(session, bytes, report, items); // the previous held bytes are dropped here
+          slot?.setPressed(source);
           status.set(`Opened a disk with ${items.length} entries.`);
+          refreshControls(); // hide Cancel first so the layout above the heading is final before it scrolls
+          if (!previewWasOpen) graveyard.reveal(prefersReducedMotion());
           break;
         }
         case 'failed':
@@ -255,9 +263,14 @@ export function startApp(): void {
   }
 
   if (demoMount !== null) {
-    const slot = createDemoSlot((bytes, demo) => {
-      if (intakeBytes !== null) intakeBytes(bytes, demo.title);
-      else onBytes(bytes);
+    slot = createDemoSlot((bytes, demo) => {
+      pendingSource = demo.id;
+      try {
+        if (intakeBytes !== null) intakeBytes(bytes, demo.title);
+        else onBytes(bytes);
+      } finally {
+        pendingSource = null;
+      }
     });
     demoMount.appendChild(slot.element);
   }

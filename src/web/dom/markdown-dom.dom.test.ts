@@ -111,6 +111,39 @@ describe('buildMarkdown hostile input', () => {
   });
 });
 
+describe('buildMarkdown paragraph mapping', () => {
+  // Safe line: starts with a letter (never blank, never `---`), then letters, digits, space and plain punctuation.
+  // No `*`, `\`, `_`, `<`, `>`, `[`, `]`, `#`, `+`, `-` and no newline, so no markup or escape is possible.
+  const safeLine = fc
+    .tuple(
+      fc.constantFrom(...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')),
+      fc.string({ unit: fc.constantFrom(...'abcXYZ019 .,;:!?'.split('')), maxLength: 30 }),
+    )
+    .map(([first, rest]) => first + rest);
+  const group = fc.array(safeLine, { minLength: 1, maxLength: 5 });
+  const groups = fc.array(group, { minLength: 1, maxLength: 6 });
+
+  // Feature: ui-polish, Property 6: Markdown paragraphs map one to one, line breaks map to one br, and text is preserved
+  // **Validates: Requirements 6.1, 6.4, 6.6**
+  it('maps N groups to N p, single newlines to br, and keeps text (property)', () => {
+    fc.assert(
+      fc.property(groups, (gs) => {
+        const text = gs.map((lines) => lines.join('\n')).join('\n\n');
+        const host = build(text);
+        const ps = Array.from(host.querySelectorAll('p'));
+        if (ps.length !== gs.length || host.children.length !== gs.length) return false;
+        for (let i = 0; i < gs.length; i++) {
+          if (ps[i]!.querySelectorAll('br').length !== gs[i]!.length - 1) return false;
+        }
+        const expectedText = gs.map((lines) => lines.join('')).join('');
+        const tagsOk = tagNames(host).every((t) => MD_TAGS.has(t));
+        return tagsOk && host.textContent === expectedText;
+      }),
+      { numRuns: numRuns(100) },
+    );
+  });
+});
+
 describe('buildCsvTable hostile cells', () => {
   const hostile = '<img src=x onerror=alert(1)>';
   const table = {

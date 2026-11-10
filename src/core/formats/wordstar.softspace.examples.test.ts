@@ -63,8 +63,10 @@ describe('convertWordStar soft space runs', () => {
     expect(convert(bytes('a', SOFT, [0xa0], 'b'))).toBe('a b');
   });
   it('writes the pending run as trailing spaces before a hard return', () => {
-    expect(convert(bytes('a', [0x20, 0x20], HARD, 'b', HARD))).toBe('a  \nb\n');
-    expect(convert(bytes('a', [0x20, 0xa0], HARD, 'b', HARD))).toBe('a \nb\n');
-    expect(convert(bytes('a', [0xa0, 0xa0], HARD, 'b', HARD))).toBe('a  \nb\n');
+    // Changed on purpose (mcp-root-and-flaky, Item C): a hard return after a content line now ends a
+    // paragraph, so a blank line follows the trailing spaces. The trailing-space run itself is unchanged.
+    expect(convert(bytes('a', [0x20, 0x20], HARD, 'b', HARD))).toBe('a  \n\nb\n');
+    expect(convert(bytes('a', [0x20, 0xa0], HARD, 'b', HARD))).toBe('a \n\nb\n');
+    expect(convert(bytes('a', [0xa0, 0xa0], HARD, 'b', HARD))).toBe('a  \n\nb\n');
   });
 });

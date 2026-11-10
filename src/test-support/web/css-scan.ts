@@ -351,6 +351,212 @@ export function checkLayout(
   return problems;
 }
 
+// ---------------------------------------------------------------- page background
+
+function rulesFor(rules: readonly CssRule[], selector: string): CssRule[] {
+  return rules.filter((r) => selectorParts(r.selector).includes(selector));
+}
+
+/** Top-level comma split of a function argument list. */
+function splitArgs(text: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let cur = '';
+  for (const c of text) {
+    if (c === '(') depth++;
+    else if (c === ')') depth--;
+    if (c === ',' && depth === 0) {
+      out.push(cur.trim());
+      cur = '';
+    } else cur += c;
+  }
+  out.push(cur.trim());
+  return out;
+}
+
+/** Argument text of every `radial-gradient(` call in a value (balanced parentheses, length capped). */
+function radialGradientArgs(value: string): string[] {
+  const out: string[] = [];
+  const key = 'radial-gradient(';
+  let from = 0;
+  for (let n = 0; n < 64; n++) {
+    const at = value.toLowerCase().indexOf(key, from);
+    if (at < 0) break;
+    let depth = 1;
+    let i = at + key.length;
+    while (i < value.length && depth > 0) {
+      if (value[i] === '(') depth++;
+      else if (value[i] === ')') depth--;
+      i++;
+    }
+    out.push(value.slice(at + key.length, depth === 0 ? i - 1 : i));
+    from = i;
+  }
+  return out;
+}
+
+const ABS_LEN = '\\d*\\.?\\d+(?:px|rem|em|vw|vh|vmin|vmax|ch|pt|cm|mm|in)';
+const ELLIPSE_SIZE = new RegExp(`^(?:ellipse\\s+)?${ABS_LEN}\\s+${ABS_LEN}\\s+at\\s`, 'i');
+const ENDS_TRANSPARENT = /transparent(?:\s+-?\d*\.?\d+(?:%|px|rem|em)?)?$/i;
+
+function isOpaqueBackground(value: string): boolean {
+  const v = value.trim().toLowerCase();
+  if (['transparent', 'none', 'initial', 'unset', 'inherit', 'revert'].includes(v)) return false;
+  const fn = /^(?:rgba|hsla|rgb|hsl)\(([^)]*)\)$/.exec(v);
+  if (fn !== null) {
+    const alpha = /[,/]\s*([\d.]+%?)\s*$/.exec(fn[1]!);
+    if (alpha === null) return true;
+    const a = alpha[1]!.endsWith('%') ? parseFloat(alpha[1]!) / 100 : parseFloat(alpha[1]!);
+    return !(a < 1);
+  }
+  const hex = /^#([0-9a-f]{4}|[0-9a-f]{8})$/.exec(v);
+  if (hex !== null) return hex[1]!.slice(-(hex[1]!.length / 4)).split('').every((c) => c === 'f');
+  return true;
+}
+
+const BG_PROPS = ['background', 'background-color'];
+
+/**
+ * Rule-level proxy for "the background covers the whole page" (Req 3.1 to 3.4). It proves the
+ * stylesheet has the structure that cannot give a viewport-tall band; it does not prove pixels.
+ */
+export function checkBackground(css: string): CssProblem[] {
+  const rules = parseCss(css);
+  const problems: CssProblem[] = [];
+  const fail = (message: string): void => void problems.push({ check: 'background', message });
+  const last = (group: readonly CssRule[], props: readonly string[]): string | null => {
+    let v: string | null = null;
+    for (const r of group) for (const d of r.decls) if (props.includes(d.prop)) v = d.value;
+    return v;
+  };
+  const all = (group: readonly CssRule[], props: readonly string[]): string[] =>
+    group.flatMap((r) => r.decls.filter((d) => props.includes(d.prop)).map((d) => d.value));
+
+  // 1. html paints the solid ground.
+  const groundHex = declValues(rules, '--pair-body-bg').at(-1)?.toLowerCase() ?? null;
+  const html = rulesFor(rules, 'html');
+  const htmlBg = last(html, BG_PROPS)?.toLowerCase() ?? null;
+  const groundOk =
+    htmlBg !== null &&
+    (htmlBg === 'var(--pair-body-bg)' ||
+      htmlBg === 'var(--ground)' ||
+      (groundHex !== null && htmlBg === groundHex));
+  if (!groundOk) fail(`html needs a solid ground background (found ${htmlBg ?? 'none'})`);
+
+  // 2. body is a positioned, full-height containing block.
+  const body = rulesFor(rules, 'body');
+  if (last(body, ['position']) !== 'relative') fail('body needs position: relative');
+  const minH = last(body, ['min-height']);
+  if (minH !== '100vh' && minH !== '100dvh') fail('body needs min-height: 100vh or 100dvh');
+
+  // 3. body::before is an inert absolute layer below .content.
+  const before = rulesFor(rules, 'body::before');
+  if (before.length === 0) {
+    fail('no body::before rule');
+  } else {
+    if (last(before, ['position']) !== 'absolute') fail('body::before needs position: absolute');
+    const inset = last(before, ['inset']);
+    const sides = ['top', 'right', 'bottom', 'left'].map((p) => last(before, [p]));
+    const zero = (v: string | null): boolean => v !== null && /^0(?:px)?$/.test(v);
+    if (!(inset !== null && inset.split(/\s+/).every(zero)) && !sides.every(zero)) {
+      fail('body::before needs inset: 0');
+    }
+    if (last(before, ['pointer-events']) !== 'none') fail('body::before needs pointer-events: none');
+    const z = last(before, ['z-index']);
+    const contentZs = declValues(rulesFor(rules, '.content'), 'z-index').map(parseNumber);
+    const contentZ = contentZs.length === 0 || contentZs.some((n) => n === null)
+      ? null
+      : Math.max(...(contentZs as number[]));
+    const zn = z === null ? null : parseNumber(z);
+    if (zn === null || !Number.isInteger(zn)) fail('body::before needs an integer z-index');
+    else if (contentZ === null || !Number.isInteger(contentZ)) fail('.content needs an integer z-index');
+    else if (zn >= contentZ) fail(`body::before z-index ${zn} must be below .content (${contentZ})`);
+
+    // 4. radial gradients: fixed two-length ellipse, ending in transparent.
+    for (const value of all(before, ['background', 'background-image'])) {
+      for (const args of radialGradientArgs(value)) {
+        const parts = splitArgs(args);
+        if (!ELLIPSE_SIZE.test(parts[0] ?? '')) {
+          fail(`body::before radial-gradient needs "ellipse <len> <len> at ..." (found "${(parts[0] ?? '').slice(0, 60)}")`);
+        }
+        if (!ENDS_TRANSPARENT.test(parts[parts.length - 1] ?? '')) {
+          fail('body::before radial-gradient must end in transparent');
+        }
+      }
+    }
+  }
+
+  // 5. no viewport-tall gradient layers on the fx host.
+  for (const sel of ['#fx-host', '#fx-host::before', '#fx-host::after', '.fx-glow']) {
+    const bg = all(rulesFor(rules, sel), ['background', 'background-image']);
+    if (bg.some((v) => /gradient\(/i.test(v))) fail(`${sel} must not have a gradient background`);
+  }
+
+  // 6. no flat opaque panel that could end mid-page.
+  for (const sel of ['.content', '#app', 'main', 'header', 'footer']) {
+    for (const v of all(rulesFor(rules, sel), BG_PROPS)) {
+      if (isOpaqueBackground(v)) fail(`${sel} paints an opaque background (${v.slice(0, 40)})`);
+    }
+  }
+  return problems;
+}
+
+// ---------------------------------------------------------------- narrow demo layout
+
+/** Length in rem, or null when not a plain rem/px/em/0 value (px and em read at 16px per rem). */
+function toRem(token: string): number | null {
+  const m = /^(-?(?:\d+(?:\.\d*)?|\.\d+))(rem|em|px)?$/.exec(token.trim().toLowerCase());
+  if (m === null) return null;
+  const n = parseFloat(m[1]!);
+  if (m[2] === undefined) return n === 0 ? 0 : null;
+  return m[2] === 'px' ? n / 16 : n;
+}
+
+/**
+ * Rule-level proxy for the compact narrow demo layout (Req 5.7, 5.8). Looks only at rules inside
+ * `@media (max-width: 600px)`. It does not measure rendered height.
+ */
+export function checkNarrowDemoLayout(css: string): CssProblem[] {
+  const block = parseCss(css).filter((r) =>
+    r.context.some((c) => /^@media\b.*\(\s*max-width\s*:\s*600px\s*\)/i.test(c)),
+  );
+  const problems: CssProblem[] = [];
+  const fail = (message: string): void => void problems.push({ check: 'narrow-demo', message });
+  if (block.length === 0) return [{ check: 'narrow-demo', message: 'no @media (max-width: 600px) block' }];
+
+  const list = declValues(rulesFor(block, '.demo-slot-list'), 'grid-template-columns');
+  if (list.length === 0 || list[list.length - 1]!.trim() !== '1fr') {
+    fail('.demo-slot-list needs grid-template-columns: 1fr');
+  }
+
+  const desc = rulesFor(block, '.demo-slot-description');
+  for (const prop of ['-webkit-line-clamp', 'line-clamp']) {
+    const v = declValues(desc, prop).at(-1);
+    const n = v === undefined ? null : parseNumber(v);
+    if (n === null || !Number.isInteger(n) || n < 1 || n > 2) {
+      fail(`.demo-slot-description needs ${prop} of 1 or 2 (found ${v ?? 'none'})`);
+    }
+  }
+
+  const pad = declValues(rulesFor(block, '.demo-slot-button'), 'padding').at(-1);
+  const tokens = pad === undefined ? [] : pad.trim().split(/\s+/);
+  const rems = tokens.map(toRem);
+  if (tokens.length === 0 || tokens.length > 4 || rems.some((r) => r === null || r > 0.75)) {
+    fail(`.demo-slot-button needs padding of 0.75rem or less (found ${pad ?? 'none'})`);
+  }
+
+  for (const rule of block) {
+    if (!selectorParts(rule.selector).some((s) => s.includes('.demo-slot'))) continue;
+    for (const d of rule.decls) {
+      const v = d.value.trim().toLowerCase();
+      if ((d.prop === 'display' && v === 'none') || (d.prop === 'visibility' && v === 'hidden')) {
+        fail(`${rule.selector} must not use ${d.prop}: ${v}`);
+      }
+    }
+  }
+  return problems;
+}
+
 // ---------------------------------------------------------------- reduced motion
 
 /** A `prefers-reduced-motion: reduce` block that turns animation or transition off. */

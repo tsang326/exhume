@@ -1190,7 +1190,9 @@ function resolveRoot(argv, cwd, fs) {
   if (argv.length === 0) {
     dir = cwd;
   } else if (argv.length === 2 && argv[0] === ROOT_FLAG) {
-    dir = argv[1];
+    const value = argv[1];
+    if (value.trim().length === 0) return { ok: false, code: "INVALID_ARGUMENTS" };
+    dir = value;
   } else {
     return { ok: false, code: "INVALID_ARGUMENTS" };
   }
@@ -1834,6 +1836,9 @@ function convert$1(input, outputCap, w) {
   let dropped = 0;
   let dotIgnored = 0;
   let capped = false;
+  let hasOut = false;
+  let needBlank = false;
+  let ruleDue = false;
   let tokKind = 0;
   let tokC = 0;
   let tokLen = 0;
@@ -1902,11 +1907,15 @@ function convert$1(input, outputCap, w) {
     }
     const reserve = stackLength(newOpen);
     const openLen = reserve - stackLength(newOpen.slice(0, k));
-    const groupLen = closeLen + pendingSpaces + openLen + charLen;
+    const prefix = ruleDue ? PA_BLOCK : needBlank ? "\n" : "";
+    const groupLen = closeLen + pendingSpaces + openLen + charLen + prefix.length;
     if (sink.length + groupLen + reserve > outputCap) {
       capped = true;
       return;
     }
+    if (prefix.length > 0) sink.pushString(prefix);
+    ruleDue = false;
+    needBlank = false;
     pushMarkers(open, k, open.length, true);
     pushSpaces(pendingSpaces);
     pendingSpaces = 0;
@@ -1919,20 +1928,26 @@ function convert$1(input, outputCap, w) {
     leadingDigit = atLineStart && isDigit$1(c);
     textCol++;
     atBreak = false;
+    hasOut = true;
   }
   function writeHard() {
-    const closeLen = stackLength(open);
-    if (sink.length + closeLen + pendingSpaces + 1 > outputCap) {
-      capped = true;
-      return;
+    if (textCol > 0) {
+      const closeLen = stackLength(open);
+      if (sink.length + closeLen + pendingSpaces + 1 > outputCap) {
+        capped = true;
+        return;
+      }
+      pushMarkers(open, 0, open.length, true);
+      open = [];
+      pushSpaces(pendingSpaces);
+      pendingSpaces = 0;
+      sink.push(CHAR_LF);
+      needBlank = true;
+    } else {
+      pendingSpaces = 0;
     }
-    pushMarkers(open, 0, open.length, true);
-    open = [];
-    pushSpaces(pendingSpaces);
-    pendingSpaces = 0;
     runOrdinary = 0;
     runSoft = 0;
-    sink.push(CHAR_LF);
     textCol = 0;
     leadingDigit = false;
     atBreak = true;
@@ -1966,11 +1981,7 @@ function convert$1(input, outputCap, w) {
         }
         i = j;
         if (isPa) {
-          if (sink.length + PA_BLOCK.length > outputCap) {
-            capped = true;
-            break scan;
-          }
-          sink.pushString(PA_BLOCK);
+          if (hasOut) ruleDue = true;
           atBreak = true;
         }
         if (stop) break scan;
@@ -2038,10 +2049,12 @@ function convert$1(input, outputCap, w) {
   pushMarkers(open, 0, open.length, true);
   open = [];
   if (pendingSpaces > 0) {
-    if (sink.length + pendingSpaces <= outputCap) {
-      pushSpaces(pendingSpaces);
-    } else {
-      capped = true;
+    if (textCol > 0 || !hasOut) {
+      if (sink.length + pendingSpaces <= outputCap) {
+        pushSpaces(pendingSpaces);
+      } else {
+        capped = true;
+      }
     }
     pendingSpaces = 0;
   }

@@ -10,6 +10,8 @@ export interface DemoSlot {
   readonly element: HTMLElement;
   /** Number of valid demo entries shown. */
   readonly count: number;
+  /** aria-pressed="true" on the card with this id, "false" on every other. null or unknown id: all "false". */
+  setPressed(id: string | null): void;
 }
 
 export interface DemoRunDeps {
@@ -53,13 +55,14 @@ export function createDemoSlot(
   const root = h('section', { class: 'demo-slot', 'aria-labelledby': 'demo-slot-label' });
   if (demos.length === 0) {
     root.setAttribute('hidden', '');
-    return { element: root, count: 0 };
+    return { element: root, count: 0, setPressed() {} };
   }
 
   const label = h('h2', { id: 'demo-slot-label', class: 'demo-slot-label' }, 'Demo disks');
   const status = h('p', { class: 'demo-slot-status', role: 'status' });
   const list = h('div', { class: 'demo-slot-list', role: 'group', 'aria-labelledby': 'demo-slot-label' });
   const buttons: HTMLButtonElement[] = [];
+  const ids: string[] = [];
 
   const deps: DemoRunDeps = {
     load,
@@ -84,15 +87,23 @@ export function createDemoSlot(
       h('strong', { class: 'demo-slot-title' }, demo.title),
       h('span', { class: 'demo-slot-description' }, demo.description),
     ) as HTMLButtonElement;
+    button.setAttribute('aria-pressed', 'false');
     button.addEventListener('click', () => {
       void runDemo(demo, deps);
     });
     buttons.push(button);
+    ids.push(demo.id);
     list.appendChild(button);
   }
+
+  const setPressed = (id: string | null): void => {
+    buttons.forEach((b, i) => {
+      b.setAttribute('aria-pressed', id !== null && ids[i] === id ? 'true' : 'false');
+    });
+  };
 
   root.appendChild(label);
   root.appendChild(list);
   root.appendChild(status);
-  return { element: root, count: demos.length };
+  return { element: root, count: demos.length, setPressed };
 }

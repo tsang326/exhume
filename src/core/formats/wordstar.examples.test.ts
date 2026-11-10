@@ -31,7 +31,9 @@ function convertClean(input: Uint8Array): string {
 describe('convertWordStar examples', () => {
   it('writes a space for a soft return and a line feed for a hard return', () => {
     expect(convertClean(bytes('one', [0x8d, 0x0a], 'two', [0x0d, 0x0a], 'three', [0x0d, 0x0a]))).toBe(
-      'one two\nthree\n',
+      // Changed on purpose (Item C): each hard return after a content line is a paragraph break,
+      // so one blank line sits between the two content lines. The soft return still gives a space.
+      'one two\n\nthree\n',
     );
   });
 
@@ -39,20 +41,45 @@ describe('convertWordStar examples', () => {
     expect(convertClean(bytes([0x8d, 0x0a], 'a'))).toBe('a');
   });
 
+  // The four hard-return forms below changed on purpose (Item C): a hard return between two content
+  // lines is a paragraph break, so the output has a blank line ('a\n\nb') instead of 'a\nb'.
   it('treats a bare CR as a hard return', () => {
-    expect(convertClean(bytes('a', [0x0d], 'b'))).toBe('a\nb');
+    expect(convertClean(bytes('a', [0x0d], 'b'))).toBe('a\n\nb');
   });
 
   it('treats a bare LF as a hard return', () => {
-    expect(convertClean(bytes('a', [0x0a], 'b'))).toBe('a\nb');
+    expect(convertClean(bytes('a', [0x0a], 'b'))).toBe('a\n\nb');
   });
 
   it('treats a lone 0x8D as a hard return', () => {
-    expect(convertClean(bytes('a', [0x8d], 'b'))).toBe('a\nb');
+    expect(convertClean(bytes('a', [0x8d], 'b'))).toBe('a\n\nb');
   });
 
   it('treats 0x0D 0x8A as one hard return', () => {
-    expect(convertClean(bytes('a', [0x0d, 0x8a], 'b'))).toBe('a\nb');
+    expect(convertClean(bytes('a', [0x0d, 0x8a], 'b'))).toBe('a\n\nb');
+  });
+
+  // Added for Item C: hard returns with no content line before them write nothing (no leading blank line).
+  it('writes nothing for hard returns before the first content', () => {
+    expect(convertClean(bytes([0x0d, 0x0a, 0x0d, 0x0a], 'a'))).toBe('a');
+    expect(convertClean(bytes([0x0d, 0x0a, 0x20, 0x0d, 0x0a], 'a', [0x0d, 0x0a]))).toBe('a\n');
+  });
+
+  // Added for Item C: a run of hard returns (empty lines) collapses to one paragraph break.
+  it('absorbs a run of hard returns: a CRLF CRLF CRLF b equals a CRLF b', () => {
+    const run = convertClean(bytes('a', [0x0d, 0x0a, 0x0d, 0x0a, 0x0d, 0x0a], 'b'));
+    expect(run).toBe(convertClean(bytes('a', [0x0d, 0x0a], 'b')));
+    expect(run).toBe('a\n\nb');
+  });
+
+  // Added for Item C: the rule is written lazily, so a .PA with no content after it writes nothing.
+  it('writes nothing for a trailing .PA', () => {
+    expect(convertClean(bytes('a\r\n.PA\r\n'))).toBe('a\n');
+  });
+
+  // Added for Item C: a doubled .PA between content gives one rule, not two.
+  it('gives one rule for a doubled .PA', () => {
+    expect(convertClean(bytes('a\r\n.PA\r\n.PA\r\nb\r\n'))).toBe('a\n\n---\n\nb\n');
   });
 
   it('replaces .PA with a blank line, ---, and a blank line', () => {
@@ -60,7 +87,8 @@ describe('convertWordStar examples', () => {
   });
 
   it('keeps ".5" and ". x" lines as text', () => {
-    expect(convertClean(bytes('.5\r\n. x\r\n'))).toBe('.5\n. x\n');
+    // Changed on purpose (Item C): blank line between the two content lines. Both lines are still text.
+    expect(convertClean(bytes('.5\r\n. x\r\n'))).toBe('.5\n\n. x\n');
   });
 
   it('returns an empty result with no warnings for empty input', () => {
@@ -106,7 +134,9 @@ describe('convertWordStar examples', () => {
       { spans: [{ text: 'some ' }, { text: 'italic', styles: ['italic'] }, { text: ' text' }] },
     ]);
     expect(convertClean(input)).toBe(
-      'Hello **bold** world\nan *underlined* word\nsome *italic* text\n',
+      // Changed on purpose (Item C): the three fixture paragraphs are now three Markdown paragraphs,
+      // separated by one blank line each. Markers and text are unchanged.
+      'Hello **bold** world\n\nan *underlined* word\n\nsome *italic* text\n',
     );
   });
 });

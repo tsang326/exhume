@@ -7,6 +7,8 @@ import { clear, h } from './h';
 
 export interface GraveyardView {
   show(report: DiskReport, items: ItemViewModel[]): void;
+  /** Focuses the heading and scrolls it into view. */
+  reveal(reducedMotion: boolean): void;
   showMore(): void;
   setActionsEnabled(enabled: boolean): void;
   itemElement(id: number): HTMLElement | null;
@@ -22,6 +24,7 @@ function buildItem(
     h('span', { class: 'grave-art', 'aria-hidden': 'true' }),
     h('span', item.showPath ? { class: 'grave-name', title: item.path } : { class: 'grave-name' }, item.name),
   ];
+  if (item.nameHint !== null) inner.push(h('span', { class: 'grave-hint' }, item.nameHint));
   if (item.showPath) inner.push(h('span', { class: 'grave-path' }, item.path));
   inner.push(h('span', { class: 'grave-meta' }, `${item.sizeText} \u00b7 ${item.dateText}`));
   inner.push(h('span', { class: 'grave-state' }, item.stateLabel));
@@ -52,19 +55,30 @@ export function createGraveyardView(
   root: HTMLElement,
   onActivate: (item: ItemViewModel, opener: HTMLElement) => void,
 ): GraveyardView {
-  const heading = h('h2', { id: 'graveyard-heading', tabindex: '-1' }, 'Graveyard');
-  const summary = h('p', { class: 'graveyard-summary' });
+  const guidance = h('p', { class: 'graveyard-guidance' }, 'Open a disk to see its files.');
+  const heading = h(
+    'h2',
+    {
+      id: 'graveyard-heading',
+      tabindex: '-1',
+      'aria-describedby': 'graveyard-summary',
+      hidden: '',
+    },
+    'Graveyard',
+  );
+  const summary = h('p', { id: 'graveyard-summary', class: 'graveyard-summary' });
+  const progress = h('p', { class: 'graveyard-progress', hidden: '' });
+  const stats = h('div', { class: 'graveyard-stats', hidden: '' }, summary, progress);
   const message = h('p', { class: 'graveyard-message', hidden: '' });
   const warnings = h('div', { class: 'graveyard-warnings', hidden: '' });
   const list = h('ul', { class: 'graveyard-list', 'aria-labelledby': 'graveyard-heading' });
-  const progress = h('p', { class: 'graveyard-progress', hidden: '' });
   const moreButton = h('button', { class: 'graveyard-more', type: 'button', hidden: '' }, 'Show more') as HTMLButtonElement;
+  root.appendChild(guidance);
   root.appendChild(heading);
-  root.appendChild(summary);
+  root.appendChild(stats);
   root.appendChild(message);
   root.appendChild(warnings);
   root.appendChild(list);
-  root.appendChild(progress);
   root.appendChild(moreButton);
 
   let current: ItemViewModel[] = [];
@@ -130,7 +144,17 @@ export function createGraveyardView(
       );
     }
     setHidden(warnings, lines.length === 0);
+    setHidden(guidance, true);
+    setHidden(heading, false);
+    setHidden(stats, false);
     renderUpTo();
+  }
+
+  function reveal(reducedMotion: boolean): void {
+    heading.focus({ preventScroll: true });
+    if (typeof heading.scrollIntoView === 'function') {
+      heading.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
+    }
   }
 
   function showMore(): void {
@@ -151,6 +175,7 @@ export function createGraveyardView(
 
   return {
     show,
+    reveal,
     showMore,
     setActionsEnabled(value: boolean): void {
       enabled = value;

@@ -226,6 +226,49 @@ describe('resolveRoot', () => {
     expect(resolveRoot(['--root', file], w.root, nodeFs)).toEqual(reject('INVALID_ARGUMENTS'));
   });
 
+  // Bug condition exploration (Item A): blank --root values must be rejected.
+  // Validates: Requirements 1.1, 1.2, 2.1, 2.2
+  it.each(['', ' ', '   ', '\t', '\n', '\u00a0', '\u2003', '\ufeff'])(
+    'rejects blank --root value %j',
+    (v) => {
+      const w = ws();
+      expect(resolveRoot(['--root', v], w.root, nodeFs)).toEqual(reject('INVALID_ARGUMENTS'));
+    },
+  );
+
+  it.each(['', '  '])('rejects blank --root %j with no file layer calls', (v) => {
+    const w = ws();
+    const { fs, calls } = recordingFs();
+    expect(resolveRoot(['--root', v], w.root, fs)).toEqual(reject('INVALID_ARGUMENTS'));
+    expect(calls).toEqual([]);
+  });
+
+  // Preservation (Item A): padded values are not trimmed. Validates: Requirements 3.1, 3.2, 3.3, 3.4
+  it('starts in a directory literally named " pad "', () => {
+    const w = ws();
+    const padded = join(w.root, ' pad ');
+    mkdirSync(padded);
+    expect(resolveRoot(['--root', padded], '/unused', nodeFs)).toEqual({
+      ok: true,
+      value: padded,
+    });
+  });
+
+  it('does not trim a leading space: " " + root is rejected', () => {
+    const w = ws();
+    expect(resolveRoot(['--root', ' ' + w.root], w.root, nodeFs)).toEqual(
+      reject('INVALID_ARGUMENTS'),
+    );
+  });
+
+  it('uses the real path of an existing --root directory', () => {
+    const w = ws();
+    expect(resolveRoot(['--root', w.root], '/unused', nodeFs)).toEqual({
+      ok: true,
+      value: w.root,
+    });
+  });
+
   it('rejects bad arguments', () => {
     const w = ws();
     const bad: string[][] = [

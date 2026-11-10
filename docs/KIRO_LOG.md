@@ -107,3 +107,23 @@ what had to be fixed by hand. Be honest — the write-up is built from this.
   installed as an Agent Plugin and shows as `power-exhume`, Connected, 4 tools. `CHAPTER1.md` is readable Markdown.
   Autopilot was on and no approval prompt appeared, so the prompt wording is unverified. README and `POWER.md` record
   the result.
+
+## 2026-11-10 — mcp-root-and-flaky
+- I ran the spec's tasks through sub-agents. Blank `--root` is now a start failure, the markdown linear-time test uses a step counter instead of a clock, and WordStar hard returns now give paragraph breaks. I rebuilt the MCP bundle once, with your approval.
+- The spec's tasks.md, its design and bugfix docs, and the property-test and mutation-check plan helped. The mutation check caught a gap in my first linear-time test, so I added two input shapes.
+- I fixed two unrelated flaky test generators (`exhume.props`, `read-grave.props`) and moved the CHAPTER1 preview test to `src/test/`. Nothing was done by hand.
+- Added by hand afterwards: the log hook had no append tool, so this entry was pasted in. By hand during the run:
+  stopping two mutation-check drivers that hung for hours (real quadratic loops on a 2M-character input; task 7 now
+  asks for counter increments and a `spawnSync` timeout), answering two questions (fix the flaky generator in this
+  spec, approve `build:mcp` after re-running the config-hash check). Re-checked after Kiro finished: typecheck,
+  `npm test` 1828 passed / 1 skipped, `test:dom` 156/156, `make:demos --check` all match.
+
+## 2026-11-10 — ui-polish
+- Kiro ran all the ui-polish tasks through sub-agents: intro, title and repo link, page-tall background, graveyard guidance and reveal, grave state cues, progress line, pressed demo cards, plus their tests.
+- The ui-polish spec (requirements, design, tasks) drove the work; the existing contrast, CSP and source-scan tests caught two problems along the way. The sub-agents reworded the underscore hint after the forbidden-phrase scan rejected it.
+- Done by hand: task 10.1 (headless Chrome at 1440x900 and 390x844 against the built page). Background, no horizontal
+  scroll, pressed card, focus, reduced-motion jump and glow readability passed; the phone demo block went from 562px
+  (previous commit) to 339px. One failure: on the phone the Graveyard heading ended 66px above the viewport, because
+  the reveal ran before the Cancel button was hidden. I added task 12 for it; Kiro's fix moved `refreshControls()`
+  before the reveal and added a DOM test. Kiro's shell returned nothing in that run, so I verified it: the new test
+  fails with the old order, the full suite passes (1870 + 181 DOM), and the heading now lands at top 0.

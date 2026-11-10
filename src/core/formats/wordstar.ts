@@ -86,6 +86,9 @@ function convert(
   let dropped = 0;
   let dotIgnored = 0;
   let capped = false;
+  let hasOut = false; // a visible character has been written
+  let needBlank = false; // a content line ended; the next visible text starts a paragraph
+  let ruleDue = false; // a .PA line was seen after output; write a rule before the next text
 
   // Token reader results.
   let tokKind = 0;
@@ -178,12 +181,16 @@ function convert(
     }
     const reserve = stackLength(newOpen);
     const openLen = reserve - stackLength(newOpen.slice(0, k));
-    const groupLen = closeLen + pendingSpaces + openLen + charLen;
+    const prefix = ruleDue ? PA_BLOCK : needBlank ? '\n' : '';
+    const groupLen = closeLen + pendingSpaces + openLen + charLen + prefix.length;
     if (sink.length + groupLen + reserve > outputCap) {
       capped = true;
       return;
     }
 
+    if (prefix.length > 0) sink.pushString(prefix);
+    ruleDue = false;
+    needBlank = false;
     pushMarkers(open, k, open.length, true);
     pushSpaces(pendingSpaces);
     pendingSpaces = 0;
@@ -197,22 +204,28 @@ function convert(
     leadingDigit = atLineStart && isDigit(c);
     textCol++;
     atBreak = false;
+    hasOut = true;
   }
 
   /** Closes all markers, writes pending spaces and optionally a line feed. */
   function writeHard(): void {
-    const closeLen = stackLength(open);
-    if (sink.length + closeLen + pendingSpaces + 1 > outputCap) {
-      capped = true;
-      return;
+    if (textCol > 0) {
+      const closeLen = stackLength(open);
+      if (sink.length + closeLen + pendingSpaces + 1 > outputCap) {
+        capped = true;
+        return;
+      }
+      pushMarkers(open, 0, open.length, true);
+      open = [];
+      pushSpaces(pendingSpaces);
+      pendingSpaces = 0;
+      sink.push(CHAR_LF);
+      needBlank = true;
+    } else {
+      pendingSpaces = 0;
     }
-    pushMarkers(open, 0, open.length, true);
-    open = [];
-    pushSpaces(pendingSpaces);
-    pendingSpaces = 0;
     runOrdinary = 0;
     runSoft = 0;
-    sink.push(CHAR_LF);
     textCol = 0;
     leadingDigit = false;
     atBreak = true;
@@ -251,11 +264,7 @@ function convert(
         }
         i = j;
         if (isPa) {
-          if (sink.length + PA_BLOCK.length > outputCap) {
-            capped = true;
-            break scan;
-          }
-          sink.pushString(PA_BLOCK);
+          if (hasOut) ruleDue = true;
           atBreak = true;
         }
         if (stop) break scan;
@@ -328,10 +337,12 @@ function convert(
   pushMarkers(open, 0, open.length, true);
   open = [];
   if (pendingSpaces > 0) {
-    if (sink.length + pendingSpaces <= outputCap) {
-      pushSpaces(pendingSpaces);
-    } else {
-      capped = true;
+    if (textCol > 0 || !hasOut) {
+      if (sink.length + pendingSpaces <= outputCap) {
+        pushSpaces(pendingSpaces);
+      } else {
+        capped = true;
+      }
     }
     pendingSpaces = 0;
   }

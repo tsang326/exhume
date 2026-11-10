@@ -19,7 +19,7 @@ describe('paging', () => {
             grow >= 0 &&
             grow <= PAGE_SIZE &&
             hasMore(total, pages) === v < total &&
-            progressText(v, total) === `${v} of ${total}` &&
+            progressText(v, total) === `Showing ${v} of ${total} items` &&
             (total !== 0 || (v === 0 && !hasMore(total, pages)))
           );
         },
@@ -33,6 +33,6 @@ describe('paging', () => {
     expect(hasMore(4096, 20)).toBe(true);
     expect(visibleCount(4096, 21)).toBe(4096);
     expect(hasMore(4096, 21)).toBe(false);
-    expect(progressText(200, 4096)).toBe('200 of 4096');
+    expect(progressText(200, 4096)).toBe('Showing 200 of 4096 items');
   });
 });

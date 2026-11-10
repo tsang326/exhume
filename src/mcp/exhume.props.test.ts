@@ -1,7 +1,7 @@
 import { mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import fc from 'fast-check';
-import { describe, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { openDisk } from '../core/fat12/index';
 import { convertAuto } from '../core/formats/index';
 import { encodePcx, writeDbf, writeWordStar } from '../test-support/formats/index';
@@ -194,10 +194,16 @@ describe('exhume properties', () => {
     );
   });
 
-  const textLineArb = fc.string({
-    unit: fc.integer({ min: 0x20, max: 0x7e }).map((c) => String.fromCharCode(c)),
-    maxLength: 60,
-  });
+  // A line that starts with '.' plus two ASCII letters is a WordStar dot command. detect.ts counts it as a
+  // WordStar trait before it looks at the .TXT name, so the grave would not be a text grave. Keep such lines out
+  // by pushing a leading '.' one column right.
+  const noDotCommand = (line: string): string => (line.startsWith('.') ? ` ${line}` : line);
+  const textLineArb = fc
+    .string({
+      unit: fc.integer({ min: 0x20, max: 0x7e }).map((c) => String.fromCharCode(c)),
+      maxLength: 60,
+    })
+    .map(noDotCommand);
   const textBodyArb = fc
     .tuple(fc.array(textLineArb, { maxLength: 8 }), fc.constantFrom('\r\n', '\n', '\r'))
     .map(([lines, eol]) => 'a' + lines.join(eol) + eol);
@@ -210,10 +216,8 @@ describe('exhume properties', () => {
 
   // Feature: plain-text, Property 17: exhume writes one safe .txt file
   // **Validates: Requirements 5.3, 5.4**
-  it('writes one new safe .txt file per call for a text grave and never replaces one', () => {
-    fc.assert(
-      fc.property(textBodyArb, textLongNameArb, (body, longName) => {
-        return withSpace((w) => {
+  const writesSafeTxt = (body: string, longName: string): boolean =>
+        withSpace((w) => {
           const content = bytesOf(body);
           const disk = diskWith([{ name: 'NOTE.TXT', longName, content }]);
           w.write('disk.img', disk);
@@ -242,9 +246,20 @@ describe('exhume properties', () => {
           }
           return readdirSync(w.root).sort().join('|') === 'disk.img|exhumed';
         });
-      }),
+
+  it('writes one new safe .txt file per call for a text grave and never replaces one', () => {
+    fc.assert(
+      fc.property(textBodyArb, textLongNameArb, (body, longName) => writesSafeTxt(body, longName)),
       { numRuns: numRuns(25) },
     );
+  });
+
+  // Former counterexample: lines ['', '.AA'] with long name ' .txt' gave the body "a\r\n.AA\r\n",
+  // which detect.ts reads as WordStar. The generator now shifts the '.' right.
+  it('keeps a dot-command-looking line a text line (deterministic example)', () => {
+    const body = 'a' + ['', noDotCommand('.AA')].join('\r\n') + '\r\n';
+    expect(body).toBe('a\r\n .AA\r\n');
+    expect(writesSafeTxt(body, ' .txt')).toBe(true);
   });
 
   const wordArb = fc.stringMatching(/^[A-Za-z]{1,10}$/);

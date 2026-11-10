@@ -1,0 +1,641 @@
+{
+  "pbtResults": {
+    "15. Write the bug condition exploration test for Item C": {
+      "status": "passed",
+      "failingExample": "Unfixed converter: 'a CRLF b CRLF' -> 'a\\nb\\n' (expected 'a\\n\\nb\\n'); CHAPTER1 -> 1 paragraph (expected 11); normal-form property counterexample [Uint8Array.from([138])] (lone 0x8A gives leading \\n); paragraph-model counterexample lines [\"a\",\"A\"]",
+      "lastRunTimestamp": 1794299288326
+    },
+    "17.5 Verify the bug condition exploration test now passes": {
+      "status": "passed",
+      "lastRunTimestamp": 1794301088669
+    }
+  },
+  "executionHistory": {
+    "1. Record a baseline full-suite run": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294262968
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294275413
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294331264
+      }
+    ],
+    "2. Prepare the throwaway reference for Item B": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263034
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294337703
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294416789
+      }
+    ],
+    "3. Add the counter seam to `src/web/logic/markdown.ts` (minimal and local, Spec 9 parallel)": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263090
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294422291
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294502492
+      }
+    ],
+    "4. Replace the wall-clock test in `src/web/logic/markdown.test.ts`": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263132
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294508096
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294550871
+      }
+    ],
+    "5. Write the identical-output property against the throwaway old function": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263174
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294551328
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294677718
+      }
+    ],
+    "6. Prove no measurable slowdown with an interleaved benchmark (throwaway)": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263214
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294677954
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294847480
+      }
+    ],
+    "7. Run the throwaway quadratic mutation check": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263261
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294847654
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794297715508
+      }
+    ],
+    "8. Run the repaired markdown file 10 times": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263306
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794297715647
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794297785126
+      }
+    ],
+    "9. Checkpoint after Item B": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263343
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794297785316
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794298732980
+      }
+    ],
+    "10. Write the bug condition exploration test for Item A": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263389
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794298733108
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794298786878
+      }
+    ],
+    "11. Write preservation tests for Item A": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263436
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794298787411
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794298854725
+      }
+    ],
+    "12.1 Implement the fix in `src/mcp/paths.ts`": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263474
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794298854790
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794298907830
+      }
+    ],
+    "12.2 Correct the reference model in `src/mcp/launch.props.test.ts`": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263514
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794298908315
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794298975560
+      }
+    ],
+    "12.3 Verify the bug condition exploration test now passes": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263558
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794298976634
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794299014891
+      }
+    ],
+    "12.4 Verify preservation tests still pass": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263616
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794299015083
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794299064385
+      }
+    ],
+    "13. Checkpoint after Item A": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263662
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794299064604
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794299131742
+      }
+    ],
+    "14. Prepare the throwaway old converter for Item C": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263707
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794299132363
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794299186208
+      }
+    ],
+    "15. Write the bug condition exploration test for Item C": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263753
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794299186759
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794299303828
+      }
+    ],
+    "16. Write preservation tests for Item C": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263798
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794299304170
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794300198891
+      }
+    ],
+    "17.1 Implement the converter change in `src/core/formats/wordstar.ts` only": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263850
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794300199843
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794300379548
+      }
+    ],
+    "17.2 Update `wordstar.golden.test.ts` by mechanical transform, not by regeneration": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263900
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794300380521
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794300639029
+      }
+    ],
+    "17.3 Update the example and model tests on purpose": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263950
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794300639865
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794300894929
+      }
+    ],
+    "17.4 Complete the new Item C tests": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294263996
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794300895683
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301031563
+      }
+    ],
+    "17.5 Verify the bug condition exploration test now passes": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294264040
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301032196
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301102494
+      }
+    ],
+    "17.6 Verify preservation tests still pass and run the differential proof": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294264084
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301103947
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301338084
+      }
+    ],
+    "17.7 Prove runs are absorbed and bounds hold": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294264133
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301339043
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301446744
+      }
+    ],
+    "17.8 Add the web-preview check in a separate file (no `src/web` source change)": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294264174
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301447360
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301545765
+      }
+    ],
+    "18. Run the other tests that call the converter and read any failure before editing": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294264221
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301546528
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301649696
+      }
+    ],
+    "19. Checkpoint after Item C": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294264264
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301650340
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301894510
+      }
+    ],
+    "20. Add the stdio start-failure cases for Item A": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294264348
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301895215
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301999458
+      }
+    ],
+    "21. GATE: owner approval for `npm run build:mcp` (never run without it)": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294264398
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301999691
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794302380190
+      }
+    ],
+    "22. Verify the rebuilt bundle": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294264438
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794302380319
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794302480393
+      }
+    ],
+    "23. Run `npm run make:demos -- --check`": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294264484
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794302480706
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794302560559
+      }
+    ],
+    "24. Run the repaired file 10 times and the full suite 5 times, recording failures by name": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294264531
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794302561053
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794302761318
+      }
+    ],
+    "26. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294264573
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794302804280
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794302883710
+      }
+    ],
+    "27. Report to the owner (no commit, no docs edits)": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794294264617
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794302883922
+      },
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794302997647
+      }
+    ],
+    "12. Fix Item A: empty or whitespace-only `--root`": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794299064459
+      }
+    ],
+    "17. Fix Item C: hard return becomes a paragraph break": [
+      {
+        "executionId": "5d209923-1967-41b4-9380-4481addce52a",
+        "chatSessionId": "sess_26e67c31-f4dc-4ddf-9689-0eb6b36bbaef",
+        "timestamp": 1794301545842
+      }
+    ]
+  }
+}

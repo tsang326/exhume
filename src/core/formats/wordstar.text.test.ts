@@ -42,13 +42,27 @@ function joinBytes(lines: number[][], sep: number[]): Uint8Array {
   return Uint8Array.from(out);
 }
 
+/**
+ * Model of the converter for lines joined by hard returns (Item C, mcp-root-and-flaky).
+ * Changed on purpose from `lines.join('\n')`:
+ * - a hard return after a content line is a paragraph break, so content lines are joined by a blank line ('\n\n');
+ * - empty and space-only lines write nothing (they are dropped, which also collapses runs of hard returns);
+ * - the one exception is a document with no content line at all: its pending spaces are flushed at the end
+ *   (the final line's spaces), as before, so a lone space-only line is expected back as written.
+ */
 function toText(lines: number[][]): string {
-  return lines.map((l) => String.fromCharCode(...l)).join('\n');
+  const text = (l: number[]): string => String.fromCharCode(...l);
+  const content = lines.filter((l) => l.some((b) => b !== 0x20));
+  if (content.length === 0) return text(lines[lines.length - 1]!);
+  // The last content line ends with a line feed exactly when a hard return follows it, that is, when
+  // it is not the last line of the document (a trailing empty or space-only line still means a return came first).
+  const lastIsContent = lines[lines.length - 1] === content[content.length - 1];
+  return content.map(text).join('\n\n') + (lastIsContent ? '' : '\n');
 }
 
 describe('WordStar text pass-through', () => {
   // Feature: format-resurrection, Property 8: WordStar pass-through and high-bit invariance
-  it('passes Plain_ASCII_Text through with hard returns turned into line feeds', () => {
+  it('passes Plain_ASCII_Text through with hard returns turned into paragraph breaks', () => {
     // **Validates: Requirements 3.1, 3.12**
     fc.assert(
       fc.property(plainLines, (lines) => {

@@ -1,5 +1,6 @@
 // Drives the committed build (power/server/exhume-mcp.mjs) in Workspace_Mode over stdio.
 // RED until the bundle is rebuilt (task 13.3): the committed bundle predates --workspace-from-agent.
+// Also RED until rebuild: the start-failure case "--root with an empty or whitespace-only value" (Item A).
 // Temp dirs under os.tmpdir() only; HOME is a fake home so os.homedir() never sees the real one.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
@@ -183,6 +184,13 @@ describe('built server in Workspace_Mode over stdio', () => {
     it('flag plus an extra argument', async () => {
       const { w, h } = setup();
       expectStartFailure(await run(w, h, req(1, 'ping') + '\n', [FLAG, 'secret-extra-arg']), ['secret-extra-arg']);
+    });
+
+    it('--root with an empty or whitespace-only value', async () => {
+      const { w, h } = setup();
+      for (const value of ['', '   ', '\t']) {
+        expectStartFailure(await run(w, h, req(1, 'ping') + '\n', ['--root', value]), []);
+      }
     });
 
     it('argument lists rejected by Requirement 8.5', async () => {

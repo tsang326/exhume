@@ -3,8 +3,8 @@ import * as fc from 'fast-check';
 import { numRuns } from '../../test-support/runs';
 import { emittedDocArb } from '../../test-support/web/md-emitter';
 import { MD_PREVIEW_CHARS } from './limits';
-import { parseMarkdown, plainText, truncateForPreview } from './markdown';
-import type { BlockNode, InlineNode, MarkdownModel } from './markdown';
+import { parseMarkdown, parseMarkdownWithStats, plainText, truncateForPreview } from './markdown';
+import type { BlockNode, InlineNode, MarkdownModel, MarkdownStats } from './markdown';
 
 // ---- helpers (iterative walkers; nesting is at most 2 so recursion would be safe, but not needed) ----
 
@@ -57,6 +57,23 @@ function walkModel(model: MarkdownModel): Walk {
     }
   }
   return { ok, textLength, maxDepth };
+}
+
+/** Counts every block and inline node, iteratively. */
+function countNodes(model: MarkdownModel): number {
+  let count = model.blocks.length;
+  const stack: InlineNode[][] = [];
+  for (const block of model.blocks) {
+    if (block.type === 'paragraph') stack.push(block.children);
+  }
+  while (stack.length > 0) {
+    const nodes = stack.pop()!;
+    count += nodes.length;
+    for (const node of nodes) {
+      if (node.type === 'strong' || node.type === 'emphasis') stack.push(node.children);
+    }
+  }
+  return count;
 }
 
 /** Canonical structure string; the same format the emitter produces. */
@@ -229,27 +246,67 @@ describe('markdown examples', () => {
     expect(parseMarkdown('')).toEqual({ blocks: [], dropped: 0 });
   });
 
-  it('parses in linear time: doubling the input does not more than triple the time', (ctx) => {
+  it('parses in linear time: doubling the input doubles the loop steps', () => {
     const unit = 'word *em* **bold** \\* more\nline two ***both*** end\n\n';
     const build = (chars: number): string => unit.repeat(Math.ceil(chars / unit.length)).slice(0, chars);
-    // Median of 5 runs, so one slow run (GC, a busy machine) cannot fail the test.
-    const median = (text: string): number => {
-      const times: number[] = [];
-      for (let i = 0; i < 5; i++) {
-        const start = performance.now();
-        parseMarkdown(text);
-        times.push(performance.now() - start);
-      }
-      times.sort((a, b) => a - b);
-      return times[2]!;
-    };
-    const base = median(build(1_000_000));
-    if (base < 5) {
-      console.info(`doubling-time example skipped: base parse took ${base.toFixed(2)} ms (< 5 ms)`);
-      ctx.skip();
-      return;
+    const a = parseMarkdownWithStats(build(1_000_000));
+    const b = parseMarkdownWithStats(build(2_000_000));
+    for (const key of ['lineSteps', 'scanSteps', 'events', 'pairSteps'] as const) {
+      expect(a.stats[key]).toBeGreaterThan(0);
+      const ratio = b.stats[key] / a.stats[key];
+      expect(ratio).toBeGreaterThanOrEqual(1.98);
+      expect(ratio).toBeLessThanOrEqual(2.02);
     }
-    const doubled = median(build(2_000_000));
-    expect(doubled).toBeLessThanOrEqual(base * 3);
+    // The counters are not vacuous: at least one scan step per 2 characters.
+    expect(a.stats.scanSteps).toBeGreaterThanOrEqual(500_000);
+    // Structural check on whole units, where the scaling is exact.
+    const k = Math.ceil(1_000_000 / unit.length);
+    const s1 = parseMarkdownWithStats(unit.repeat(k)).model;
+    const s2 = parseMarkdownWithStats(unit.repeat(2 * k)).model;
+    expect(s2.blocks.length).toBe(2 * s1.blocks.length);
+    expect(s2.dropped).toBe(2 * s1.dropped);
+    expect(countNodes(s2)).toBe(2 * countNodes(s1));
   });
+
+  // The shape above has short lines and short paragraphs, so a cost that grows with the length of a
+  // line or of a paragraph (a re-walk in the pairing loop, a re-scan from the start of the line on
+  // each '*') stays bounded there. These shapes have no blank line: one paragraph holds everything.
+  // A re-scan from `runStart` is bounded per run (the runs of a line sum to its length), so it is
+  // linear overall and no input can tell it from the original.
+  const periodic = (unit: string, chars: number): string =>
+    unit.repeat(Math.ceil(chars / unit.length)).slice(0, chars);
+  const shapes: { name: string; unit: string; keys: readonly (keyof MarkdownStats)[] }[] = [
+    {
+      // one paragraph, one very long line: lineSteps stays 1, so it is not compared
+      name: 'one very long line',
+      unit: 'word *em* **bold** \\* more ***both*** end ',
+      keys: ['scanSteps', 'events', 'pairSteps'],
+    },
+    {
+      // one paragraph, very many lines
+      name: 'many lines in one paragraph',
+      unit: 'word *em* **bold** \\* more\nline two ***both*** end\n',
+      keys: ['lineSteps', 'scanSteps', 'events', 'pairSteps'],
+    },
+  ];
+  for (const shape of shapes) {
+    it(`parses in linear time on a single paragraph: ${shape.name}`, () => {
+      const a = parseMarkdownWithStats(periodic(shape.unit, 1_000_000));
+      const b = parseMarkdownWithStats(periodic(shape.unit, 2_000_000));
+      // Non-vacuity: the input really is one paragraph and the counters really count.
+      expect(a.model.blocks.length).toBe(1);
+      expect(b.model.blocks.length).toBe(1);
+      expect(a.stats.scanSteps).toBeGreaterThanOrEqual(500_000);
+      expect(a.stats.events).toBeGreaterThanOrEqual(100_000);
+      if (shape.keys.includes('lineSteps')) expect(a.stats.lineSteps).toBeGreaterThanOrEqual(30_000);
+      for (const key of shape.keys) {
+        expect(a.stats[key]).toBeGreaterThan(0);
+        const ratio = b.stats[key] / a.stats[key];
+        expect(ratio).toBeGreaterThanOrEqual(1.98);
+        expect(ratio).toBeLessThanOrEqual(2.02);
+      }
+      // Every event is visited once by the pairing loop.
+      expect(a.stats.pairSteps).toBe(a.stats.events);
+    });
+  }
 });

@@ -59,6 +59,32 @@ describe('resolveLaunch', () => {
     expect(resolveLaunch(argv, cwd, nodeFs)).toEqual(INVALID);
   });
 
+  // Bug condition exploration (Item A). Validates: Requirements 1.1, 1.2, 2.1, 2.2
+  it.each(['', ' ', '   ', '\t', '\n', '\u00a0', '\u2003', '\ufeff'])(
+    'rejects blank --root value %j',
+    (v) => {
+      expect(resolveLaunch(['--root', v], cwd, nodeFs)).toEqual(INVALID);
+    },
+  );
+
+  it('keeps flag plus blank --root invalid', () => {
+    expect(resolveLaunch([flag, '--root', ''], cwd, nodeFs)).toEqual(INVALID);
+  });
+
+  // Preservation (Item A). Validates: Requirements 3.1, 3.2, 3.3
+  it('starts in a directory literally named " pad "', () => {
+    const padded = join(dir, ' pad ');
+    mkdirSync(padded);
+    expect(resolveLaunch(['--root', padded], cwd, nodeFs)).toEqual({
+      ok: true,
+      value: { kind: 'default', root: padded },
+    });
+  });
+
+  it('does not trim a leading space: " " + dir is rejected', () => {
+    expect(resolveLaunch(['--root', ' ' + dir], cwd, nodeFs)).toEqual(INVALID);
+  });
+
   it('rejects a lone stray argument', () => {
     expect(resolveLaunch(['x'], cwd, nodeFs)).toEqual(INVALID);
   });

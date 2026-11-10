@@ -21,7 +21,10 @@ export function resolveRoot(
   if (argv.length === 0) {
     dir = cwd;
   } else if (argv.length === 2 && argv[0] === ROOT_FLAG) {
-    dir = argv[1] as string;
+    const value = argv[1] as string;
+    // An empty or blank value is an unset launcher variable; realpath('') is the working directory.
+    if (value.trim().length === 0) return { ok: false, code: 'INVALID_ARGUMENTS' };
+    dir = value;
   } else {
     return { ok: false, code: 'INVALID_ARGUMENTS' };
   }

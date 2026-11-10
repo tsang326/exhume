@@ -60,10 +60,14 @@ function addText(list: InlineNode[], value: string): void {
 }
 
 /** Builds one paragraph from its lines; returns the node and the characters it dropped. */
-function buildParagraph(lines: readonly string[]): { node: BlockNode; dropped: number } {
+function buildParagraph(
+  lines: readonly string[],
+): { node: BlockNode; dropped: number; scan: number; events: number; pair: number } {
   const events: InlineEvent[] = [];
   const open: number[] = []; // indexes into `events` of open markers, at most MAX_DEPTH
   let dropped = 0;
+  let scan = 0;
+  let pair = 0;
 
   for (let li = 0; li < lines.length; li++) {
     if (li > 0) events.push({ k: 1 });
@@ -79,6 +83,7 @@ function buildParagraph(lines: readonly string[]): { node: BlockNode; dropped: n
     };
 
     while (i < len) {
+      scan++;
       const c = line.charCodeAt(i);
       if (c === CH_BACKSLASH && i + 1 < len) {
         const d = line[i + 1];
@@ -98,7 +103,9 @@ function buildParagraph(lines: readonly string[]): { node: BlockNode; dropped: n
         let j = i;
         while (j < len && line.charCodeAt(j) === CH_STAR) j++;
         let n = j - i;
+        scan += n;
         while (n > 0) {
+          scan++;
           const topIdx = open.length > 0 ? open[open.length - 1] : -1;
           const top = topIdx >= 0 ? (events[topIdx] as { k: 2; style: Style; matched: boolean }) : null;
           if (top !== null && top.style === 'emphasis') {
@@ -139,6 +146,7 @@ function buildParagraph(lines: readonly string[]): { node: BlockNode; dropped: n
   const containers: InlineNode[][] = [root];
   let cur = root;
   for (let e = 0; e < events.length; e++) {
+    pair++;
     const ev = events[e];
     if (ev.k === 0) {
       addText(cur, ev.v);
@@ -159,25 +167,42 @@ function buildParagraph(lines: readonly string[]): { node: BlockNode; dropped: n
       cur = containers[containers.length - 1];
     }
   }
-  return { node: { type: 'paragraph', children: root }, dropped };
+  return { node: { type: 'paragraph', children: root }, dropped, scan, events: events.length, pair };
 }
 
-export function parseMarkdown(text: string): MarkdownModel {
+/** Loop step counts of one parse. Used by tests to check linear scaling without a clock. */
+export interface MarkdownStats {
+  lineSteps: number;
+  scanSteps: number;
+  events: number;
+  pairSteps: number;
+}
+
+/** Same parse as parseMarkdown, plus the number of steps the loops took. Used by tests. */
+export function parseMarkdownWithStats(text: string): { model: MarkdownModel; stats: MarkdownStats } {
   const blocks: BlockNode[] = [];
   let dropped = 0;
   let para: string[] = [];
+  let lineSteps = 0;
+  let scanSteps = 0;
+  let events = 0;
+  let pairSteps = 0;
 
   const endParagraph = (): void => {
     if (para.length === 0) return;
     const built = buildParagraph(para);
     blocks.push(built.node);
     dropped += built.dropped;
+    scanSteps += built.scan;
+    events += built.events;
+    pairSteps += built.pair;
     para = [];
   };
 
   const n = text.length;
   let pos = 0;
   for (;;) {
+    lineSteps++;
     const nl = text.indexOf('\n', pos);
     const line = nl < 0 ? text.slice(pos) : text.slice(pos, nl);
     if (line.length === 0) {
@@ -195,7 +220,11 @@ export function parseMarkdown(text: string): MarkdownModel {
     if (pos > n) break;
   }
   endParagraph();
-  return { blocks, dropped };
+  return { model: { blocks, dropped }, stats: { lineSteps, scanSteps, events, pairSteps } };
+}
+
+export function parseMarkdown(text: string): MarkdownModel {
+  return parseMarkdownWithStats(text).model;
 }
 
 export function truncateForPreview(text: string): { text: string; shortened: boolean } {

@@ -2,7 +2,7 @@ import fc from 'fast-check';
 import { afterAll, describe, expect, it } from 'vitest';
 import { openDisk } from '../core/fat12/index';
 import type { Grave } from '../core/fat12/index';
-import { convertAuto } from '../core/formats/index';
+import { convertAuto, detectFormat } from '../core/formats/index';
 import { numRuns } from '../test-support/runs';
 import { makeWorkspace } from '../test-support/mcp/workspace';
 import { callTool } from '../test-support/mcp/rpc';
@@ -202,7 +202,12 @@ describe('read_grave properties', () => {
 
   const LONG_TEXT_BYTES = bytesOf('A line of DOS text.\r\n'.repeat(Math.ceil((MAX_TEXT_CHARS * 1.5) / 21)));
   const textFileArb: fc.Arbitrary<Uint8Array> = fc.oneof(
-    { weight: 9, arbitrary: plainTextBytesArb.filter((b) => b.length > 0) },
+    // Random "DOS text" bytes can carry WordStar traits (for example 0x13 followed by CRLF). Content
+    // detection puts those ahead of the .TXT name, so keep only bytes the detector calls plain text.
+    {
+      weight: 9,
+      arbitrary: plainTextBytesArb.filter((b) => b.length > 0 && detectFormat(b, 'NOTE.TXT').format === 'text'),
+    },
     { weight: 1, arbitrary: fc.constant(LONG_TEXT_BYTES) },
   );
 
@@ -233,6 +238,10 @@ describe('read_grave properties', () => {
       }),
       { numRuns: numRuns(100) },
     );
+  });
+
+  it('treats a .TXT file that carries WordStar traits (0x13 CRLF) as WordStar, so the generator excludes it', () => {
+    expect(detectFormat(new Uint8Array([0x13, 0x0d, 0x0a]), 'NOTE.TXT').format).not.toBe('text');
   });
 
   it('keeps the first-match rule on the duplicate-path example', () => {

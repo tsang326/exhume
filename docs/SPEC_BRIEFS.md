@@ -177,3 +177,17 @@ their tests only; CSP, `textContent` rules and `safety.md` apply; no new runtime
 Tests: DOM tests for each item (title, intro text and link, guidance before open, focus after open, `aria-pressed`,
 state labels, paragraph spacing classes), existing tests stay green, `make:demos -- --check` unchanged. Out of scope:
 new formats, core or MCP changes, deployment.
+
+## Spec 10 — mcp-root-and-flaky (bugfix, 2026-11-10)
+Two small defects found while building Spec 8. Scope: `src/mcp/paths.ts` (or `launch.ts`) and the affected tests;
+no change to Workspace_Mode, the tool list or the confinement rules.
+1. **`--root ""` starts in the working directory.** `resolveRoot` accepts an empty `--root` value because
+   `realpath('')` resolves to the current directory. An empty (or whitespace-only) `--root` must be a start failure
+   with the existing fixed start-failure line, like any other invalid argument. Update the `launch.props.test.ts`
+   model that Spec 8 bent to match the old behaviour, and add stdio cases against the bundle. Rebuild the bundle only
+   with the owner's approval after the config-hash check.
+2. **Flaky test.** About 1 run in 4 of `npm test` has one failure that passes on rerun (seen 2026-11-09 and
+   2026-11-10). Kiro reported it as a sub-linear scaling (timing) check on about 2,000,000 items. Find the exact test,
+   show why it is timing-sensitive under a loaded machine (the full suite runs files in parallel), and make it
+   deterministic without weakening what it proves: prefer counting operations or comparing ratios with a margin
+   over wall-clock thresholds. Prove it by running that file and the full suite several times.

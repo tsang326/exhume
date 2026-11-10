@@ -8,8 +8,10 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { checkCsp, EXPECTED_CSP, parseCsp } from '../test-support/web/csp';
 import {
+  checkBackground,
   checkFxLayers,
   checkLayout,
+  checkNarrowDemoLayout,
   checkPairs,
   checkReducedMotion,
   checkUrls,
@@ -18,7 +20,7 @@ import {
   readPairs,
   stripCssComments,
 } from '../test-support/web/css-scan';
-import { parseHtml, scanHtml, type HtmlElement } from '../test-support/web/html-scan';
+import { parseHtml, scanHtml, textContent, type HtmlElement } from '../test-support/web/html-scan';
 import { scanPhrasesInHtml } from '../test-support/web/scan';
 
 const html = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
@@ -147,6 +149,124 @@ describe('index.html', () => {
   });
 });
 
+describe('index.html intro, title and description (ui-polish)', () => {
+  // Validates: Requirements 1.1-1.9, 2.1-2.5, 10.1, 10.2.
+  const readme = readFileSync(new URL('../../README.md', import.meta.url), 'utf8');
+
+  function descendants(el: HtmlElement): HtmlElement[] {
+    const out: HtmlElement[] = [];
+    const walk = (e: HtmlElement): void => {
+      for (const c of e.children) {
+        if (c.kind === 'element') {
+          out.push(c);
+          walk(c);
+        }
+      }
+    };
+    walk(el);
+    return out;
+  }
+
+  const metaDescriptions = doc.elements.filter(
+    (e) => e.tag === 'meta' && (e.attrs['name'] ?? '').toLowerCase() === 'description',
+  );
+
+  it('has the exact title', () => {
+    expect(facts.title).toBe('Exhume - read old floppy disks in your browser');
+  });
+
+  it('has exactly one meta description of 1 to 160 characters and no digit', () => {
+    expect(metaDescriptions).toHaveLength(1);
+    const content = metaDescriptions[0]!.attrs['content'] ?? '';
+    expect(content.length).toBeGreaterThanOrEqual(1);
+    expect(content.length).toBeLessThanOrEqual(160);
+    expect(content).not.toMatch(/\d/);
+  });
+
+  it('has no REVENANT.OS in index.html, src/main.ts, src/style.css or non-test files under src/web', () => {
+    const files: URL[] = [
+      new URL('../../index.html', import.meta.url),
+      new URL('../main.ts', import.meta.url),
+      new URL('../style.css', import.meta.url),
+    ];
+    const webDir = new URL('./', import.meta.url);
+    for (const rel of readdirSync(webDir, { recursive: true, encoding: 'utf8' })) {
+      if (/\.(ts|css|html)$/.test(rel) && !/\.test\.ts$/.test(rel)) files.push(new URL(rel, webDir));
+    }
+    expect(files.length).toBeGreaterThan(3);
+    for (const f of files) expect(readFileSync(f, 'utf8'), f.pathname).not.toContain('REVENANT.OS');
+  });
+
+  it('keeps the CSP equal to EXPECTED_CSP', () => {
+    const parsed = parseCsp(facts.cspContent ?? '');
+    const actual: Record<string, readonly string[]> = {};
+    for (const d of parsed.directives) actual[d.name] = [...d.values].sort();
+    const expected: Record<string, readonly string[]> = {};
+    for (const [k, v] of Object.entries(EXPECTED_CSP)) expected[k] = [...v].sort();
+    expect(actual).toEqual(expected);
+  });
+
+  it('puts the intro before the drop zone in document order', () => {
+    expect(byId('intro').order).toBeLessThan(byId('drop-zone').order);
+  });
+
+  it('has a lead sentence naming old DOS floppy images and the browser', () => {
+    const lead = descendants(byId('intro')).find((e) => e.tag === 'p' && (e.attrs['class'] ?? '').split(/\s+/).includes('intro-lead'));
+    expect(lead).toBeDefined();
+    const text = textContent(lead!);
+    expect(text).toMatch(/DOS/);
+    expect(text).toMatch(/floppy/i);
+    expect(text).toMatch(/browser/i);
+  });
+
+  it('has five list items with the capability keywords', () => {
+    const items = descendants(byId('intro')).filter((e) => e.tag === 'li');
+    expect(items).toHaveLength(5);
+    const texts = items.map(textContent);
+    expect(texts[0]).toMatch(/WordStar/);
+    expect(texts[0]).toMatch(/Markdown/);
+    expect(texts[1]).toMatch(/dBase/);
+    expect(texts[1]).toMatch(/CSV/);
+    expect(texts[2]).toMatch(/PCX/);
+    expect(texts[2]).toMatch(/PNG/);
+    expect(texts[3]).toMatch(/text/i);
+    expect(texts[4]).toMatch(/deleted/i);
+  });
+
+  it('has the privacy note inside the intro', () => {
+    expect(descendants(byId('intro')).some((e) => e.attrs['id'] === 'privacy-note')).toBe(true);
+  });
+
+  it('has a repo link to the GitHub repository with GitHub in its accessible name', () => {
+    const link = byId('repo-link');
+    expect(link.tag).toBe('a');
+    expect(link.attrs['href']).toBe('https://github.com/tsang326/exhume');
+    expect(link.attrs['aria-label']).toContain('GitHub');
+  });
+
+  it('has no digit in the intro text', () => {
+    expect(facts.textById['intro']).toBeDefined();
+    expect(facts.textById['intro']).not.toMatch(/\d/);
+  });
+
+  it('backs each capability keyword with the README', () => {
+    for (const word of ['WordStar', 'Markdown', 'dBase', 'CSV', 'PCX', 'PNG']) {
+      expect(readme, word).toContain(word);
+      expect(facts.textById['intro'], word).toContain(word);
+    }
+  });
+
+  it('keeps the honesty note and the contract ids, including intro and repo-link', () => {
+    expect(facts.textById['honesty-note']).toContain('andete/disk-peek');
+    for (const id of [
+      'fx-host', 'app', 'drop-zone', 'pick-button', 'file-input', 'status', 'cancel-button',
+      'reopen-button', 'demo-slot', 'graveyard', 'preview-root', 'intro', 'repo-link',
+    ]) {
+      expect(doc.elements.filter((e) => e.attrs['id'] === id), `#${id}`).toHaveLength(1);
+    }
+  });
+});
+
 describe('src/style.css', () => {
   it('meets every contrast pair minimum', () => {
     expect(readPairs(css).length).toBeGreaterThan(0);
@@ -159,6 +279,119 @@ describe('src/style.css', () => {
 
   it('keeps .fx-* layers click-through, low in opacity and under .content, with the over-text check', () => {
     expect(checkFxLayers(css)).toEqual([]);
+  });
+
+  it('has a background that covers the whole page (ui-polish, Req 3.1 to 3.6, 10.1)', () => {
+    expect(checkBackground(css)).toEqual([]);
+  });
+
+  it('spaces markdown preview paragraphs and lines (ui-polish, Req 6.2, 6.3, 10.1)', () => {
+    const top = parseCss(css).filter((r) => r.context.length === 0);
+    const declsOf = (selector: string) =>
+      top.filter((r) => r.selector.split(',').map((s) => s.trim()).includes(selector)).flatMap((r) => r.decls);
+    const last = (selector: string, prop: string): string | undefined =>
+      declsOf(selector).filter((d) => d.prop === prop).at(-1)?.value.trim();
+
+    // margin-bottom from the longhand or the 1 to 4 value `margin` shorthand; the later declaration wins.
+    const pDecls = declsOf('.preview-markdown p').filter((d) => d.prop === 'margin' || d.prop === 'margin-bottom');
+    const winner = pDecls.at(-1);
+    expect(winner, '.preview-markdown p margin').toBeDefined();
+    let bottom = winner!.value.trim();
+    if (winner!.prop === 'margin') {
+      const parts = bottom.split(/\s+/);
+      bottom = parts.length === 1 ? parts[0]! : parts.length === 2 ? parts[0]! : parts[2]!;
+    }
+    const m = /^(\d*\.?\d+)em$/.exec(bottom);
+    expect(m, `margin-bottom "${bottom}" in em`).not.toBeNull();
+    expect(Number(m![1])).toBeGreaterThanOrEqual(0.75);
+
+    const lh = last('.preview-markdown', 'line-height');
+    expect(lh, '.preview-markdown line-height').toBeDefined();
+    expect(/^\d*\.?\d+$/.test(lh!), `unitless line-height "${lh}"`).toBe(true);
+    expect(Number(lh)).toBeGreaterThanOrEqual(1.4);
+  });
+
+  it('gives recovered, partial and lost three different state glyphs (ui-polish, Req 7.2, 7.4, 10.1)', () => {
+    const top = parseCss(css).filter((r) => r.context.length === 0);
+    const glyph = (state: string): string | undefined =>
+      top
+        .filter((r) => r.selector.split(',').map((s) => s.trim()).includes(`.grave--${state} .grave-state::before`))
+        .flatMap((r) => r.decls)
+        .filter((d) => d.prop === 'content')
+        .at(-1)
+        ?.value.trim();
+    const glyphs = ['recovered', 'partial', 'lost'].map((s) => glyph(s));
+    for (const g of glyphs) {
+      expect(g).toBeDefined();
+      expect(g).not.toBe('');
+      expect(g).not.toBe('none');
+    }
+    expect(new Set(glyphs).size).toBe(3);
+  });
+
+  it('makes the open-grave icon at least 5rem by 3.5rem (ui-polish, Req 7.1, 10.1)', () => {
+    const top = parseCss(css).filter((r) => r.context.length === 0);
+    const decls = top
+      .filter((r) => r.selector.split(',').map((s) => s.trim()).includes('.grave--open-grave .grave-art'))
+      .flatMap((r) => r.decls);
+    const rem = (prop: string): number => {
+      const v = decls.filter((d) => d.prop === prop).at(-1)?.value.trim();
+      const m = /^(\d*\.?\d+)rem$/.exec(v ?? '');
+      expect(m, `${prop} "${v}" in rem`).not.toBeNull();
+      return Number(m![1]);
+    };
+    expect(rem('width')).toBeGreaterThanOrEqual(5);
+    expect(rem('height')).toBeGreaterThanOrEqual(3.5);
+  });
+
+  it('declares the --pair-grave-art-ui pair and checks it (ui-polish, Req 7.1, 10.1)', () => {
+    const pair = readPairs(css).find((p) => JSON.stringify(p).includes('grave-art-ui'));
+    expect(pair, 'grave-art-ui pair read by readPairs').toBeDefined();
+    expect(css).toMatch(/--pair-grave-art-ui-fg:\s*#[0-9a-fA-F]{6}/);
+    expect(css).toMatch(/--pair-grave-art-ui-bg:\s*#[0-9a-fA-F]{6}/);
+    expect(checkPairs(css)).toEqual([]);
+    // A low-contrast replacement of the fg must be reported, so the pair really is checked.
+    const broken = css.replace(/--pair-grave-art-ui-fg:\s*#[0-9a-fA-F]{6}/, '--pair-grave-art-ui-fg: #151d1f');
+    expect(checkPairs(broken)).not.toEqual([]);
+  });
+
+  it('has rules for graveyard-guidance, graveyard-stats and grave-hint (ui-polish, Req 7.10, 10.1)', () => {
+    const cssText = stripCssComments(css);
+    for (const c of ['graveyard-guidance', 'graveyard-stats', 'grave-hint']) {
+      expect(new RegExp(`\\.${c}(?![A-Za-z0-9_-])`).test(cssText), `.${c}`).toBe(true);
+    }
+  });
+
+  it('keeps the narrow demo layout compact (ui-polish, Req 5.7, 5.8, 10.1)', () => {
+    expect(checkNarrowDemoLayout(css)).toEqual([]);
+  });
+
+  it('reports a bad narrow demo layout sample (ui-polish, Req 5.7, 5.8)', () => {
+    const good =
+      '@media (max-width: 600px){.demo-slot-list{grid-template-columns:1fr}' +
+      '.demo-slot-description{-webkit-line-clamp:2;line-clamp:2}.demo-slot-button{padding:0.5rem}}';
+    expect(checkNarrowDemoLayout(good)).toEqual([]);
+    expect(checkNarrowDemoLayout(good.replace('1fr', '1fr 1fr')).length).toBeGreaterThan(0);
+    expect(checkNarrowDemoLayout(good.replace('}}', ';display:none}}')).length).toBeGreaterThan(0);
+    expect(checkNarrowDemoLayout('.demo-slot-list{grid-template-columns:1fr}').length).toBeGreaterThan(0);
+  });
+
+  it('marks the pressed demo slot by border style and added words, not colour alone (ui-polish, Req 8.7, 10.1)', () => {
+    const top = parseCss(css).filter((r) => r.context.length === 0);
+    const declsOf = (selector: string) =>
+      top.filter((r) => r.selector.split(',').map((s) => s.trim()).includes(selector)).flatMap((r) => r.decls);
+    const pressed = declsOf(".demo-slot-button[aria-pressed='true']");
+    expect(pressed.filter((d) => d.prop === 'border-style' || d.prop === 'border-width').length).toBeGreaterThan(0);
+    expect(pressed.filter((d) => d.prop === 'border-style').at(-1)?.value.trim()).toBe('double');
+    const content = declsOf(".demo-slot-button[aria-pressed='true'] .demo-slot-title::after")
+      .filter((d) => d.prop === 'content')
+      .at(-1)
+      ?.value.trim();
+    expect(content).toBeDefined();
+    expect(content).not.toBe('');
+    expect(content).not.toBe('none');
+    expect(content).not.toMatch(/^(''|"")$/);
+    expect(content).toMatch(/[A-Za-z]{2,}/);
   });
 
   it('has a reduced-motion block', () => {
@@ -187,6 +420,59 @@ describe('src/style.css', () => {
     const hookOnly = new Set<string>();
     const missing = [...used].filter((c) => !hookOnly.has(c) && !new RegExp(`\\.${c}(?![A-Za-z0-9_-])`).test(cssText)).sort();
     expect(missing).toEqual([]);
+  });
+});
+
+describe('source and dependency scans (ui-polish)', () => {
+  // Validates: Requirements 6.4, 7.8, 10.6, 10.7.
+  const webDir = new URL('./', import.meta.url);
+
+  /** Drops block comments and whole-line or trailing `//` comments (not inside `://`). */
+  function stripTsComments(src: string): string {
+    return src
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .split('\n')
+      .map((line) => line.replace(/(^|[^:])\/\/.*$/, '$1'))
+      .join('\n');
+  }
+
+  const sources: { rel: string; code: string }[] = [];
+  for (const rel of readdirSync(webDir, { recursive: true, encoding: 'utf8' })) {
+    const norm = rel.split('\\').join('/');
+    if (!norm.endsWith('.ts') || norm.endsWith('.d.ts') || /\.test\.ts$/.test(norm)) continue;
+    sources.push({ rel: norm, code: stripTsComments(readFileSync(new URL(norm, webDir), 'utf8')) });
+  }
+
+  it('finds the non-test web sources', () => {
+    expect(sources.length).toBeGreaterThan(10);
+    expect(sources.some((s) => s.rel === 'demos.ts')).toBe(true);
+  });
+
+  it('uses no innerHTML, outerHTML or insertAdjacentHTML in non-test web sources', () => {
+    const hits = sources.filter((s) => /\b(innerHTML|outerHTML|insertAdjacentHTML)\b/.test(s.code)).map((s) => s.rel);
+    expect(hits).toEqual([]);
+  });
+
+  it('uses fetch only in demos.ts among non-test web sources', () => {
+    const hits = sources.filter((s) => /\bfetch\b/.test(s.code)).map((s) => s.rel);
+    expect(hits).toEqual(['demos.ts']);
+  });
+
+  it('keeps the package.json dependency keys unchanged and has no runtime dependencies', () => {
+    const pkg = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')) as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+    expect(Object.keys(pkg.dependencies ?? {}).sort()).toEqual([]);
+    expect(Object.keys(pkg.devDependencies ?? {}).sort()).toEqual(
+      ['@types/node', 'fast-check', 'happy-dom', 'typescript', 'vite', 'vitest'],
+    );
+  });
+
+  it('the comment stripper hides comment-only mentions and keeps code', () => {
+    expect(/\bfetch\b/.test(stripTsComments('// fetch\n/* fetch */ const a = 1;'))).toBe(false);
+    expect(/\bfetch\b/.test(stripTsComments('const r = fetch(u);'))).toBe(true);
+    expect(/\binnerHTML\b/.test(stripTsComments('el.innerHTML = x; // ok'))).toBe(true);
   });
 });
 
@@ -253,6 +539,25 @@ describe('helper self-tests', () => {
     expect(checkReducedMotion('a{color:red}')).not.toEqual([]);
     expect(checkUrls('a{background:url(https://x.test/a.png)}')).not.toEqual([]);
     expect(checkUrls('a{background:url(data:image/png;base64,AA)}')).not.toEqual([]);
+  });
+
+  it('reports a viewport-tall gradient on #fx-host and a missing html background', () => {
+    const good =
+      ':root{--pair-body-bg:#0b0f10}html{background:var(--pair-body-bg)}' +
+      'body{position:relative;min-height:100dvh}' +
+      'body::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;' +
+      'background:radial-gradient(ellipse 900px 600px at 50% 0,rgba(1,2,3,0.4),transparent 70%)}' +
+      '#fx-host{position:fixed;pointer-events:none}.content{position:relative;z-index:10}';
+    expect(checkBackground(good)).toEqual([]);
+
+    const tall = good.replace(
+      '#fx-host{',
+      '#fx-host{height:100vh;background:radial-gradient(ellipse 100vw 100vh at 50% 0,red,transparent);',
+    );
+    expect(checkBackground(tall).some((p) => /#fx-host/.test(p.message))).toBe(true);
+
+    const noHtml = good.replace('html{background:var(--pair-body-bg)}', '');
+    expect(checkBackground(noHtml).some((p) => /html/.test(p.message))).toBe(true);
   });
 
   it('reads at-rule context for reduced motion', () => {

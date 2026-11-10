@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import type { DiskReport, Grave, Warning } from '../../core/fat12/index';
-import { toItemViewModels, summarize, warningLines } from './viewmodel';
+import { toItemViewModels, summarize, warningLines, underscoreHint, UNDERSCORE_HINT } from './viewmodel';
 import { lastSegment, segmentCount, toLabel } from './text';
 import { numRuns } from '../../test-support/runs';
 
@@ -139,5 +139,68 @@ describe('view model examples', () => {
     expect(items[1]!.dateText).toBe('no date');
     expect(items[0]!.sizeText).toBe('4096.0 MB');
     expect(summarize(report).label).toBe('(no label)');
+  });
+
+  describe('nameHint', () => {
+    const grave = (path: string, state: Grave['state']): Grave => ({
+      id: 0,
+      path,
+      size: 10,
+      date: null,
+      state,
+      kind: 'file',
+      ...(state === 'alive' ? {} : { reason: 'because' }),
+      attributes: { readOnly: false, hidden: false, system: false, archive: false },
+      startCluster: 2,
+    });
+    const hintFor = (path: string, state: Grave['state']): string | null => {
+      const report: DiskReport = {
+        volume: { label: '', geometrySource: 'bpb', geometry: null },
+        files: [grave(path, state)],
+        warnings: [],
+      };
+      const [item] = toItemViewModels(report);
+      return item!.nameHint;
+    };
+
+    it.each(['recovered', 'partial', 'lost'] as const)('gives the hint for a deleted (%s) name starting with _', (state) => {
+      expect(hintFor('/_ETTER.TXT', state)).toBe(UNDERSCORE_HINT);
+    });
+
+    it('uses the last path segment for the name', () => {
+      expect(hintFor('/DOCS/_EPORT.DOC', 'recovered')).toBe(UNDERSCORE_HINT);
+    });
+
+    it('gives no hint for an alive name starting with _', () => {
+      expect(hintFor('/_KEEP.TXT', 'alive')).toBeNull();
+    });
+
+    it('gives no hint for a deleted name without a leading _', () => {
+      expect(hintFor('/LETTER.TXT', 'recovered')).toBeNull();
+      expect(hintFor('/A_B.TXT', 'lost')).toBeNull();
+    });
+
+    it('underscoreHint matches the rule directly', () => {
+      expect(underscoreHint('partial', '_X')).toBe(UNDERSCORE_HINT);
+      expect(underscoreHint('alive', '_X')).toBeNull();
+      expect(underscoreHint('lost', 'X_')).toBeNull();
+    });
+
+    // Feature: ui-polish, Property 3: Underscore hint if and only if a deleted entry's name starts with `_`
+    // **Validates: Requirements 7.5, 7.6, 7.7**
+    it('property: hint iff state is not alive and name starts with _', () => {
+      const states = fc.constantFrom<Grave['state']>('alive', 'recovered', 'partial', 'lost');
+      const names = fc.oneof(
+        fc.string({ maxLength: 20 }),
+        fc.string({ maxLength: 20 }).map((s) => `_${s}`),
+      );
+      fc.assert(
+        fc.property(states, names, (state, name) => {
+          const expected = state !== 'alive' && name.startsWith('_') ? UNDERSCORE_HINT : null;
+          return underscoreHint(state, name) === expected;
+        }),
+        { numRuns: numRuns(100) },
+      );
+    });
   });
 });

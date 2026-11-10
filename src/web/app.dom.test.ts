@@ -73,6 +73,8 @@ function buildPage(): void {
 class FakeWorker {
   static instances: FakeWorker[] = [];
   static auto = true;
+  /** When true, answers every open request with a failed response. */
+  static failOpen = false;
   static last(): FakeWorker {
     const w = FakeWorker.instances[FakeWorker.instances.length - 1];
     if (w === undefined) throw new Error('no worker was created');
@@ -112,6 +114,13 @@ class FakeWorker {
     while (this.queue.length > 0) {
       const message = this.queue.shift();
       if (this.terminated) continue;
+      const req = message as { type?: string; id?: number };
+      if (FakeWorker.failOpen && req.type === 'open') {
+        this.emit('message', {
+          data: { type: 'failed', id: req.id, request: 'open', cause: 'internal', error: 'boom' },
+        });
+        continue;
+      }
       const data = handleRequest(this.session, message);
       this.emit('message', { data });
     }
@@ -249,11 +258,16 @@ let revoked: string[] = [];
 let downloads: Array<{ href: string; download: string }> = [];
 const recorded: Array<{ target: EventTarget; type: string; listener: EventListenerOrEventListenerObject }> = [];
 const saved: Record<string, unknown> = {};
+let scrollSpy = vi.fn();
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
   FakeWorker.instances = [];
   FakeWorker.auto = true;
+  FakeWorker.failOpen = false;
+  scrollSpy = vi.fn();
+  saved['scrollIntoView'] = HTMLElement.prototype.scrollIntoView;
+  HTMLElement.prototype.scrollIntoView = scrollSpy as unknown as typeof HTMLElement.prototype.scrollIntoView;
   vi.stubGlobal('Worker', FakeWorker);
   reducedMotion = false;
   revoked = [];
@@ -296,6 +310,7 @@ afterEach(() => {
   vi.useRealTimers();
   const w = window as unknown as Record<string, unknown>;
   w['matchMedia'] = saved['matchMedia'];
+  HTMLElement.prototype.scrollIntoView = saved['scrollIntoView'] as typeof HTMLElement.prototype.scrollIntoView;
   (HTMLCanvasElement.prototype as unknown as Record<string, unknown>)['getContext'] = saved['getContext'];
   (HTMLAnchorElement.prototype as unknown as Record<string, unknown>)['click'] = saved['click'];
   URL.createObjectURL = saved['create'] as typeof URL.createObjectURL;
@@ -406,6 +421,154 @@ describe('opening a disk', () => {
     await settle();
     expect(dialog()).not.toBeNull();
     expect(statusText()).toBe('This file is empty.');
+  });
+});
+
+describe('open flow: focus, reveal and guidance (4.3, 4.4, 5.1-5.6)', () => {
+  const heading = (): HTMLElement => $('#graveyard-heading');
+  const guidanceHidden = (): boolean => $('#graveyard .graveyard-guidance').hasAttribute('hidden');
+
+  it('focuses the heading and scrolls smoothly after a good open', async () => {
+    expect(guidanceHidden()).toBe(false);
+    await drop(makeDisk());
+    expect(document.activeElement).toBe(heading());
+    expect(guidanceHidden()).toBe(true);
+    expect(scrollSpy).toHaveBeenCalledTimes(1);
+    expect(scrollSpy).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+  });
+
+  it('reveals only after the Cancel button is hidden', async () => {
+    const cancelHiddenAtScroll: boolean[] = [];
+    scrollSpy.mockImplementation(() => {
+      cancelHiddenAtScroll.push(hidden('cancel-button'));
+    });
+    await drop(makeDisk());
+    expect(cancelHiddenAtScroll).toEqual([true]);
+  });
+
+  it('scrolls instantly when reduced motion is on', async () => {
+    reducedMotion = true;
+    await drop(makeDisk());
+    expect(document.activeElement).toBe(heading());
+    expect(scrollSpy).toHaveBeenCalledTimes(1);
+    expect(scrollSpy).toHaveBeenCalledWith({ behavior: 'instant', block: 'start' });
+  });
+
+  it('a failed first open keeps the guidance and leaves focus and scroll alone', async () => {
+    const pick = $('#pick-button');
+    pick.focus();
+    FakeWorker.failOpen = true;
+    await drop(makeDisk());
+    expect(statusText()).toBe('The disk could not be opened because the reader reported an error.');
+    expect(guidanceHidden()).toBe(false);
+    expect(heading().hasAttribute('hidden')).toBe(true);
+    expect(document.activeElement).toBe(pick);
+    expect(scrollSpy).not.toHaveBeenCalled();
+  });
+
+  it('a failed open after a good one keeps the earlier disk and hides the guidance', async () => {
+    await drop(makeDisk());
+    const names = graves().map((g) => g.querySelector('.grave-name')?.textContent);
+    scrollSpy.mockClear();
+    const pick = $('#pick-button');
+    pick.focus();
+    FakeWorker.failOpen = true;
+    await drop(smallDisk());
+    expect(graves().map((g) => g.querySelector('.grave-name')?.textContent)).toEqual(names);
+    expect(guidanceHidden()).toBe(true);
+    expect(document.activeElement).toBe(pick);
+    expect(scrollSpy).not.toHaveBeenCalled();
+  });
+
+  it('does not reveal or take focus when a preview was open during the open', async () => {
+    await drop(makeDisk());
+    await exhume('NOTES.BIN');
+    expect(dialog()).not.toBeNull();
+    scrollSpy.mockClear();
+    await drop(smallDisk());
+    expect(dialog()).toBeNull();
+    expect(graves().map((g) => g.querySelector('.grave-name')?.textContent)).toEqual(['ONLY.BIN']);
+    expect(scrollSpy).not.toHaveBeenCalled();
+    expect(document.activeElement).not.toBe(heading());
+  });
+});
+
+describe('pressed demo card (8.5, 8.6, 8.8)', () => {
+  interface FakeResponse {
+    status: number;
+    headers: { get(name: string): string | null };
+    body: null;
+    arrayBuffer(): Promise<ArrayBuffer>;
+  }
+  const respond = (bytes: Uint8Array, status = 200, headers: Record<string, string> = {}): FakeResponse => ({
+    status,
+    headers: { get: (name) => headers[name.toLowerCase()] ?? null },
+    body: null,
+    arrayBuffer: () => Promise.resolve(bytes.slice().buffer),
+  });
+  /** Stubs the global fetch that demos.ts uses; the registry and loader stay real. */
+  const stubFetch = (make: () => FakeResponse): void => {
+    vi.stubGlobal('fetch', () => Promise.resolve(make()));
+  };
+  const cards = (): HTMLButtonElement[] => Array.from(document.querySelectorAll<HTMLButtonElement>('#demo-slot .demo-slot-button'));
+  const pressed = (): string[] => cards().map((c) => c.getAttribute('aria-pressed') ?? '');
+  const demoStatus = (): string => $('#demo-slot .demo-slot-status').textContent ?? '';
+  const clickCard = async (index: number): Promise<void> => {
+    const card = cards()[index];
+    if (card === undefined) throw new Error(`no demo card ${index}`);
+    card.click();
+    await settle();
+  };
+
+  it('has several unpressed cards at the start', () => {
+    expect(cards().length).toBeGreaterThanOrEqual(2);
+    expect(pressed().every((v) => v === 'false')).toBe(true);
+  });
+
+  it('presses only the clicked card after a good open', async () => {
+    stubFetch(() => respond(makeDisk()));
+    await clickCard(1);
+    expect(statusText()).toMatch(/^Opened a disk with \d+ entries\.$/);
+    expect(pressed()).toEqual(cards().map((_, i) => (i === 1 ? 'true' : 'false')));
+  });
+
+  it('moves the pressed state when another demo opens', async () => {
+    stubFetch(() => respond(makeDisk()));
+    await clickCard(0);
+    await clickCard(2);
+    expect(pressed()).toEqual(cards().map((_, i) => (i === 2 ? 'true' : 'false')));
+  });
+
+  it('clears every card when a dropped file opens after a demo', async () => {
+    stubFetch(() => respond(makeDisk()));
+    await clickCard(0);
+    expect(pressed()).toContain('true');
+    await drop(smallDisk());
+    expect(graves().map((g) => g.querySelector('.grave-name')?.textContent)).toEqual(['ONLY.BIN']);
+    expect(pressed().every((v) => v === 'false')).toBe(true);
+  });
+
+  it('leaves everything unchanged when a later demo fails to load', async () => {
+    stubFetch(() => respond(makeDisk()));
+    await clickCard(0);
+    const before = pressed();
+    const names = graves().map((g) => g.querySelector('.grave-name')?.textContent);
+    stubFetch(() => respond(new Uint8Array(0), 404));
+    await clickCard(1);
+    expect(demoStatus()).toBe('The demo disk request failed (status 404).');
+    expect(pressed()).toEqual(before);
+    expect(graves().map((g) => g.querySelector('.grave-name')?.textContent)).toEqual(names);
+  });
+
+  it('does not leak a rejected demo id into a later open', async () => {
+    stubFetch(() => respond(new Uint8Array(8), 200, { 'content-length': String(MAX_IMAGE_BYTES + 1) }));
+    await clickCard(0);
+    expect(demoStatus()).toContain('larger than');
+    expect(FakeWorker.instances.length).toBe(0);
+    expect(pressed().every((v) => v === 'false')).toBe(true);
+    await drop(smallDisk());
+    expect(graves().length).toBe(1);
+    expect(pressed().every((v) => v === 'false')).toBe(true);
   });
 });
 

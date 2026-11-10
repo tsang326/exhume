@@ -1,5 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest';
+import fc from 'fast-check';
+import { numRuns } from '../../test-support/runs';
 import { createDemoSlot } from './demo-slot';
 import type { DemoDisk, DemoLoad } from '../demos';
 
@@ -40,6 +42,9 @@ describe('createDemoSlot (happy-dom)', () => {
     for (const b of Array.from(buttons)) {
       expect(b.getAttribute('type')).toBe('button');
       expect(b.hasAttribute('tabindex')).toBe(false);
+      expect(b.getAttribute('aria-pressed')).toBe('false');
+      expect(b.querySelector('strong')).not.toBeNull();
+      expect(b.querySelector('span')).not.toBeNull();
     }
     expect(buttons[0].textContent).toContain('Title a');
     expect(buttons[0].textContent).toContain('Description a');
@@ -123,5 +128,40 @@ describe('createDemoSlot (happy-dom)', () => {
     );
     expect(button.hasAttribute('disabled')).toBe(false);
     expect(onBytes).not.toHaveBeenCalled();
+  });
+});
+
+describe('createDemoSlot setPressed (property)', () => {
+  // Feature: ui-polish, Property 5: Exactly one demo card is pressed
+  // **Validates: Requirements 8.5, 8.6**
+  it('presses exactly the card whose id matches, and none for null or unknown ids', () => {
+    const idArb = fc.stringMatching(/^[a-z0-9]{1,8}$/);
+    const caseArb = fc
+      .uniqueArray(idArb, { minLength: 1, maxLength: 6 })
+      .chain((ids) =>
+        fc.record({
+          ids: fc.constant(ids),
+          pick: fc.oneof(
+            fc.constantFrom(...ids),
+            fc.constant(null),
+            fc.string({ maxLength: 12 }).filter((s) => !ids.includes(s)),
+          ),
+        }),
+      );
+    fc.assert(
+      fc.property(caseArb, ({ ids, pick }) => {
+        const slot = createDemoSlot(vi.fn(), ids.map((id) => good(id)), vi.fn());
+        slot.setPressed(pick);
+        const buttons = Array.from(slot.element.querySelectorAll('button'));
+        return (
+          slot.count === ids.length &&
+          buttons.length === ids.length &&
+          buttons.every(
+            (b, i) => b.getAttribute('aria-pressed') === (pick !== null && ids[i] === pick ? 'true' : 'false'),
+          )
+        );
+      }),
+      { numRuns: numRuns(100) },
+    );
   });
 });

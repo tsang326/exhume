@@ -36,6 +36,7 @@ const itemArb: fc.Arbitrary<ItemViewModel> = fc
       marker: null,
       action: 'exhume',
       note: null,
+      nameHint: null,
     }),
   );
 

@@ -319,6 +319,37 @@ describe('focus trap in the dialog (12.8)', () => {
   });
 });
 
+describe('tab order with the revealed heading (5.1, 10.1)', () => {
+  /** Elements a Tab key can reach, in document order: enabled buttons, links with href, tabindex >= 0. */
+  function tabbable(): HTMLElement[] {
+    const all = Array.from(document.querySelectorAll<HTMLElement>('button, a[href], input, [tabindex]'));
+    return all.filter((el) => {
+      if (el.closest('[hidden]') !== null) return false;
+      if ((el as HTMLButtonElement).disabled === true) return false;
+      const t = el.getAttribute('tabindex');
+      return t === null || Number(t) >= 0;
+    });
+  }
+
+  it('keeps the heading out of the tab order; the repo link is the only added, last stop', () => {
+    const footer = document.createElement('footer');
+    const link = document.createElement('a');
+    link.id = 'repo-link';
+    link.setAttribute('href', 'https://example.invalid/exhume');
+    footer.appendChild(link);
+    rig.app.appendChild(footer);
+
+    rig.show([grave(0), grave(1), grave(2, { kind: 'directory', path: '/DIR' })]);
+    rig.view.reveal(false);
+    const heading = rig.view.headingElement();
+    expect(document.activeElement).toBe(heading);
+
+    const order = tabbable();
+    expect(order).not.toContain(heading);
+    expect(order).toEqual([itemButton(rig, 0), itemButton(rig, 1), link]);
+  });
+});
+
 describe('Show more focus behaviour (12.2, 12.3)', () => {
   it('moves focus to the first newly rendered item and keeps earlier nodes', () => {
     const files = Array.from({ length: 205 }, (_, i) => grave(i));

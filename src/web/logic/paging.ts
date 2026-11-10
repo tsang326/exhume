@@ -12,5 +12,5 @@ export function hasMore(total: number, pages: number): boolean {
 }
 
 export function progressText(visible: number, total: number): string {
-  return `${visible} of ${total}`;
+  return `Showing ${visible} of ${total} items`;
 }

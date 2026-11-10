@@ -17,6 +17,14 @@ export interface ItemViewModel {
   marker: 'directory' | null;
   action: 'exhume' | 'none';
   note: string | null;
+  /** Set for a deleted entry whose displayed name starts with '_'; null otherwise. */
+  nameHint: string | null;
+}
+
+export const UNDERSCORE_HINT = 'When the file was deleted, DOS overwrote this name\u2019s first letter.';
+
+export function underscoreHint(state: GraveState, name: string): string | null {
+  return state !== 'alive' && name.startsWith('_') ? UNDERSCORE_HINT : null;
 }
 
 export interface VolumeSummary {
@@ -29,13 +37,14 @@ export interface VolumeSummary {
 export function toItemViewModels(report: DiskReport): ItemViewModel[] {
   return report.files.map((g): ItemViewModel => {
     const rawName = lastSegment(g.path);
+    const name = rawName === '' ? '(unnamed)' : toLabel(rawName);
     return {
       id: g.id,
       kind: g.kind,
       state: g.state,
       stateLabel: g.state,
       visual: g.state === 'alive' ? 'tombstone' : 'open-grave',
-      name: rawName === '' ? '(unnamed)' : toLabel(rawName),
+      name,
       path: toLabel(g.path),
       showPath: segmentCount(g.path) > 1,
       sizeText: formatBytes(g.size),
@@ -44,6 +53,7 @@ export function toItemViewModels(report: DiskReport): ItemViewModel[] {
       marker: g.kind === 'directory' ? 'directory' : null,
       action: g.kind === 'file' && g.state !== 'lost' ? 'exhume' : 'none',
       note: g.state === 'lost' ? 'not previewable' : null,
+      nameHint: underscoreHint(g.state, name),
     };
   });
 }

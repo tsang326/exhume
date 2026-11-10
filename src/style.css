@@ -1,5 +1,5 @@
 /*
-  REVENANT.OS / Exhume: a lantern-lit graveyard in fog. CSS only, no external resources.
+  Exhume: a lantern-lit graveyard in fog. CSS only, no external resources.
 
   Contrast pairs are literal hex values (--pair-<id>-fg / --pair-<id>-bg) so tests can read them.
   Ids ending -large or -ui need 3:1; all others 4.5:1.
@@ -37,6 +37,8 @@
   --pair-focus-ui-ground-bg: #0b0f10;
   --pair-border-ui-fg: #5f7378;
   --pair-border-ui-bg: #141c1e;
+  --pair-grave-art-ui-fg: #8fa5aa;
+  --pair-grave-art-ui-bg: #141c1e;
 
   /* Tokens */
   --ground: var(--pair-body-bg);
@@ -59,11 +61,19 @@
   box-sizing: border-box;
 }
 
-html,
-body {
+html {
   margin: 0;
   min-height: 100%;
   background: var(--pair-body-bg);
+  overflow-x: hidden;
+}
+
+body {
+  position: relative;
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: transparent;
   color: var(--pair-body-fg);
   overflow-x: hidden;
 }
@@ -82,31 +92,26 @@ body {
   overflow: hidden;
 }
 
-/* Lantern glow: CSS gradient on the host, translucent, behind all text. */
-#fx-host::before,
+/* Document-tall lantern glow. Fixed-size ellipses, so the light does not stretch with page height. */
 .fx-glow {
-  content: '';
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 0;
   opacity: 0.45;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse at 15% 10%, rgb(255 191 94 / 0.45), transparent 45%),
-    radial-gradient(ellipse at 85% 90%, rgb(255 191 94 / 0.25), transparent 50%);
 }
 
-/* Static fog fallback when no canvas draws: gradients only. */
-#fx-host::after {
+body::before {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 0;
-  opacity: 0.3;
+  opacity: 0.45;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 30% 80%, rgb(169 183 168 / 0.3), transparent 55%),
-    radial-gradient(ellipse at 75% 30%, rgb(169 183 168 / 0.2), transparent 50%);
+    radial-gradient(ellipse 60rem 40rem at 15% 0, rgb(255 191 94 / 0.45), transparent 100%),
+    radial-gradient(ellipse 60rem 40rem at 85% 100%, rgb(255 191 94 / 0.25), transparent 100%),
+    radial-gradient(ellipse 50rem 30rem at 30% 55%, rgb(169 183 168 / 0.09), transparent 100%);
 }
 
 .fx-canvas {
@@ -165,6 +170,39 @@ footer {
 
 .content .note {
   background: transparent;
+}
+
+.intro {
+  margin: 0.5rem 0 1rem;
+}
+
+.intro-lead {
+  margin: 0 0 0.5rem;
+  color: var(--pair-body-fg);
+  overflow-wrap: anywhere;
+}
+
+.intro-list {
+  margin: 0 0 0.75rem;
+  padding-left: 1.25rem;
+  color: var(--pair-muted-fg);
+  overflow-wrap: anywhere;
+}
+
+.intro-list li {
+  margin: 0.125rem 0;
+}
+
+.repo-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: var(--pair-lantern-fg);
+  text-underline-offset: 0.2em;
+}
+
+.repo-link:focus-visible {
+  outline: 2px solid var(--pair-focus-ui-ground-fg);
+  outline-offset: 2px;
 }
 
 /* ---------------------------------------------------------------- controls */
@@ -297,6 +335,41 @@ button[disabled] {
   color: var(--pair-muted-raised-fg);
 }
 
+.demo-slot-button[aria-pressed='true'] {
+  border-width: 3px;
+  border-style: double;
+}
+
+.demo-slot-button[aria-pressed='true'] .demo-slot-title::after {
+  content: ' \2013  open now';
+}
+
+@media (max-width: 600px) {
+  .demo-slot {
+    padding: 0.75rem;
+  }
+
+  .demo-slot-list {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .demo-slot-button {
+    padding: 0.5rem;
+    gap: 0;
+  }
+
+  .demo-slot-description {
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+}
+
 /* ---------------------------------------------------------------- graveyard */
 
 #graveyard {
@@ -308,6 +381,31 @@ button[disabled] {
 .graveyard-progress {
   margin: 0.5rem 0;
   color: var(--pair-muted-fg);
+  overflow-wrap: anywhere;
+}
+
+.graveyard-guidance {
+  margin: 0.5rem 0;
+  color: var(--pair-muted-fg);
+  overflow-wrap: anywhere;
+}
+
+.graveyard-guidance[hidden],
+.graveyard-stats[hidden] {
+  display: none;
+}
+
+.graveyard-stats {
+  margin: 0.5rem 0;
+}
+
+.graveyard-stats > * {
+  margin: 0.25rem 0;
+}
+
+.grave-hint {
+  color: var(--pair-muted-fg);
+  font-size: 0.875rem;
   overflow-wrap: anywhere;
 }
 
@@ -469,13 +567,44 @@ button[disabled] {
 
 /* Open grave: dark earth slab, dashed top edge, small mound, glow tinted by state. */
 .grave--open-grave .grave-art {
-  height: 2rem;
-  width: 3.5rem;
+  height: 3.5rem;
+  width: 5rem;
   background:
     radial-gradient(ellipse at 50% 0, var(--grave-glow, rgb(255 191 94 / 0.4)), transparent 75%),
-    linear-gradient(var(--earth), var(--earth));
-  border-top: 2px dashed var(--stone);
+    linear-gradient(var(--raised), var(--raised));
+  border-top: 2px dashed var(--pair-grave-art-ui-fg);
   border-radius: 0.25rem;
+}
+
+/* Shapes differ by state, so state is never carried by colour alone. */
+.grave--open-grave.grave--partial .grave-art {
+  background: linear-gradient(to right, var(--raised) 50%, transparent 50%);
+}
+
+.grave--open-grave.grave--lost .grave-art {
+  background: transparent;
+  border: 2px dashed var(--pair-grave-art-ui-fg);
+}
+
+.grave--open-grave.grave--lost .grave-art::after {
+  display: none;
+}
+
+/* State glyphs */
+.grave--recovered .grave-state::before {
+  content: '\25CF\00A0';
+}
+
+.grave--partial .grave-state::before {
+  content: '\25D0\00A0';
+}
+
+.grave--lost .grave-state::before {
+  content: '\2715\00A0';
+}
+
+.grave--alive .grave-state::before {
+  content: '\25A0\00A0';
 }
 
 .grave--open-grave .grave-art::after {
@@ -645,11 +774,12 @@ button[disabled] {
 }
 
 .preview-markdown {
+  line-height: 1.5;
   overflow-wrap: anywhere;
 }
 
 .preview-markdown p {
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.75em;
 }
 
 .preview-markdown hr {

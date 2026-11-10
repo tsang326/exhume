@@ -1,0 +1,676 @@
+{
+  "pbtResults": {
+    "4.3 Write property test for Markdown paragraph mapping": {
+      "status": "passed",
+      "lastRunTimestamp": 1794310321175
+    },
+    "6.8 Write property test for the pressed card": {
+      "status": "passed",
+      "lastRunTimestamp": 1794311047162
+    },
+    "3.4 Write property test for guidance until a disk is shown": {
+      "status": "passed",
+      "lastRunTimestamp": 1794311064701
+    },
+    "5.5 Write property test for state text and safe text rendering": {
+      "status": "passed",
+      "lastRunTimestamp": 1794311835971
+    },
+    "5.4 Write property test for the underscore hint": {
+      "status": "passed",
+      "lastRunTimestamp": 1794311993608
+    },
+    "6.2 Write property test for the progress line": {
+      "status": "passed",
+      "lastRunTimestamp": 1794312265413
+    }
+  },
+  "executionHistory": {
+    "1.1 Edit `index.html` and the stylesheet header": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310190761
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310203915
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310362372
+      }
+    ],
+    "1.2 Update and extend `src/web/page.static.test.ts` for the static page": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310190827
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310623870
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310755637
+      }
+    ],
+    "2.1 Add `checkBackground(css: string): CssProblem[]` to `src/test-support/web/css-scan.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310190871
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310203988
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310363119
+      }
+    ],
+    "2.2 Rewrite the background rules in `src/style.css`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310190921
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310623950
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310757204
+      }
+    ],
+    "2.3 Wire the background checks into `src/web/page.static.test.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310190969
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310940902
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311086172
+      }
+    ],
+    "3.1 Update `src/web/dom/graveyard.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191021
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310204670
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310365083
+      }
+    ],
+    "3.2 Style the new graveyard elements in `src/style.css`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191089
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310940966
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311086810
+      }
+    ],
+    "3.3 Call `reveal` from `src/web/app.ts` on a successful open": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191151
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310624057
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310757317
+      }
+    ],
+    "3.4 Write property test for guidance until a disk is shown": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191217
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310941248
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311087983
+      }
+    ],
+    "3.5 Update and extend `src/web/dom/graveyard.dom.test.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191263
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311156157
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311717186
+      }
+    ],
+    "3.6 Add open-flow tests in `src/web/app.dom.test.ts` and `src/web/dom/keyboard.dom.test.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191311
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311156270
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311717999
+      }
+    ],
+    "4.1 Update the `.preview-markdown` rules in `src/style.css`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191361
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311156864
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311719259
+      }
+    ],
+    "4.2 Add CSS checks to `src/web/page.static.test.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191423
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311773137
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311861983
+      }
+    ],
+    "4.3 Write property test for Markdown paragraph mapping": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191463
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310205045
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310365189
+      }
+    ],
+    "5.1 Add `nameHint` to `src/web/logic/viewmodel.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191514
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310205797
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310365556
+      }
+    ],
+    "5.2 Render the hint in `src/web/dom/graveyard.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191560
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310624973
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310758276
+      }
+    ],
+    "5.3 Style the graveyard cues in `src/style.css`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191622
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311773198
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311864229
+      }
+    ],
+    "5.4 Write property test for the underscore hint": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191670
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311922792
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794312006533
+      }
+    ],
+    "5.5 Write property test for state text and safe text rendering": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191729
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311773656
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311864379
+      }
+    ],
+    "5.6 Update `src/web/logic/viewmodel.test.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191787
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310625404
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310758842
+      }
+    ],
+    "5.7 Add CSS checks to `src/web/page.static.test.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191830
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311923794
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794312005815
+      }
+    ],
+    "6.1 Change `progressText` in `src/web/logic/paging.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191877
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310429581
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310574542
+      }
+    ],
+    "6.2 Write property test for the progress line": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191930
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794312183404
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794312277142
+      }
+    ],
+    "6.3 Add `setPressed` to `src/web/dom/demo-slot.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310191979
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310430176
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310574462
+      }
+    ],
+    "6.4 Wire `setPressed` in `src/web/app.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310192021
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310942596
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311088548
+      }
+    ],
+    "6.5 Add pressed-card and narrow-layout CSS to `src/style.css`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310192064
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311924342
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794312007308
+      }
+    ],
+    "6.6 Add `checkNarrowDemoLayout(css: string): CssProblem[]` to `src/test-support/web/css-scan.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310192120
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310823706
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310889371
+      }
+    ],
+    "6.7 Update `src/web/dom/demo-slot.dom.test.ts` for the new attribute": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310192170
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310823761
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310890262
+      }
+    ],
+    "6.8 Write property test for the pressed card": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310192212
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310942930
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311089321
+      }
+    ],
+    "6.9 Add pressed-state tests in `src/web/app.dom.test.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310192277
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311774526
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311864469
+      }
+    ],
+    "6.10 Add CSS checks to `src/web/page.static.test.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310192335
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794312184146
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794312276902
+      }
+    ],
+    "7.1 Add source scans to `src/web/page.static.test.ts`": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310192377
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794312322484
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794312371130
+      }
+    ],
+    "8. Checkpoint - Items 1 to 8 complete": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310192421
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794312429558
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794312527522
+      }
+    ],
+    "10.1 Run the headless Chromium checks and record the result": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310192472
+      }
+    ],
+    "11. Final checkpoint - Verify the whole change": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310192519
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794312645593
+      },
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794312720211
+      }
+    ],
+    "1. Static page: intro, title, meta description, repo link": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794310755702
+      }
+    ],
+    "2. Background covers the whole page": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311086241
+      }
+    ],
+    "3. Graveyard guidance, reveal and focus": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311718098
+      }
+    ],
+    "4. Markdown preview spacing (CSS only)": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794311862053
+      }
+    ],
+    "5. Distinct, explained deleted graves": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794312006589
+      }
+    ],
+    "6. Progress line, pressed demo card, narrow layout": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794312277199
+      }
+    ],
+    "7. Guard tests for scope and safety": [
+      {
+        "executionId": "8cd9ca83-dad9-45d3-ae2c-8ed01671f21f",
+        "chatSessionId": "sess_4993e67e-63bb-4c96-bf00-23ab9b484d6a",
+        "timestamp": 1794312371201
+      }
+    ],
+    "12. Fix: reveal runs before the Cancel button hides (found by the owner in 10.1)": [
+      {
+        "executionId": "60d18aef-8c2f-4a30-8a23-a3a161655ff2",
+        "chatSessionId": "sess_2841d312-fd4f-47f7-a5f6-2d635d4ba42e",
+        "timestamp": 1794313535064
+      },
+      {
+        "executionId": "60d18aef-8c2f-4a30-8a23-a3a161655ff2",
+        "chatSessionId": "sess_2841d312-fd4f-47f7-a5f6-2d635d4ba42e",
+        "timestamp": 1794313543253
+      }
+    ]
+  }
+}

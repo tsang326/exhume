@@ -79,7 +79,9 @@ describe('POWER.md frontmatter', () => {
 });
 
 describe.each(MCP_FILES)('%s', (_label, file, base) => {
-  const raw = readText(file);
+  // The `$schema` member is a URL by design; drop it before the URL scan.
+  const { $schema: _schema, ...withoutSchema } = readJson(file);
+  const raw = JSON.stringify(withoutSchema);
   const entry = exhumeEntry(file);
 
   it('has a single exhume server run by node', () => {
@@ -100,7 +102,7 @@ describe.each(MCP_FILES)('%s', (_label, file, base) => {
   it('names a script path that exists', () => {
     const script = argsOf(entry).find((a) => a.endsWith('.mjs'));
     expect(script).toBeDefined();
-    expect(existsSync(resolve(base, script!))).toBe(true);
+    expect(existsSync(resolve(base, script!.replace('${PLUGIN_ROOT}', POWER_DIR)))).toBe(true);
   });
 });
 
@@ -122,6 +124,44 @@ describe('the two exhume entries agree', () => {
 
   it('agree on whether --root is passed', () => {
     expect(argsOf(power).includes('--root')).toBe(argsOf(workspace).includes('--root'));
+  });
+});
+
+describe('Power entry (Workspace_Mode launch)', () => {
+  const entry = exhumeEntry(POWER_MCP);
+
+  it('is a stdio server with PLUGIN_ROOT first and the Workspace_Flag', () => {
+    expect(entry.type).toBe('stdio');
+    expect(argsOf(entry)).toEqual(['${PLUGIN_ROOT}/server/exhume-mcp.mjs', '--workspace-from-agent']);
+    expect(argsOf(entry)[0]!.startsWith('${PLUGIN_ROOT}')).toBe(true);
+  });
+
+  it('has exactly $schema and mcpServers at the top level', () => {
+    expect(Object.keys(readJson(POWER_MCP)).sort()).toEqual(['$schema', 'mcpServers']);
+    expect(readJson(POWER_MCP).$schema).toBe('https://agent-plugins.org/schemas/1.0.0/mcp.schema.json');
+    expect(Object.keys(entry).sort()).toEqual(['args', 'command', 'type']);
+  });
+});
+
+describe('Workspace_Config entry (Default_Mode launch)', () => {
+  const entry = exhumeEntry(WORKSPACE_MCP);
+
+  it('has no flag and the unchanged args', () => {
+    expect(argsOf(entry)).toEqual(['power/server/exhume-mcp.mjs']);
+    expect(argsOf(entry)).not.toContain('--workspace-from-agent');
+  });
+
+  it('is otherwise unchanged', () => {
+    expect(readJson(WORKSPACE_MCP)).toEqual({
+      mcpServers: { exhume: { command: 'node', args: ['power/server/exhume-mcp.mjs'] } },
+    });
+  });
+});
+
+describe('both configs point at exhume-mcp.mjs', () => {
+  it.each([POWER_MCP, WORKSPACE_MCP])('%s', (file) => {
+    const script = argsOf(exhumeEntry(file)).find((a) => a.endsWith('.mjs'));
+    expect(basename(script!)).toBe('exhume-mcp.mjs');
   });
 });
 

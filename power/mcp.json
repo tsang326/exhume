@@ -1,8 +1,10 @@
 {
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
     "exhume": {
+      "type": "stdio",
       "command": "node",
-      "args": ["server/exhume-mcp.mjs"]
+      "args": ["${PLUGIN_ROOT}/server/exhume-mcp.mjs", "--workspace-from-agent"]
     }
   }
 }

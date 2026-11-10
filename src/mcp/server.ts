@@ -27,10 +27,12 @@ import type { RpcId } from './jsonrpc';
 import { MAX_RESPONSE_BYTES } from './limits';
 import type { ToolContext } from './grave-source';
 import { TOOL_DEFS } from './tool-defs';
+import type { ToolDef } from './tool-defs';
 import { runExhume } from './tools/exhume';
 import { runExplainState } from './tools/explain-state';
 import { runOpenDisk } from './tools/open-disk';
 import { runReadGrave } from './tools/read-grave';
+import { createWorkspaceStrategy } from './workspace';
 
 export const SERVER_NAME = 'exhume';
 export const SERVER_VERSION = '0.1.0';
@@ -88,7 +90,19 @@ function runTool(ctx: ToolContext, name: string, args: unknown): Outcome<unknown
   }
 }
 
-function handleCall(ctx: ToolContext, id: RpcId, params: unknown): string {
+/** A tool call bound to the context and arguments its runner receives. */
+export interface BoundCall {
+  ctx: ToolContext;
+  args: Record<string, unknown>;
+}
+
+/** Decides the advertised tools and how a call is bound to a context. */
+export interface ModeStrategy {
+  readonly tools: readonly ToolDef[];
+  bind(name: string, args: Record<string, unknown>): Outcome<BoundCall>;
+}
+
+function handleCall(strategy: ModeStrategy, id: RpcId, params: unknown): string {
   if (!isPlainObject(params)) return errorLine(id, JSONRPC_INVALID_PARAMS, INVALID_PARAMS);
   const name = getOwn(params, 'name');
   if (typeof name !== 'string') return errorLine(id, JSONRPC_INVALID_PARAMS, INVALID_PARAMS);
@@ -96,15 +110,17 @@ function handleCall(ctx: ToolContext, id: RpcId, params: unknown): string {
   if (rawArgs !== undefined && !isPlainObject(rawArgs)) {
     return errorLine(id, JSONRPC_INVALID_PARAMS, INVALID_PARAMS);
   }
-  if (!TOOL_DEFS.some((t) => t.name === name)) {
+  if (!strategy.tools.some((t) => t.name === name)) {
     return errorLine(id, JSONRPC_INVALID_PARAMS, INVALID_PARAMS);
   }
-  const outcome = runTool(ctx, name, rawArgs === undefined ? {} : rawArgs);
+  const bound = strategy.bind(name, rawArgs === undefined ? {} : rawArgs);
+  if (!bound.ok) return resultLine(id, toolFailure(bound.code));
+  const outcome = runTool(bound.value.ctx, name, bound.value.args);
   if (outcome === null) return errorLine(id, JSONRPC_INVALID_PARAMS, INVALID_PARAMS);
   return resultLine(id, outcome.ok ? toolResult(outcome.value) : toolFailure(outcome.code));
 }
 
-function dispatch(ctx: ToolContext, id: RpcId, method: string, params: unknown): string {
+function dispatch(strategy: ModeStrategy, id: RpcId, method: string, params: unknown): string {
   switch (method) {
     case 'initialize':
       if (!isPlainObject(params)) return errorLine(id, JSONRPC_INVALID_PARAMS, INVALID_PARAMS);
@@ -118,17 +134,15 @@ function dispatch(ctx: ToolContext, id: RpcId, method: string, params: unknown):
       return resultLine(id, {});
     case 'tools/list':
       if (!paramsOk(params)) return errorLine(id, JSONRPC_INVALID_PARAMS, INVALID_PARAMS);
-      return resultLine(id, { tools: TOOL_DEFS });
+      return resultLine(id, { tools: strategy.tools });
     case 'tools/call':
-      return handleCall(ctx, id, params);
+      return handleCall(strategy, id, params);
     default:
       return errorLine(id, JSONRPC_METHOD_NOT_FOUND, METHOD_NOT_FOUND);
   }
 }
 
-export function createServer(root: string, options?: ServerOptions): Server {
-  const ctx: ToolContext = { root, fs: options?.fs ?? nodeFs };
-
+function buildServer(strategy: ModeStrategy): Server {
   function handleLine(line: Uint8Array | string): string[] {
     let id: RpcId | null = null;
     try {
@@ -155,7 +169,7 @@ export function createServer(root: string, options?: ServerOptions): Server {
       }
       if (env.kind === 'notification') return [];
       id = env.id;
-      const response = dispatch(ctx, env.id, env.method, env.params);
+      const response = dispatch(strategy, env.id, env.method, env.params);
       if (Buffer.byteLength(response, 'utf8') > MAX_RESPONSE_BYTES) {
         return [errorLine(env.id, JSONRPC_INTERNAL_ERROR, INTERNAL_ERROR)];
       }
@@ -166,4 +180,24 @@ export function createServer(root: string, options?: ServerOptions): Server {
   }
 
   return { handleLine };
+}
+
+export interface WorkspaceServerOptions extends ServerOptions {
+  /** Required: supplies the Home_Directory used to reject Home_Ancestors. */
+  homedir: () => string;
+}
+
+/** Workspace_Mode: the root is given per call by the agent and validated each time. */
+export function createWorkspaceServer(options: WorkspaceServerOptions): Server {
+  return buildServer(
+    createWorkspaceStrategy({ fs: options.fs ?? nodeFs, homedir: options.homedir }),
+  );
+}
+
+export function createServer(root: string, options?: ServerOptions): Server {
+  const ctx: ToolContext = { root, fs: options?.fs ?? nodeFs };
+  return buildServer({
+    tools: TOOL_DEFS,
+    bind: (_name, args) => ({ ok: true, value: { ctx, args } }),
+  });
 }

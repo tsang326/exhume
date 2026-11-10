@@ -1,14 +1,15 @@
 # Working with old floppy disk images
 
-PROVISIONAL: this file's location and format in a Power are not yet confirmed in Kiro. `POWER.md` repeats the four rules below.
+This file is fallback guidance for the legacy Power format. `POWER.md` repeats the four rules below.
 
 ## Workflow
 
-1. When the user mentions an old floppy image, call `open_disk` before guessing at its contents. Do not read the bytes yourself.
-2. Read the listing. Each entry has a state (`alive`, `recovered`, `partial`, `lost`), and non-alive entries carry a reason. If two entries share a path, use the `id` from the listing.
-3. To look at a file, call `read_grave`. It returns a preview only.
-4. To save a file, call `exhume` only for the file the user asked for. It writes into `exhumed/` and never overwrites. Do not exhume every file to be helpful.
-5. If unsure what a state means, call `explain_state`.
+1. Pass the absolute path of the open workspace folder as `workspace` on every call to `open_disk`, `read_grave`, `exhume` and `explain_state`.
+2. When the user mentions an old floppy image, call `open_disk` before guessing at its contents. Do not read the bytes yourself.
+3. Read the listing. Each entry has a state (`alive`, `recovered`, `partial`, `lost`), and non-alive entries carry a reason. If two entries share a path, use the `id` from the listing.
+4. To look at a file, call `read_grave`. It returns a preview only.
+5. To save a file, call `exhume` only for the file the user asked for. It writes into `exhumed/` and never overwrites. Do not exhume every file to be helpful.
+6. If unsure what a state means, call `explain_state`.
 
 ## Rules
 
@@ -18,5 +19,5 @@ PROVISIONAL: this file's location and format in a Power are not yet confirmed in
 
 ## Notes
 
-- If image calls fail with `PATH_REJECTED`, the image may be outside the workspace, or the server may not be running in the workspace root. Tell the user; do not try to work around it.
+- If a call fails with `PATH_REJECTED`, either the image or the `workspace` is not allowed. Tell the user. Do not work around it, and do not retry with a broader folder.
 - Prior art: andete/disk-peek already browses FAT12 images and recovers deleted entries in the browser.

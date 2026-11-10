@@ -58,10 +58,9 @@ Exhume ships as a local stdio MCP server (`power/server/exhume-mcp.mjs`) wrapped
 hand-written JSON-RPC 2.0 server with no SDK and no runtime dependency. Disk content is untrusted data: every name,
 label and text it returns is sanitized and marked as untrusted.
 
-Status: the workspace server (`.kiro/settings/mcp.json`) is verified by hand in Kiro and is the only supported way to
-run Exhume there. The Power in `power/` is not working yet: Kiro does not copy `server/` when it installs a power, so
-the server fails with "Connection Failed" (details below). Whether to convert it to the Agent Plugins format
-(`plugin.json`) with an `EXHUME_ROOT` setting is a later decision.
+Status: the workspace server (`.kiro/settings/mcp.json`) is verified by hand in Kiro. The Power in `power/` is verified
+by hand in Kiro (2026-11-10): it installs in the Agent Plugins format, connects, opens an image and exhumes a file, and
+it rejects the home folder as `workspace`. See "Manual check of the Power (owner)" for what was and was not checked.
 
 ### Tools
 - `open_disk`: open a disk image inside the workspace and list its files with state (`alive`, `recovered`, `partial`,
@@ -104,7 +103,8 @@ option for when a client starts the server somewhere else: image calls then fail
 expose nothing, and you can append `"--root", "<absolute workspace path>"` to the `args` array of the `exhume` entry.
 
 ### Power and plugin results (verified by hand in Kiro)
-The Power in `power/` is not working yet. What was checked:
+This section is the record of the hand checks of 2026-11-07, made on the Power as it was then (before Power
+packaging and Workspace_Mode existed). What was checked:
 1. Installed as a legacy Power (`POWER.md` format) from `power/`, Kiro accepts the frontmatter and shows "Exhume by
    tsang326". The internal name comes from the folder name (`power`), so the server is named `power-power-exhume`.
 2. Kiro copies only `POWER.md`, `mcp.json` and `steering/` into `~/.kiro/powers/installed/power/`. `server/` is not
@@ -118,11 +118,53 @@ The Power in `power/` is not working yet. What was checked:
 5. Using a power's tools from chat takes: activate the power, then a call through Kiro's power "use" tool, with three
    approvals (Kiro Powers, the power, trust the tool).
 
-The plugin.json conversion and an `EXHUME_ROOT` setting are a later decision; neither is in the repo.
+Power packaging and Workspace_Mode were built in response to these findings. Workspace_Mode is a launch flag,
+`--workspace-from-agent`, used only by the Power's `mcp.json`: every tool then takes a per-call `workspace` argument
+(the absolute path of the folder the user has open), which the server validates on each call before the usual
+confinement runs inside it. The result was checked by hand on 2026-11-10 (next section).
+
+### Manual check of the Power (owner)
+The Owner performs this check. Steps:
+1. Install the Power from `power/` in Kiro (Powers panel, "Add Custom Power", import from a folder).
+2. Record whether the server shows as connected, and its server name (`power-exhume-exhume` points to the plugin
+   path, `power-power-exhume` to the legacy path).
+3. Open the workspace that holds `fixtures/real-disks/freedos13/fd13-720k-dsk01.img`. Use the image read-only and do
+   not add, change or delete anything under `fixtures/`.
+4. In chat, open that image through the Power. Record the `workspace` value shown in the approval prompt and every
+   approval Kiro asks for.
+5. Exhume one file from the listing and check that it appears in `<workspace>/exhumed/`.
+6. Record whether the steering file (`steering/floppy-images.md`) or the skill text was used in chat.
+7. Record the result here, in `power/POWER.md` and in `docs/KIRO_LOG.md`.
+
+Result of 2026-11-10 (Kiro on macOS, the old 2026-11-07 install removed first):
+- Kiro installed `power/` as an Agent Plugin: it copied `plugin.json`, `mcp.json`, `server/`, `skills/`, `POWER.md` and
+  `steering/` to `~/.kiro/powers/installed/power/`, showed the `plugin.json` metadata ("exhume" by tsang326) and the
+  `floppy-images` skill, and added nothing to `~/.kiro/settings/mcp.json`. The installed bundle is byte-identical to
+  `power/server/exhume-mcp.mjs`.
+- The MCP Servers list shows `power-exhume` as Connected with 4 tools. (The design's guess `power-exhume-exhume` was
+  wrong; the name is neither that nor the legacy `power-power-exhume`.)
+- From chat, the agent activated the power and called its tools with `workspace` set to the open folder,
+  `/Users/os/Documents/side-gigs/hackathon/kiroween/exhume`. `open_disk` on
+  `fixtures/real-disks/freedos13/fd13-720k-dsk01.img` listed 13 entries (12 alive, 1 recovered and empty). That disk has
+  no file a converter accepts, so step 5 used `public/disks/writers-disk.img` instead: `exhume` wrote
+  `exhumed/CHAPTER1.md` (2686 bytes, readable Markdown). Nothing under `fixtures/` changed.
+- `open_disk` with `workspace` set to the home folder returned `PATH_REJECTED`. A direct run of the bundle confirms that
+  this comes from the `workspace` check: with a missing image, `workspace` `/` or the home folder gives `PATH_REJECTED`,
+  while an allowed folder gives `IMAGE_NOT_FOUND`.
+- Not verified: approval prompts. Autopilot was on and Kiro ran the power tools without asking, so this check does not
+  show that the `workspace` value appears in an approval prompt. The value is visible in the chat's record of each tool
+  call.
+- Not verified: whether the skill or `steering/floppy-images.md` text was used. The agent passed `workspace` without
+  being told to.
 
 ### Accepted residual risks
-Path checks confine image reads to the workspace (no `..` escape, no symlinks, regular files only, size cap). Two
+Path checks confine image reads to the workspace (no `..` escape, no symlinks, regular files only, size cap). These
 risks are accepted and not hidden:
+- In workspace mode the agent, not the user, chooses the confinement root. The root is visible in the chat's record
+  of each tool call, and in the approval prompt when Kiro asks for one (with Autopilot on it may not ask). The server rejects the filesystem root, the user's home folder and every folder above it, but it
+  accepts any other existing directory the agent names. That includes a parent of the folder the user opened when that
+  parent lies below the home folder, and any directory outside the home folder, for example `/tmp` or `/Volumes/x`.
+  Inside the chosen folder the image checks and the `exhumed/` write rules still apply.
 - Node has no resolve-beneath open (`openat2` with `RESOLVE_BENEATH`). A local process that can already write inside
   the workspace could, in a window of microseconds, swap a directory for a symlink and back between the checks and the
   open. The server re-verifies the path and the file identity after opening, which narrows the window but cannot close

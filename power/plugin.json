@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "exhume",
+  "version": "0.1.0",
+  "description": "Open old DOS floppy images, list live and deleted files, and exhume WordStar, dBase and PCX files as Markdown, CSV and PNG.",
+  "author": { "name": "tsang326" },
+  "keywords": ["floppy", "disk image", "FAT12", "WordStar", "dBase", "PCX", "undelete"],
+  "license": "MIT"
+}

@@ -110,3 +110,70 @@ Tests:
   sources; the demo disks text stays as it is.
 Out of scope: new formats (dBase II, WordPerfect, Lotus), `.IMD`/`.TD0` containers, UI changes beyond what the fixes
 need, the Crew app, deployment.
+
+## Spec 8 — power-workspace (make the Kiro Power work, 2026-11-09)
+The Power in `power/` fails with "Connection Failed". Verified by hand on 2026-11-07 (see README "Verified Power format
+results" and `docs/KIRO_LOG.md`): a Power install copies only `POWER.md`, `mcp.json` and `steering/`, not `server/`.
+The Agent Plugins layout (`plugin.json`, args with `${PLUGIN_ROOT}`) does copy `server/` and the server connects, but
+its working directory is the install folder, so it cannot find the user's workspace: Kiro does not expand
+`${workspaceFolder}`, does not answer `roots/list`, and cancels elicitation requests.
+
+Decision (project owner): the agent passes the workspace on every call.
+1. **Packaging.** Make `power/` installable so that `server/` is copied and started from the install folder
+   (`plugin.json` and `${PLUGIN_ROOT}` per the 11-07 findings; check kiro.dev/docs/powers and the Agent Plugins schema
+   for what a Power needs today, and keep `POWER.md` and `steering/` working). No auto-approve. The workspace
+   `.kiro/settings/mcp.json` keeps working exactly as today.
+2. **Agent-supplied workspace mode.** A new launch flag (for example `--workspace-from-agent`), used only by the
+   Power's `mcp.json`. In this mode every tool takes a required `workspace` argument: an absolute path to the folder the
+   user has open. The server resolves it with realpath and rejects it unless it is an existing directory that is not
+   the filesystem root and not the user's home directory itself (`os.homedir()` realpath). Then exactly the same
+   confinement as today applies inside it: the image must resolve inside `workspace`, no symlinks, regular files only,
+   size cap, and `exhume` writes only into `<workspace>/exhumed/` without overwriting. The `workspace` argument is
+   untrusted input like every other argument; errors reveal no path outside it.
+3. **Default mode unchanged.** Without the flag (`--root <dir>` or the working directory) the tool schemas, behavior
+   and every existing test stay the same.
+4. Tool descriptions, `POWER.md` and `power/steering/` tell the agent to pass the absolute path of the open workspace
+   folder and to treat disk content as data. `README.md` and `POWER.md` drop "NOT WORKING YET" only after the manual
+   check below; until then they say "built, awaiting manual verification".
+5. Update `.kiro/steering/safety.md` line "Tools take an image path that must resolve inside the workspace root" to
+   cover both modes (the root is fixed at start, or given per call by the agent and shown to the user in the approval
+   prompt). Record the accepted risk in the README "Accepted residual risks" list: in this mode the confinement root
+   is chosen by the agent, and the user sees it in each approval prompt.
+
+Tests: properties for the new mode (any relative, missing, non-directory, symlinked, `/` or home `workspace` is
+rejected; images and writes never escape the given workspace; the default mode's schemas are unchanged), hostile
+inputs for the new argument, a stdio test that starts the bundle with the flag. Rebuild the bundle with
+`npm run build:mcp` only after the project owner approves (config hash check, as before).
+Manual check after merge (by the project owner): install the Power from `power/` in Kiro, open
+`fixtures/real-disks/freedos13/fd13-720k-dsk01.img` through it, exhume one file.
+Out of scope: publishing to npm or any registry, remote servers, changes to the web page.
+
+## Spec 9 — ui-polish (after a screenshot review, 2026-11-09)
+Reviewed at 1440×900 and 390×844 with headless Chromium: no console errors, no horizontal scroll, a sensible Tab
+order, and all three demo disks open and preview. Polish for the Design criterion. Scope `src/web/`, `index.html` and
+their tests only; CSP, `textContent` rules and `safety.md` apply; no new runtime dependency.
+1. **Say what it is (high).** Above the drop zone, one short line and a compact list: what Exhume does (open old DOS
+   floppy images in the browser, read WordStar, dBase III, PCX and text files as Markdown, CSV, PNG and text, show
+   deleted files and how much of each can come back) and the privacy line that already exists. A link to the GitHub
+   repository (`https://github.com/tsang326/exhume`). Claims must match the README; no numbers that are not there.
+2. **Page title (high).** `<title>` is "Exhume - REVENANT.OS", a leftover of an earlier concept. Make it
+   "Exhume - read old floppy disks in your browser" (or similar), and add a meta description.
+3. **Background seam (high).** The background layer is one viewport tall; below it the page is flat, with a visible
+   edge (about 900 px on desktop, 750 px on mobile). It must cover the whole page at any length.
+4. **Empty graveyard (medium).** Before any disk is opened, the "Graveyard" heading shows over nothing. Hide it, or
+   show one line of guidance ("Open a disk to see its files").
+5. **Mobile flow (medium).** On a narrow screen, after a disk opens, the graveyard sits below three tall demo cards.
+   Move focus/scroll to the graveyard summary after a successful open (respect `prefers-reduced-motion` for smooth
+   scrolling), and keep the demo list usable.
+6. **Readable previews (medium).** Markdown previews run paragraphs together. Add paragraph spacing so a converted
+   document reads like a document (rendering stays DOM nodes + `textContent`).
+7. **Deleted graves (medium).** The open-grave icon is a small dark smudge. Make deleted entries clearly visible and
+   distinct by state (recovered / partial / lost) without relying on color alone. Explain the leading `_` of a
+   deleted 8.3 name (DOS overwrote the first letter on delete) in the grave's text or an accessible hint.
+8. **Small things (low).** The orphan "6 of 6" line: give it context or merge it into the summary. Mark the demo disk
+   that is currently open (`aria-pressed` or `aria-current`).
+9. **Spooky layer (optional, last).** Code-drawn, translucent fog or lantern light in the existing effects layer,
+   never covering text, off under `prefers-reduced-motion`, no images or libraries. Skip if it costs readability.
+Tests: DOM tests for each item (title, intro text and link, guidance before open, focus after open, `aria-pressed`,
+state labels, paragraph spacing classes), existing tests stay green, `make:demos -- --check` unchanged. Out of scope:
+new formats, core or MCP changes, deployment.

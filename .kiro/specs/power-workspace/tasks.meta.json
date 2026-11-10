@@ -1,0 +1,706 @@
+{
+  "pbtResults": {
+    "1.2 Take the Default_Mode snapshot BEFORE any other `src/mcp/` edit, then write its test": {
+      "status": "passed",
+      "lastRunTimestamp": 1794222084786
+    },
+    "4.2 Write `src/mcp/workspace-defs.test.ts` and its property test": {
+      "status": "passed",
+      "lastRunTimestamp": 1794222259888
+    },
+    "2.3 Write property test for launch classification": {
+      "status": "passed",
+      "lastRunTimestamp": 1794222269255
+    },
+    "3.4 Write property tests for workspace validation": {
+      "status": "passed",
+      "lastRunTimestamp": 1794222320032
+    },
+    "6.1 Write the `exhume` property test for Workspace_Mode": {
+      "status": "passed",
+      "lastRunTimestamp": 1794222599341
+    },
+    "5.6 Write the hostile property test for the Workspace_Argument": {
+      "status": "passed",
+      "lastRunTimestamp": 1794222607993
+    },
+    "5.5 Write property tests for the Workspace_Mode dispatcher": {
+      "status": "passed",
+      "lastRunTimestamp": 1794222691270
+    }
+  },
+  "executionHistory": {
+    "1.1 Add `MAX_HOME_SEGMENTS` to `src/mcp/limits.ts`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221984277
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221992772
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222035738
+      }
+    ],
+    "1.2 Take the Default_Mode snapshot BEFORE any other `src/mcp/` edit, then write its test": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221984348
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222040051
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222095714
+      }
+    ],
+    "2.1 Create `src/mcp/launch.ts`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221984396
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222101885
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222168314
+      }
+    ],
+    "2.2 Write `src/mcp/launch.test.ts`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221984441
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222176782
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222332130
+      }
+    ],
+    "2.3 Write property test for launch classification": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221984486
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222176875
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222332538
+      }
+    ],
+    "3.1 Create the test-support helpers `src/test-support/mcp/fake-home.ts` and `src/test-support/mcp/alias-fs.ts`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221984528
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222102156
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222169306
+      }
+    ],
+    "3.2 Create `src/mcp/workspace.ts` (validation functions only)": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221984578
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222103101
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222170067
+      }
+    ],
+    "3.3 Write `src/mcp/workspace.test.ts`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221984628
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222176996
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222333580
+      }
+    ],
+    "3.4 Write property tests for workspace validation": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221984669
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222177581
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222333874
+      }
+    ],
+    "4.1 Create `src/mcp/workspace-defs.ts`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221984714
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222103333
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222170610
+      }
+    ],
+    "4.2 Write `src/mcp/workspace-defs.test.ts` and its property test": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221984757
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222177991
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222334933
+      }
+    ],
+    "5.1 Refactor `src/mcp/server.ts` to a `ModeStrategy` with Default_Mode behavior unchanged": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221984807
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222335603
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222412164
+      }
+    ],
+    "5.2 Add `createWorkspaceStrategy` to `src/mcp/workspace.ts`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221984856
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222412238
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222467519
+      }
+    ],
+    "5.3 Add `createWorkspaceServer` to `src/mcp/server.ts`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221984899
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222467902
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222514823
+      }
+    ],
+    "5.4 Write `src/mcp/server.workspace.test.ts`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221984947
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222522402
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222718604
+      }
+    ],
+    "5.5 Write property tests for the Workspace_Mode dispatcher": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221984987
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222522763
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222719323
+      }
+    ],
+    "5.6 Write the hostile property test for the Workspace_Argument": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985031
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222523855
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222720833
+      }
+    ],
+    "6.1 Write the `exhume` property test for Workspace_Mode": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985072
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222524570
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222721391
+      }
+    ],
+    "7.1 Wire `src/mcp/main.ts`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985114
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222525079
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222722047
+      }
+    ],
+    "7.2 Write `src/test-support/mcp/run-bundle.ts` and `src/mcp/stdio.workspace.test.ts` (red until task 13.3)": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985174
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222726458
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222824416
+      }
+    ],
+    "8.1 Rewrite `power/mcp.json` and adjust the two allowed assertions in `src/mcp/config.test.ts`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985219
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222727457
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222825815
+      }
+    ],
+    "9. Checkpoint - Phase 1 complete (tests and `src/mcp/`)": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985281
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794223083699
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794223635455
+      }
+    ],
+    "10.1 Create `power/plugin.json`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985322
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222839997
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222893308
+      }
+    ],
+    "10.2 Create `power/skills/floppy-images/SKILL.md`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985362
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222840103
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222893962
+      }
+    ],
+    "10.3 Edit `power/POWER.md`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985406
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222840695
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222894745
+      }
+    ],
+    "10.4 Edit `power/steering/floppy-images.md`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985446
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222841453
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222895420
+      }
+    ],
+    "10.5 Write `src/mcp/power-package.test.ts`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985487
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222900981
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222973689
+      }
+    ],
+    "11.1 Edit `.kiro/steering/safety.md`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985541
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222842007
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222896484
+      }
+    ],
+    "11.2 Edit `README.md`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985583
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222901404
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222974056
+      }
+    ],
+    "11.3 Write `src/mcp/docs.test.ts`": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985623
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222974803
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794223070295
+      }
+    ],
+    "12. Checkpoint - Phase 2 complete (documents and packaging)": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985675
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794223083956
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794223139849
+      }
+    ],
+    "13.1 Run the Config_Hash_Check (read-only) and STOP on any difference": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985747
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794223636091
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794223672965
+      }
+    ],
+    "13.2 Ask the Owner to approve the rebuild, then STOP until the Owner answers": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985786
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794223673388
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794223810918
+      }
+    ],
+    "13.3 Rebuild the bundle (only after the approval in 13.2)": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985828
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794223811658
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794223856651
+      }
+    ],
+    "13.4 Run the tests against the rebuilt bundle": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794221985870
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794223856847
+      },
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794224203128
+      }
+    ],
+    "1. Foundations: limits constant and the Default_Mode snapshot": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222095805
+      }
+    ],
+    "2. Launch decision (`launch.ts`)": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222332578
+      }
+    ],
+    "3. Workspace validation (`workspace.ts`)": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222333931
+      }
+    ],
+    "4. Workspace tool definitions (`workspace-defs.ts`)": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222334988
+      }
+    ],
+    "5. Server: ModeStrategy and Workspace_Mode": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222720895
+      }
+    ],
+    "6. Exhume write path in Workspace_Mode": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222721451
+      }
+    ],
+    "7. Process entry and stdio tests": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222824509
+      }
+    ],
+    "8. Power configuration with the two allowed `config.test.ts` edits": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222825897
+      }
+    ],
+    "10. Packaging files": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794222973749
+      }
+    ],
+    "11. Documents": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794223070444
+      }
+    ],
+    "13. Rebuild the bundle (OWNER APPROVAL REQUIRED) - last implementation task": [
+      {
+        "executionId": "ea24eb18-8b88-410b-92fb-f032f2f16efc",
+        "chatSessionId": "sess_c9d5c9bd-3dfe-4cf8-afb9-2d3a59b85203",
+        "timestamp": 1794224203248
+      }
+    ]
+  }
+}

@@ -29,6 +29,7 @@ export type PreviewBody =
 
 export interface PreviewModel {
   title: string;
+  kindLabel: string;
   partialNote: string | null;
   error: string | null;
   warnings: string[];
@@ -41,12 +42,28 @@ export type ExhumeOutcome =
   | { status: 'read-failed'; error: string }
   | { status: 'lost-disk'; error: string };
 
+const KIND_LABELS: Record<PreviewBody['kind'], string> = {
+  markdown: 'Read as Markdown',
+  csv: 'Read as CSV',
+  text: 'Plain text',
+  png: 'Read as PNG',
+  hex: 'Raw bytes',
+  none: 'Nothing to read',
+};
+
+/** Short label for how the item was read; ", partly" is appended for partial items. */
+export function kindLabel(body: PreviewBody, state: ItemViewModel['state']): string {
+  const base = KIND_LABELS[body.kind];
+  return state === 'partial' ? `${base}, partly` : base;
+}
+
 export function buildPreviewModel(item: ItemViewModel, outcome: ExhumeOutcome): PreviewModel {
   const title = toLabel(item.name);
   const partialNote = item.state === 'partial' ? item.reason : null;
 
   if (outcome.status !== 'ok') {
-    return { title, partialNote, error: outcome.error, warnings: [], body: { kind: 'none' }, downloads: [] };
+    const none: PreviewBody = { kind: 'none' };
+    return { title, kindLabel: kindLabel(none, item.state), partialNote, error: outcome.error, warnings: [], body: { kind: 'none' }, downloads: [] };
   }
 
   const { raw, readWarnings, result } = outcome.response;
@@ -105,5 +122,5 @@ export function buildPreviewModel(item: ItemViewModel, outcome: ExhumeOutcome): 
     data: raw,
   });
 
-  return { title, partialNote, error, warnings, body, downloads };
+  return { title, kindLabel: kindLabel(body, item.state), partialNote, error, warnings, body, downloads };
 }

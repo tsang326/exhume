@@ -27,9 +27,15 @@ describe('h()', () => {
     expect(el.childElementCount).toBe(0);
   });
 
+  it('sets aria-pressed and aria-current', () => {
+    const el = h('button', { 'aria-pressed': 'false', 'aria-current': 'true' });
+    expect(el.getAttribute('aria-pressed')).toBe('false');
+    expect(el.getAttribute('aria-current')).toBe('true');
+  });
+
   it('throws for forbidden attribute names and creates no element', () => {
     const before = document.body.querySelectorAll('*').length;
-    for (const name of ['onclick', 'onerror', 'style', 'href', 'src', 'srcdoc', 'CLASS', 'data-', 'data-A', 'data-a b', 'x y']) {
+    for (const name of ['onclick', 'onerror', 'style', 'href', 'src', 'srcdoc', 'CLASS', 'inert', 'aria-modal', 'data-', 'data-A', 'data-a b', 'x y']) {
       expect(() => h('div', { [name]: 'v' } as never)).toThrow('attribute not allowed');
     }
     expect(document.body.querySelectorAll('*').length).toBe(before);

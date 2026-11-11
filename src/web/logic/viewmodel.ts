@@ -2,6 +2,19 @@ import type { DiskReport, GraveKind, GraveState } from '../../core/fat12/index';
 import { formatBytes } from './size';
 import { formatDate, lastSegment, segmentCount, toLabel } from './text';
 
+export const STATE_WORDS = {
+  alive: 'Alive',
+  recovered: 'Recovered',
+  partial: 'Partly back',
+  lost: 'Lost',
+} as const satisfies Record<GraveState, string>;
+
+export type StateWord = (typeof STATE_WORDS)[GraveState];
+
+export function stateWord(state: GraveState): StateWord {
+  return STATE_WORDS[state];
+}
+
 export interface ItemViewModel {
   id: number;
   kind: GraveKind;
@@ -31,6 +44,8 @@ export interface VolumeSummary {
   label: string;
   fileCount: number;
   directoryCount: number;
+  /** File entries whose state is not 'alive'. */
+  deletedCount: number;
   empty: null | 'unreadable' | 'no-files';
 }
 
@@ -42,7 +57,7 @@ export function toItemViewModels(report: DiskReport): ItemViewModel[] {
       id: g.id,
       kind: g.kind,
       state: g.state,
-      stateLabel: g.state,
+      stateLabel: stateWord(g.state),
       visual: g.state === 'alive' ? 'tombstone' : 'open-grave',
       name,
       path: toLabel(g.path),
@@ -61,9 +76,13 @@ export function toItemViewModels(report: DiskReport): ItemViewModel[] {
 export function summarize(report: DiskReport): VolumeSummary {
   let fileCount = 0;
   let directoryCount = 0;
+  let deletedCount = 0;
   for (const g of report.files) {
     if (g.kind === 'directory') directoryCount++;
-    else fileCount++;
+    else {
+      fileCount++;
+      if (g.state !== 'alive') deletedCount++;
+    }
   }
   let empty: VolumeSummary['empty'] = null;
   if (report.files.length === 0) {
@@ -73,6 +92,7 @@ export function summarize(report: DiskReport): VolumeSummary {
     label: report.volume.label === '' ? '(no label)' : toLabel(report.volume.label),
     fileCount,
     directoryCount,
+    deletedCount,
     empty,
   };
 }

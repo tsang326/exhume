@@ -1,7 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import fc from 'fast-check';
 import type { DiskReport, Grave, Warning } from '../../core/fat12/index';
-import { toItemViewModels, summarize, warningLines, underscoreHint, UNDERSCORE_HINT } from './viewmodel';
+import {
+  toItemViewModels,
+  summarize,
+  warningLines,
+  underscoreHint,
+  UNDERSCORE_HINT,
+  stateWord,
+  STATE_WORDS,
+} from './viewmodel';
 import { lastSegment, segmentCount, toLabel } from './text';
 import { numRuns } from '../../test-support/runs';
 
@@ -73,7 +81,7 @@ describe('view model properties', () => {
           return (
             it.id === g.id &&
             it.stateLabel.length > 0 &&
-            it.stateLabel === g.state &&
+            it.stateLabel === stateWord(g.state) &&
             it.name === (seg === '' ? '(unnamed)' : toLabel(seg)) &&
             it.showPath === segmentCount(g.path) > 1 &&
             (g.state === 'alive' ? it.reason === null : it.reason === g.reason) &&
@@ -139,6 +147,45 @@ describe('view model examples', () => {
     expect(items[1]!.dateText).toBe('no date');
     expect(items[0]!.sizeText).toBe('4096.0 MB');
     expect(summarize(report).label).toBe('(no label)');
+  });
+
+  it.each([
+    ['alive', 'Alive'],
+    ['recovered', 'Recovered'],
+    ['partial', 'Partly back'],
+    ['lost', 'Lost'],
+  ] as const)('stateWord(%s) is %s', (state, word) => {
+    expect(stateWord(state)).toBe(word);
+    expect(STATE_WORDS[state]).toBe(word);
+  });
+
+  it('deletedCount counts file entries that are not alive, not directories', () => {
+    const mk = (id: number, state: Grave['state'], kind: Grave['kind']): Grave => ({
+      id,
+      path: `/F${id}`,
+      size: 1,
+      date: null,
+      state,
+      kind,
+      ...(state === 'alive' ? {} : { reason: 'x' }),
+      attributes: { readOnly: false, hidden: false, system: false, archive: false },
+      startCluster: 2,
+    });
+    const report: DiskReport = {
+      volume: { label: 'V', geometrySource: 'bpb', geometry: null },
+      files: [
+        mk(0, 'alive', 'file'),
+        mk(1, 'recovered', 'file'),
+        mk(2, 'partial', 'file'),
+        mk(3, 'lost', 'file'),
+        mk(4, 'alive', 'directory'),
+      ],
+      warnings: [],
+    };
+    const s = summarize(report);
+    expect(s.deletedCount).toBe(3);
+    expect(s.fileCount).toBe(4);
+    expect(s.directoryCount).toBe(1);
   });
 
   describe('nameHint', () => {

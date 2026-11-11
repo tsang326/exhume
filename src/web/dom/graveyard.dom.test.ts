@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DiskReport, Grave, GraveKind, GraveState } from '../../core/fat12/index';
 import { numRuns } from '../../test-support/runs';
 import { visibleCount } from '../logic/paging';
-import { toItemViewModels } from '../logic/viewmodel';
+import { stateWord, toItemViewModels } from '../logic/viewmodel';
 import type { ItemViewModel } from '../logic/viewmodel';
 import { createGraveyardView } from './graveyard';
 
@@ -20,6 +20,9 @@ const ALLOWED_ATTRS = new Set([
   'aria-hidden',
   'aria-labelledby',
   'aria-describedby',
+  'aria-current',
+  'aria-label',
+  'role',
 ]);
 
 function grave(id: number, over: Partial<Grave> = {}): Grave {
@@ -78,12 +81,12 @@ describe('graveyard rendering', () => {
     ]);
     const li = items();
     expect(li[0]?.classList.contains('grave--tombstone')).toBe(true);
-    expect(li[0]?.querySelector('.grave-state')?.textContent).toBe('alive');
+    expect(li[0]?.querySelector('.grave-state')?.textContent).toBe('Alive');
     expect(li[0]?.querySelector('.grave-reason')).toBeNull();
     expect(li[1]?.classList.contains('grave--open-grave')).toBe(true);
-    expect(li[1]?.querySelector('.grave-state')?.textContent).toBe('recovered');
+    expect(li[1]?.querySelector('.grave-state')?.textContent).toBe('Recovered');
     expect(li[1]?.querySelector('.grave-reason')?.textContent).toBe('found by chain walk');
-    expect(li[2]?.querySelector('.grave-state')?.textContent).toBe('partial');
+    expect(li[2]?.querySelector('.grave-state')?.textContent).toBe('Partly back');
     expect(li[2]?.querySelector('.grave-reason')?.textContent).toBe('tail missing');
   });
 
@@ -127,7 +130,7 @@ describe('graveyard rendering', () => {
     expectOnlyAllowedMarkup(root, 3);
     expect(root.querySelector('img, script, svg')).toBeNull();
     expect(root.textContent).toContain('<img src=x onerror=1>');
-    expect(root.querySelector('.graveyard-summary')?.textContent).toContain('<img src=x onerror=1>');
+    expect(root.querySelector('#graveyard-heading')?.textContent).toBe('<img src=x onerror=1>');
   });
 
   it('property: arbitrary text never adds elements or attributes', () => {
@@ -188,7 +191,7 @@ describe('state text and safe text rendering', () => {
   // Feature: ui-polish, Property 2: Every item shows its state as text with a state class, and disk text stays text
   // **Validates: Requirements 7.2, 7.3, 7.8**
   it('property: each item shows its state word, state class and vm name; only expected elements', () => {
-    const EXPECTED_TAGS = new Set(['div', 'h2', 'p', 'ul', 'li', 'span', 'button', 'details', 'summary']);
+    const EXPECTED_TAGS = new Set(['div', 'h3', 'p', 'ul', 'li', 'span', 'button']);
     const nasty = fc.oneof(
       fc.string({ minLength: 1, maxLength: 40 }),
       fc.constantFrom('<', '>', '&', '"', "'", '<b>x</b>', '&amp;', '<img src=x onerror=1>', '" onclick="1'),
@@ -221,7 +224,7 @@ describe('state text and safe text rendering', () => {
           const li = lis[i] as HTMLElement;
           const vm = vms[i] as ItemViewModel;
           const stateText = li.querySelector('.grave-state')?.textContent ?? '';
-          if (stateText.length === 0 || stateText !== vm.stateLabel || stateText !== vm.state) return false;
+          if (stateText.length === 0 || stateText !== vm.stateLabel) return false;
           if (!li.classList.contains(`grave--${vm.state}`)) return false;
           if (li.querySelector('.grave-name')?.textContent !== vm.name) return false;
           if (vm.reason !== null && li.querySelector('.grave-reason')?.textContent !== vm.reason) return false;
@@ -274,10 +277,198 @@ describe('underscore hint rendering', () => {
   });
 });
 
+function freshRoot(): void {
+  document.body.textContent = '';
+  root = document.createElement('div');
+  document.body.appendChild(root);
+}
+
+describe('page-redesign graveyard properties', () => {
+  const stateArb = fc.constantFrom<GraveState>('alive', 'recovered', 'partial', 'lost');
+  const kindArb = fc.constantFrom<GraveKind>('file', 'file', 'file', 'directory');
+
+  // Feature: page-redesign, Property 7: The open row tracks the preview
+  // **Validates: Requirements 8.7**
+  it('property: aria-current count and id follow show, clear and new-disk sequences', () => {
+    type Action =
+      | { kind: 'show'; pick: number }
+      | { kind: 'clear' }
+      | { kind: 'disk'; states: Array<[GraveState, GraveKind]> };
+    const disk = fc.array(fc.tuple(stateArb, kindArb), { minLength: 0, maxLength: 20 });
+    const action: fc.Arbitrary<Action> = fc.oneof(
+      fc.record({ kind: fc.constant('show' as const), pick: fc.nat(1000) }),
+      fc.record({ kind: fc.constant('clear' as const) }),
+      fc.record({ kind: fc.constant('disk' as const), states: disk }),
+    );
+    fc.assert(
+      fc.property(disk, fc.array(action, { maxLength: 25 }), (first, actions) => {
+        freshRoot();
+        const view = createGraveyardView(root, () => undefined);
+        let exhumable: number[] = [];
+        let expected: number | null = null;
+        const load = (spec: Array<[GraveState, GraveKind]>): void => {
+          const files = spec.map(([s, k], i) =>
+            grave(i, { state: s, kind: k, ...(k === 'directory' ? { path: `/D${i}`, size: 0 } : {}) }),
+          );
+          const rep = report(files);
+          const vms = toItemViewModels(rep);
+          exhumable = vms.filter((v) => v.action === 'exhume').map((v) => v.id);
+          view.show(rep, vms);
+          expected = null;
+        };
+        const ok = (): boolean => {
+          const marked = Array.from(root.querySelectorAll('[aria-current]'));
+          if (expected === null) return marked.length === 0;
+          const li = marked[0]?.closest('li.grave');
+          return (
+            marked.length === 1 &&
+            marked[0]?.getAttribute('aria-current') === 'true' &&
+            li?.getAttribute('data-grave-id') === String(expected)
+          );
+        };
+        load(first);
+        if (!ok()) return false;
+        for (const a of actions) {
+          if (a.kind === 'disk') load(a.states);
+          else if (a.kind === 'clear') {
+            view.setCurrent(null);
+            expected = null;
+          } else if (exhumable.length > 0) {
+            expected = exhumable[a.pick % exhumable.length] as number;
+            view.setCurrent(expected);
+          }
+          if (!ok()) return false;
+        }
+        return true;
+      }),
+      { numRuns: numRuns(100) },
+    );
+  });
+
+  // Feature: page-redesign, Property 8: Every row carries its state, size and date as text
+  // **Validates: Requirements 8.3, 8.4, 13.8**
+  it('property: each row text holds state word, size, date, reason and the exact underscore hint', () => {
+    const name = fc.oneof(
+      fc.stringMatching(/^[A-Z0-9.]{1,10}$/),
+      fc.stringMatching(/^[A-Z0-9.]{1,9}$/).map((s) => `_${s}`),
+    );
+    const entry = fc.record({
+      state: stateArb,
+      kind: kindArb,
+      name,
+      size: fc.integer({ min: 0, max: 3_000_000 }),
+      reason: fc.stringMatching(/^[a-z ]{1,30}$/),
+    });
+    fc.assert(
+      fc.property(fc.array(entry, { minLength: 1, maxLength: 20 }), (entries) => {
+        freshRoot();
+        const files = entries.map((e, i) =>
+          grave(i, {
+            state: e.state,
+            kind: e.kind,
+            path: `/${e.name}`,
+            size: e.size,
+            ...(e.state === 'alive' ? {} : { reason: e.reason }),
+          }),
+        );
+        const rep = report(files);
+        const vms = toItemViewModels(rep);
+        createGraveyardView(root, () => undefined).show(rep, vms);
+        const lis = Array.from(root.querySelectorAll('li.grave'));
+        if (lis.length !== files.length) return false;
+        return lis.every((li, i) => {
+          const g = files[i] as Grave;
+          const vm = vms[i] as ItemViewModel;
+          const text = li.textContent ?? '';
+          const hint = li.querySelector('.grave-hint');
+          const wantHint = g.state !== 'alive' && vm.name.startsWith('_');
+          return (
+            text.includes(stateWord(g.state)) &&
+            vm.sizeText.length > 0 &&
+            vm.dateText.length > 0 &&
+            text.includes(vm.sizeText) &&
+            text.includes(vm.dateText) &&
+            (g.state === 'alive' || text.includes(g.reason ?? '')) &&
+            (hint !== null) === wantHint
+          );
+        });
+      }),
+      { numRuns: numRuns(100) },
+    );
+  });
+
+  // Feature: page-redesign, Property 1: Disk text never becomes elements (graveyard part)
+  // **Validates: Requirements 1.6, 1.7, 14.3**
+  it('property: hostile strings give the same tags and attribute names as plain x strings', () => {
+    const hostile = fc.oneof(
+      fc.string({ minLength: 0, maxLength: 30 }),
+      fc.constantFrom(
+        '<script>alert(1)</script>',
+        '<img src=x onerror=1>',
+        '</li></ul><b>',
+        '" onclick="1',
+        '`${x}`',
+        '&lt;&amp;',
+        '<svg onload=1>',
+      ),
+    );
+    // Keep names free of '/', a leading '_' or dots-only so only the text differs, not the structure.
+    const seg = hostile.map((s) => `a${s.replace(/\//g, '<')}`);
+    const entry = fc.record({ state: stateArb, kind: kindArb, name: seg, reason: hostile });
+    const shape = (el: HTMLElement): string => {
+      const tags = new Map<string, number>();
+      const attrs = new Map<string, number>();
+      for (const e of Array.from(el.querySelectorAll('*'))) {
+        const t = e.tagName.toLowerCase();
+        tags.set(t, (tags.get(t) ?? 0) + 1);
+        for (const a of Array.from(e.attributes)) attrs.set(`${t}@${a.name}`, (attrs.get(`${t}@${a.name}`) ?? 0) + 1);
+      }
+      const sorted = (m: Map<string, number>): Array<[string, number]> =>
+        Array.from(m).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+      return JSON.stringify([sorted(tags), sorted(attrs)]);
+    };
+    const render = (
+      label: string,
+      rows: Array<{ state: GraveState; kind: GraveKind; name: string; reason: string }>,
+      warn: string,
+    ): HTMLElement => {
+      freshRoot();
+      const files = rows.map((e, i) =>
+        grave(i, {
+          state: e.state,
+          kind: e.kind,
+          path: `/${e.name}`,
+          ...(e.state === 'alive' ? {} : { reason: e.reason.length > 0 ? e.reason : 'x' }),
+        }),
+      );
+      const rep = report(files, {
+        volume: { label, geometrySource: 'bpb', geometry: null },
+        warnings: [{ code: 'chain-short', message: warn, path: `/${rows[0]?.name ?? 'x'}` }],
+      });
+      createGraveyardView(root, () => undefined).show(rep, toItemViewModels(rep));
+      return root;
+    };
+    fc.assert(
+      fc.property(
+        fc.array(entry, { minLength: 1, maxLength: 8 }),
+        fc.stringMatching(/^[A-Z]{1,8}$/).chain((base) => hostile.map((h2) => `${base}${h2}`)),
+        hostile,
+        (rows, label, warn) => {
+          const hostileShape = shape(render(label, rows, warn.length > 0 ? warn : 'w'));
+          const plainRows = rows.map((r) => ({ ...r, name: 'x'.repeat(r.name.length), reason: 'x'.repeat(r.reason.length) }));
+          const plainShape = shape(render('x'.repeat(label.length), plainRows, 'x'.repeat(Math.max(1, warn.length))));
+          return hostileShape === plainShape;
+        },
+      ),
+      { numRuns: numRuns(100) },
+    );
+  });
+});
+
 function expectOnlyAllowedMarkup(container: HTMLElement, expectedItems: number): void {
   expect(container.querySelectorAll('li.grave').length).toBe(expectedItems);
   const tags = new Set(Array.from(container.querySelectorAll('*')).map((e) => e.tagName.toLowerCase()));
-  for (const t of tags) expect(['div', 'h2', 'p', 'ul', 'li', 'span', 'button', 'details', 'summary']).toContain(t);
+  for (const t of tags) expect(['div', 'h3', 'p', 'ul', 'li', 'span', 'button']).toContain(t);
   for (const el of Array.from(container.querySelectorAll('*'))) {
     for (const attr of Array.from(el.attributes)) {
       const ok = ALLOWED_ATTRS.has(attr.name) || /^data-[a-z0-9-]+$/.test(attr.name);
@@ -374,26 +565,27 @@ describe('messages and warnings', () => {
     expect(message().textContent).toBe('');
   });
 
-  it('puts warnings in a collapsed details element', () => {
+  it('shows warnings as an always visible group banner', () => {
     setup([grave(0)], {
       warnings: [
         { code: 'chain-short', message: 'Chain is short', path: '/A.TXT' },
         { code: 'fat-copies-differ', message: 'FAT copies differ' },
       ],
     });
-    const details = root.querySelector('.graveyard-warnings details') as HTMLDetailsElement;
-    expect(details).not.toBeNull();
-    expect(details.hasAttribute('open')).toBe(false);
-    expect(details.querySelector('summary')?.textContent).toBe('Warnings (2)');
-    const lines = Array.from(details.querySelectorAll('li')).map((l) => l.textContent);
+    const banner = root.querySelector('.graveyard-warnings') as HTMLElement;
+    expect(banner.hasAttribute('hidden')).toBe(false);
+    expect(banner.getAttribute('role')).toBe('group');
+    expect(banner.getAttribute('aria-label')).toBe('Warnings');
+    expect(banner.querySelector('p')?.textContent).toBe('Warnings (2)');
+    const lines = Array.from(banner.querySelectorAll('li')).map((l) => l.textContent);
     expect(lines).toEqual(['Chain is short (/A.TXT)', 'FAT copies differ']);
-    expect(root.querySelector('.graveyard-warnings')?.hasAttribute('hidden')).toBe(false);
+    expect(root.querySelector('details')).toBeNull();
   });
 
   it('hides the warnings area when there are none', () => {
     setup([grave(0)]);
     expect(root.querySelector('.graveyard-warnings')?.hasAttribute('hidden')).toBe(true);
-    expect(root.querySelector('details')).toBeNull();
+    expect(root.querySelector('.graveyard-warnings li')).toBeNull();
   });
 });
 
@@ -423,6 +615,17 @@ describe('heading, guidance and reveal', () => {
     expect(heading().getAttribute('tabindex')).toBe('-1');
     expect(heading().getAttribute('aria-describedby')).toBe('graveyard-summary');
     expect(root.querySelector('#graveyard-summary')?.classList.contains('graveyard-summary')).toBe(true);
+  });
+
+  it('heading is an h3 with the volume label; summary counts files, directories and deleted', () => {
+    const rep = report([grave(0), grave(1, { state: 'recovered' }), grave(2, { kind: 'directory', path: '/D', size: 0 })], {
+      volume: { label: 'WRITER DEMO', geometrySource: 'bpb', geometry: null },
+    });
+    const view = createGraveyardView(root, () => undefined);
+    view.show(rep, toItemViewModels(rep));
+    expect(heading().tagName).toBe('H3');
+    expect(heading().textContent).toBe('WRITER DEMO');
+    expect(root.querySelector('#graveyard-summary')?.textContent).toBe('2 files, 1 directories, 1 deleted');
   });
 
   it('stats block holds the summary then the progress', () => {
@@ -480,6 +683,37 @@ describe('actions', () => {
     expect(view.itemElement(0)).toBe(items()[0]);
     expect(view.itemElement(9)).toBeNull();
     expect(view.headingElement().id).toBe('graveyard-heading');
+  });
+});
+
+describe('current row marker', () => {
+  const current = () => Array.from(root.querySelectorAll('[aria-current]'));
+
+  it('setCurrent marks only the matching row button; null clears', () => {
+    const view = setup([grave(0), grave(1), grave(2, { state: 'lost', reason: 'gone' })]);
+    expect(current().length).toBe(0);
+    view.setCurrent(1);
+    expect(current()).toEqual([view.rowButton(1)]);
+    expect(view.rowButton(1)?.getAttribute('aria-current')).toBe('true');
+    view.setCurrent(0);
+    expect(current()).toEqual([view.rowButton(0)]);
+    view.setCurrent(2);
+    expect(current().length).toBe(0);
+    expect(view.rowButton(2)).toBeNull();
+    view.setCurrent(null);
+    expect(current().length).toBe(0);
+  });
+
+  it('show() clears the marker and a later page keeps it', () => {
+    const view = setup(Array.from({ length: 250 }, (_, i) => grave(i)));
+    view.setCurrent(210);
+    expect(current().length).toBe(0);
+    view.showMore();
+    expect(current()).toEqual([view.rowButton(210)]);
+    const rep = report([grave(0), grave(1)]);
+    view.show(rep, toItemViewModels(rep));
+    expect(current().length).toBe(0);
+    expect(view.rowButton(999)).toBeNull();
   });
 });
 

@@ -6,6 +6,10 @@ Drop a DOS floppy image into the page and its files appear as a graveyard. Delet
 dig up. WordStar documents rise as Markdown, dBase tables as CSV, PCX pictures as PNG, plain text files as `.txt` text. Everything runs in your
 browser; nothing is uploaded.
 
+The page reads 1980s-era DOS floppy images (FAT12) with the extensions `.img`, `.ima`, `.vfd`, `.flp` and `.dsk`, from
+160 KB up to 2.88 MB. It is one page: a hero where you drop or pick a disk, a graveyard of headstones and file rows
+below it, an inline preview beside the list, and demo disk cards you can open with one click.
+
 Also ships as an MCP server / Kiro Power and a Kiro Crew app, so an agent can open a floppy image and exhume files
 into your project.
 

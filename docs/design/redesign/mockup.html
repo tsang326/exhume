@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exhume</title>
+<meta name="description" content="Open 1980s DOS floppy disk images in your browser and bring deleted files back. Nothing is uploaded.">
+<style>
+@font-face{font-family:"Instrument Serif";src:url(type/instrument-serif-latin-400-normal.woff2) format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Instrument Serif";src:url(type/instrument-serif-latin-400-italic.woff2) format("woff2");font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:"Hanken Grotesk";src:url(type/hanken-grotesk-latin-wght-normal.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+:root{
+  color-scheme:dark;
+  --bg:#0b0f10;
+  --surface:#1b1915;
+  --surface-2:#26231d;
+  --soil1:#12110e; --soil2:#16130f; --soil3:#0e0c0a;
+  --ink:#e6e6e1;
+  --muted:#a9b3a6;
+  --accent:#ffbf5e;
+  --accent-ink:#0b0f10;
+  --field:#e4e4df;
+  --field-ink:#121514;
+  --field-muted:#4c524d;
+  --ok:#9ad49c; --part:#e8b65a; --lost:#ee8b72; --alive:#d4cdb9;
+
+  --sans:"Hanken Grotesk",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  --serif:"Instrument Serif","Iowan Old Style",Georgia,serif;
+  --num:tabular-nums;
+
+  --step-small:clamp(.8125rem,.79rem + .1vw,.875rem);
+  --step-body:clamp(1.0625rem,1rem + .25vw,1.1875rem);
+  --step-lead:clamp(1.25rem,1.1rem + .7vw,1.625rem);
+  --step-head:clamp(2.6rem,1.4rem + 4.4vw,5.6rem);
+  --step-hero:clamp(3.8rem,1rem + 11vw,12rem);
+
+  --m:clamp(16px,3vw,40px);
+  --ease:cubic-bezier(.2,.7,.1,1);
+}
+*{box-sizing:border-box}
+html{background:var(--bg);-webkit-text-size-adjust:100%}
+body{font-variant-numeric:tabular-nums;margin:0;background:var(--bg);color:var(--ink);font:400 var(--step-body)/1.5 var(--sans);letter-spacing:-.005em;overflow-x:hidden}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+h1,h2,h3{font-family:var(--serif);font-weight:400;letter-spacing:-.015em;line-height:.92;margin:0}
+h1 em,h2 em,h3 em{font-style:italic;color:var(--accent)}
+.formats h2 em,.formats h3 em{color:#8a4b12}
+p{margin:0}
+.wrap{padding:0 var(--m)}
+
+/* ---------- ground: night surface, then strata ---------- */
+body::after{content:"";position:fixed;inset:0;background:url(assets/grain.png);opacity:.22;pointer-events:none;z-index:60}
+.stratum{position:relative}
+.edge{position:absolute;left:0;width:100%;height:64px;top:-63px;display:block;pointer-events:none}
+.yard{background:var(--soil1)} .yard .edge{color:var(--soil1)}
+.deep{background:var(--soil2);padding-bottom:120px} .deep .edge{color:var(--soil2)}
+.formats .edge{color:var(--field);height:40px;top:-39px}
+.foot .edge{color:var(--soil3)}
+.foot{background:var(--soil3)!important}
+
+/* ---------- headstones standing on the hero's ground line ---------- */
+.stoneline{position:absolute;left:var(--m);right:var(--m);bottom:calc(100% + 26px);height:240px;overflow:hidden;z-index:1;pointer-events:none}
+.yard .edge{z-index:2}
+.hs{position:absolute;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;padding-top:42px;text-decoration:none;border-radius:999px 999px 4px 4px;background:#8d877a;color:#1a1814;pointer-events:auto;transform-origin:50% 100%;transition:transform .5s var(--ease),background .2s}
+.hs .sn{font:700 var(--step-small)/1.1 var(--sans);letter-spacing:.01em}
+.hs .st{font:500 var(--step-small)/1 var(--sans);opacity:.8}
+.hs::before{content:"";position:absolute;top:22px;width:34%;height:2px;background:currentColor;opacity:.35}
+a.hs:hover{background:#a39d8f}
+a.hs:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.hs.recovered{background:var(--ok);color:#10200f}
+.hs.partial{background:transparent;border:2px dashed var(--part);color:var(--part)}
+.hs.lost{background:transparent;border:2px dashed #6e5a50;color:#a08a7e}
+.stone-0{left:3%;width:128px;height:176px;transform:translateY(46px) rotate(-1.5deg)}
+.stone-1{left:17%;width:140px;height:196px;transform:translateY(0px) rotate(0deg)}
+.stone-2{left:33%;width:120px;height:168px;transform:translateY(52px) rotate(2deg)}
+.stone-3{left:47%;width:128px;height:180px;transform:translateY(64px) rotate(-6deg)}
+.stone-4{left:62%;width:124px;height:172px;transform:translateY(50px) rotate(1deg)}
+.stone-5{left:76%;width:116px;height:164px;transform:translateY(96px) rotate(8deg)}
+.stone-6{left:89%;width:104px;height:150px;transform:translateY(48px) rotate(-2deg)}
+.hs.recovered{animation:raise 1.6s .7s var(--ease) both}
+@keyframes raise{from{transform:translateY(170px)}}
+@media (max-width:760px){
+  .stoneline{zoom:.6;bottom:calc(100% + 18px)}
+  .stone-4,.stone-5,.stone-6{display:none}
+  .stone-0{left:0}.stone-1{left:26%}.stone-2{left:52%}.stone-3{left:76%}
+  .hs.recovered{animation:none}
+}
+@media (prefers-reduced-motion:reduce){.hs.recovered{animation:none}}
+/* ---------- nav ---------- */
+.nav{display:flex;align-items:center;gap:2rem;padding:20px var(--m)}
+.wordmark{display:inline-flex;align-items:center;gap:10px;font-family:var(--sans);font-weight:700;font-size:1.125rem;line-height:1;letter-spacing:-.025em;text-decoration:none}
+.nav .links{display:flex;gap:1.6rem;margin-left:auto;font-size:var(--step-small)}
+.nav .links a{text-decoration:none;color:var(--muted)}
+.nav .links a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 1.4rem;border:0;border-radius:0;background:var(--accent);color:var(--accent-ink);font:600 1rem var(--sans);letter-spacing:-.01em;cursor:pointer;text-decoration:none;transition:transform .15s var(--ease),background .15s}
+.btn:hover{background:#ffcd7f}
+.btn:active{transform:translateY(1px) scale(.985)}
+.btn.small{min-height:40px;font-size:var(--step-small);padding:0 1rem}
+.btn.ink{background:var(--field-ink);color:var(--field)}
+.btn.ink:hover{background:#2a302e}
+
+/* ---------- hero ---------- */
+.hero{display:grid;gap:44px;padding:clamp(80px,16vh,200px) var(--m) 0}
+.hero h1{font-size:var(--step-hero);line-height:.88;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:.22em;row-gap:.06em}
+.hero h1 .w{white-space:nowrap}
+.disk-glyph{display:inline-block;width:1.25em;height:.7em;align-self:baseline;overflow:hidden;position:relative;top:.02em}
+.disk-glyph img{width:100%;height:100%;object-fit:cover;object-position:55% 45%;display:block}
+.hero-foot{display:grid;grid-template-columns:repeat(12,1fr);gap:24px;align-items:center}
+.hero-foot .say{grid-column:1/7;font-size:var(--step-lead);line-height:1.3;max-width:30ch}
+.hero-foot .act{grid-column:7/13;justify-self:start;display:flex;flex-direction:row;align-items:center;gap:20px;flex-wrap:wrap}
+.hero-foot .act small{flex-basis:100%;font-size:var(--step-small);color:var(--muted)}
+.exts{line-height:1.6}
+.exts b{color:var(--ink);font-weight:600}
+.try{color:var(--ink);text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:2px;text-underline-offset:5px}
+.try:hover{color:var(--accent)}
+.hero h1 .w{animation:up 1s var(--ease) both}
+.hero h1 .w:last-child{animation-delay:.18s}
+@keyframes up{from{opacity:0;transform:translateY(.25em)}}
+.dropping .hero{background:#121a17}
+
+/* shutter on the disk glyph */
+.disk-glyph{clip-path:inset(0 0 100% 0);animation:shutter 1.1s .15s var(--ease) forwards}
+.disk-glyph img{transform:scale(1.12);animation:settle 1.1s .15s var(--ease) forwards}
+@keyframes shutter{to{clip-path:inset(0 0 0 0)}}
+@keyframes settle{to{transform:scale(1)}}
+
+/* ---------- graveyard (the app itself) ---------- */
+.yard{padding:120px var(--m) 140px;margin-top:300px}
+.yard-head{display:grid;grid-template-columns:repeat(12,1fr);gap:24px;align-items:end;margin-bottom:48px}
+.yard-head h2{grid-column:1/8;font-size:var(--step-head)}
+.yard-head p{grid-column:8/13;color:var(--muted);font-size:var(--step-body);max-width:34ch}
+.pick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.pick button{all:unset;cursor:pointer;display:grid;grid-template-columns:72px 1fr;gap:18px;align-items:center;background:var(--surface);padding:18px;transition:background .15s,transform .15s var(--ease)}
+.pick button:hover{background:var(--surface-2)}
+.pick button:active{transform:scale(.99)}
+.pick button:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+.pick button{border-bottom:4px solid transparent}
+.pick button[aria-pressed=true]{background:var(--surface-2);border-bottom-color:var(--accent)}
+.pick svg{width:72px;height:72px;display:block}
+.pick b{display:block;font-weight:500;font-size:var(--step-body);letter-spacing:-.02em}
+.pick span{display:block;color:var(--muted);font-size:var(--step-small);margin-top:2px}
+
+.app{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:8px;min-height:560px}
+.panel{background:var(--surface);padding:24px}
+.summary{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;margin-bottom:18px}
+.summary b{font:600 1rem var(--sans);letter-spacing:0}
+.summary span{color:var(--muted);font-size:var(--step-small)}
+.warn{background:#2a1f12;color:var(--part);font-size:var(--step-small);padding:10px 12px;margin-bottom:14px}
+.graves{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.grave{all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:grid;grid-template-columns:34px 1fr auto;gap:14px;align-items:center;padding:12px 12px;background:var(--soil1);transition:background .15s}
+.grave:hover{background:#1f1c17}
+.grave[aria-current=true]{background:var(--surface-2)}
+.grave:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+.grave .stone{width:26px;height:32px}
+.grave .n{font:600 1rem var(--sans);letter-spacing:0}
+.grave .m{display:block;font:400 var(--step-small) var(--sans);color:var(--muted);letter-spacing:0;margin-top:2px}
+.tag{font-size:var(--step-small);font-weight:600;white-space:nowrap}
+.tag.alive{color:var(--alive)} .tag.recovered{color:var(--ok)} .tag.partial{color:var(--part)} .tag.lost{color:var(--lost)}
+.why{grid-column:2/4;font-size:var(--step-small);color:var(--muted)}
+
+.preview{display:flex;flex-direction:column;align-self:start;position:sticky;top:24px}
+.preview-top{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:20px}
+.preview-top b{font:600 var(--step-small) var(--sans);letter-spacing:0}
+.preview-top span{display:block;color:var(--muted);font-size:var(--step-small);margin-top:2px}
+.save{all:unset;cursor:pointer;font:600 var(--step-small) var(--sans);color:var(--ink);padding:10px 14px;border:1px solid #4a443a;white-space:nowrap;transition:border-color .15s,color .15s}
+.save[hidden]{display:none}
+.save:hover{border-color:var(--accent);color:var(--accent)}
+.save:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.paper{background:var(--field);color:var(--field-ink);padding:clamp(20px,3vw,44px);overflow:auto;max-height:560px;font-size:var(--step-body);line-height:1.6}
+.paper h4{font:600 var(--step-lead)/1.2 var(--sans);margin:0 0 .9em}
+.paper p{margin:0 0 .9em;max-width:62ch}
+.paper pre.inv{font:400 .82rem/1.5 ui-monospace,Menlo,monospace;white-space:pre;overflow:auto;margin:0}
+.paper .cut{color:#9a3b2c;font-family:var(--sans);font-size:var(--step-small);border-top:2px dashed #c9a78f;padding-top:.7em;margin-top:1em}
+table.csv{border-collapse:collapse;font:400 var(--step-small) var(--sans);width:100%;color:var(--field-ink)}
+table.csv th{text-align:left;font-weight:600;border-bottom:2px solid var(--field-ink);padding:6px 10px 6px 0}
+table.csv td{border-bottom:1px solid #cfccc1;padding:6px 10px 6px 0;white-space:nowrap}
+table.csv td.num{text-align:right}
+.pixel{image-rendering:pixelated;width:100%;max-width:420px;height:auto;display:block;margin:auto}
+.empty-paper{display:grid;place-items:center;text-align:center;color:var(--field-muted);font-family:var(--sans)}
+
+/* ---------- the disk bar ---------- */
+.bar-sec{padding:120px var(--m) 0}
+.bar-sec h2{font-size:var(--step-head);margin-bottom:64px;max-width:14ch}
+.bar{display:flex;gap:6px;height:22vh;min-height:150px}
+.seg{position:relative;padding:20px;display:flex;flex-direction:column;justify-content:space-between;color:var(--field-ink);transform-origin:left;transition:transform .9s var(--ease)}
+.seg strong{font-weight:500;font-size:clamp(20px,2vw,30px);letter-spacing:-.03em;line-height:1}
+.seg.alive{background:var(--alive);flex:10600}
+.seg.recovered{background:var(--ok);flex:3468}
+.seg.partial{background:var(--part);flex:2048}
+.seg.lost{background:var(--lost);flex:1024;min-width:12%}
+.clauses{display:flex;gap:6px;margin-top:18px}
+.clauses p{font-size:var(--step-small);color:var(--ink);padding-right:12px}
+.clauses p span{color:var(--muted)}
+.clauses .c1{flex:10600}.clauses .c2{flex:3468}.clauses .c3{flex:2048}.clauses .c4{flex:1024;min-width:12%}
+
+.band{margin:160px 0 0;padding:0 var(--m);display:grid;grid-template-columns:repeat(12,1fr);gap:24px;align-items:end}
+.band img{grid-column:1/9;width:100%;height:auto;display:block;filter:saturate(.75)}
+.band figcaption{grid-column:9/13}
+.band h2{font-size:clamp(2.2rem,1rem + 3vw,4rem);margin-bottom:16px}
+.band p{color:var(--muted);max-width:34ch}
+/* ---------- formats on a paper field ---------- */
+.formats{margin-top:0;background:var(--field);color:var(--field-ink);padding:120px var(--m) 140px}
+.formats h2{font-size:var(--step-head);max-width:12ch;margin-bottom:48px}
+.fmt{display:grid;grid-template-columns:repeat(12,1fr);gap:24px;align-items:start;padding:56px 0;border-top:0}
+.fmt + .fmt{margin-top:24px}
+.fmt .what{grid-column:1/6;min-width:0}
+.fmt .what h3{font-size:clamp(2.2rem,1rem + 3vw,4rem);margin-bottom:16px}
+.fmt .what p{color:var(--field-muted);max-width:34ch}
+.fmt .proof{min-width:0;overflow:auto;grid-column:6/13;background:#d5d6d0;padding:clamp(20px,3vw,40px)}
+.fmt .proof .doc{font-size:var(--step-body);line-height:1.6;max-width:58ch}
+.fmt .proof .doc b{font-size:var(--step-lead)}
+.fmt .proof .cap{font:400 var(--step-small) var(--sans);color:var(--field-muted);margin-top:16px}
+.fmt.flip .what{grid-column:8/13;grid-row:1}
+.fmt.flip .proof{grid-column:1/8;grid-row:1}
+.logo-proof{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center}
+
+/* ---------- footer: the buried name ---------- */
+.foot{position:relative;overflow:visible;margin-top:0;background:var(--bg);padding:160px var(--m) 0;display:flex;flex-direction:column}
+.foot .inv{display:grid;grid-template-columns:repeat(12,1fr);gap:24px}
+.foot .inv div{grid-column:1/10}
+.foot h2{font-size:clamp(3rem,1rem + 6vw,7.4rem);margin-bottom:32px;max-width:16ch}
+.foot ul{grid-column:10/13;list-style:none;margin:0;padding:0;display:grid;gap:10px;align-content:start}
+.foot ul a{text-decoration:none;color:var(--muted)} .foot ul a:hover{color:var(--ink)}
+.legal span{max-width:60ch}
+.legal{margin-top:120px;display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;font-size:var(--step-small);color:var(--muted);padding-bottom:12px}
+.buried{font-family:var(--serif);font-style:normal;font-weight:400;font-size:35vw;line-height:.8;letter-spacing:-.02em;text-align:center;white-space:nowrap;color:#6b6355;margin:0;transform:translateY(6%);user-select:none}
+.bury{overflow:hidden;position:relative}
+.soil{position:absolute;left:0;right:0;bottom:0;height:4.2vw;background:#080706;z-index:1}
+.soil .edge{color:#080706;height:3vw;top:calc(-3vw + 1px)}
+.bury{padding-top:4vw}
+
+/* ---------- entrances ---------- */
+.rise{opacity:0;transform:translateY(24px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.rise.in{opacity:1;transform:none}
+.bar .seg{transform:scaleX(.001)}
+.bar.in .seg{transform:none}
+.bar.in .seg:nth-child(2){transition-delay:.12s}.bar.in .seg:nth-child(3){transition-delay:.24s}.bar.in .seg:nth-child(4){transition-delay:.36s}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .disk-glyph{clip-path:none}.disk-glyph img{transform:none}
+  .rise{opacity:1;transform:none}.bar .seg{transform:none}
+}
+
+/* ---------- phone ---------- */
+@media (max-width:760px){
+  .nav .links a:not(:last-child){display:none}
+  .hero{min-height:auto;padding-top:56px;gap:48px}
+  .hero h1{font-size:17vw;line-height:.92}
+  .hero-foot{grid-template-columns:1fr;gap:24px}
+  .hero-foot .say,.hero-foot .act{grid-column:1;justify-self:start;align-items:flex-start}
+  .hero-foot .act .btn{width:100%}
+  .hero-foot .act{width:100%;flex-direction:column}
+  .preview{position:static}
+  .yard{padding-top:88px;margin-top:190px}
+  .edge{height:36px;top:-35px}
+  .formats .edge{height:22px;top:-21px}
+  .formats{margin-top:0}
+  .yard-head{grid-template-columns:1fr;gap:16px}
+  .yard-head h2,.yard-head p{grid-column:1}
+  .pick{grid-template-columns:1fr}
+  .pick button{grid-template-columns:52px 1fr;padding:14px}
+  .pick svg{width:52px;height:52px}
+  .app{grid-template-columns:1fr;min-height:0}
+  .paper{max-height:420px}
+  .bar-sec{padding-top:140px}
+  .bar{flex-direction:column;height:auto}
+  .seg{min-height:96px}
+  .seg.alive{flex:none;height:220px}.seg.recovered{flex:none;height:110px}.seg.partial{flex:none;height:96px}.seg.lost{flex:none;height:96px;min-width:0}
+  .clauses{display:none}
+  .seg em{font-style:normal;font-size:1rem;letter-spacing:-.005em;line-height:1.35;max-width:26ch}
+  .band{grid-template-columns:1fr;margin-top:96px}.band img,.band figcaption{grid-column:1}
+  .formats{padding:96px var(--m) 110px;margin-top:0}
+  .formats h2{margin-bottom:48px}
+  .fmt,.fmt.flip{grid-template-columns:1fr;padding:32px 0}
+  .fmt .what,.fmt .proof,.fmt.flip .what,.fmt.flip .proof{grid-column:1;grid-row:auto}
+  .logo-proof{grid-template-columns:1fr}
+  .foot{padding-top:110px}
+  .foot .inv{grid-template-columns:1fr}
+  .foot .inv div,.foot ul{grid-column:1}
+  .foot ul{grid-auto-flow:column;justify-content:start;gap:20px;margin-top:32px}
+  .foot .btn{width:100%}
+  .buried{font-size:33.5vw}
+}
+@media (min-width:761px){ .seg em{display:none} }
+</style>
+</head>
+<body>
+
+<!-- disk drawings: one symbol, labels differ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="d-writers" viewBox="0 0 100 100">
+      <path d="M8 6h78l8 8v78a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" fill="#2f5fb3"/>
+      <rect x="28" y="6" width="44" height="30" fill="#c9ced0"/><rect x="56" y="11" width="10" height="20" fill="#2f5fb3"/>
+      <rect x="18" y="50" width="64" height="44" fill="#f1efe6"/>
+      <rect x="24" y="60" width="44" height="2" fill="#2f5fb3"/><rect x="24" y="68" width="34" height="2" fill="#9aa8c4"/><rect x="24" y="76" width="40" height="2" fill="#9aa8c4"/>
+    </symbol>
+    <symbol id="d-office" viewBox="0 0 100 100">
+      <rect x="4" y="4" width="92" height="92" rx="2" fill="#d9573b"/>
+      <circle cx="50" cy="50" r="14" fill="#1a1512"/><circle cx="50" cy="50" r="7" fill="#d9573b"/>
+      <rect x="44" y="70" width="12" height="22" rx="6" fill="#1a1512"/>
+      <rect x="12" y="10" width="44" height="16" fill="#f1efe6"/><rect x="16" y="15" width="30" height="2" fill="#d9573b"/><rect x="16" y="20" width="22" height="2" fill="#c9b9a8"/>
+      <circle cx="68" cy="40" r="2.5" fill="#1a1512"/>
+    </symbol>
+    <symbol id="d-damaged" viewBox="0 0 100 100">
+      <path d="M8 6h78l8 8v78a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" fill="#2b2925"/>
+      <rect x="28" y="6" width="44" height="30" fill="#8b8a84"/><rect x="40" y="11" width="10" height="20" fill="#2b2925"/>
+      <path d="M18 50h64v44H18z" fill="#e1dccd"/><path d="M50 50l14 0-8 18 10 26H50z" fill="#2b2925"/>
+      <path d="M6 40l18 6-6 10 14 8" fill="none" stroke="#ee8b72" stroke-width="2.5"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="nav">
+  <a class="wordmark" href="#"><svg width="22" height="22" viewBox="0 0 100 100" aria-hidden="true"><use href="#d-writers"/></svg>Exhume</a>
+  <nav class="links" aria-label="Page">
+    <a href="#yard">Demo disks</a>
+    <a href="#bar">How it works</a>
+    <a href="#formats">Formats</a>
+    <a href="#">GitHub</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="h1">
+    <h1 id="h1">
+      <span class="w">Dig up</span>
+      <span class="disk-glyph"><img src="assets/disk35.jpg" width="600" height="560" alt="A blue 3.5-inch floppy disk"></span>
+      <span class="w">lost files.</span>
+    </h1>
+    <div class="hero-foot">
+      <p class="say">Exhume opens 1980s DOS floppy images in your browser and brings deleted files back, as far as the disk allows.</p>
+      <div class="act">
+        <button class="btn open-disk" id="open">Open a disk image</button>
+        <input type="file" id="file" accept=".img,.ima,.vfd,.flp,.dsk" hidden>
+        <a class="try" href="#yard">or try a demo disk <span aria-hidden="true">↓</span></a>
+        <small class="exts">Opens <b>.img</b> <b>.ima</b> <b>.vfd</b> <b>.flp</b> <b>.dsk</b>, raw floppy images up to 2.88&nbsp;MB.<br>Drop one anywhere on the page. Nothing leaves your computer.</small>
+      </div>
+    </div>
+  </section>
+
+  <section class="yard stratum" id="yard" aria-labelledby="yard-h">
+    <div class="stoneline" aria-label="Files on the writer's disk"><a class="hs stone-0 alive" href="#yard" data-file="0"><span class="sn">CHAPTER1.WS</span><span class="st">Alive</span></a><a class="hs stone-1 recovered" href="#yard" data-file="1"><span class="sn">_RAFT1.WS</span><span class="st">Recovered</span></a><a class="hs stone-2 alive" href="#yard" data-file="2"><span class="sn">CHAPTER2.WS</span><span class="st">Alive</span></a><a class="hs stone-3 partial" href="#yard" data-file="3"><span class="sn">_RAFT2.WS</span><span class="st">Partly back</span></a><a class="hs stone-4 alive" href="#yard" data-file="4"><span class="sn">CHAPTER3.WS</span><span class="st">Alive</span></a><span class="hs stone-5 lost" aria-hidden="true"><span class="sn">_LDCUST.DBF</span><span class="st">Lost</span></span><a class="hs stone-6 alive" href="#yard" data-file="5"><span class="sn">README.TXT</span><span class="st">Alive</span></a></div>
+    <svg class="edge" viewBox="0 0 1440 64" preserveAspectRatio="none" aria-hidden="true"><path d="M0 64 L0 28 L0 28 L29 30 L80 15 L114 41 L155 13 L210 13 L242 27 L277 46 L319 13 L371 30 L393 12 L446 15 L486 37 L527 13 L568 18 L600 17 L636 30 L678 29 L717 21 L750 23 L794 42 L832 13 L891 18 L927 13 L963 23 L992 42 L1037 44 L1091 22 L1117 34 L1160 31 L1199 12 L1248 36 L1270 18 L1319 15 L1361 35 L1391 33 L1440 46 L1440 64Z" fill="currentColor"/><ellipse cx="922" cy="37" rx="5.2" ry="3.1" fill="#2a2620"/><ellipse cx="1276" cy="57" rx="8.9" ry="5.4" fill="#2a2620"/><ellipse cx="782" cy="49" rx="3.9" ry="2.4" fill="#2a2620"/><ellipse cx="1065" cy="36" rx="5.2" ry="3.1" fill="#2a2620"/><ellipse cx="1358" cy="60" rx="5.8" ry="3.5" fill="#2a2620"/><ellipse cx="945" cy="51" rx="4.8" ry="2.9" fill="#2a2620"/><ellipse cx="606" cy="58" rx="4.5" ry="2.7" fill="#2a2620"/><ellipse cx="766" cy="59" rx="7.9" ry="4.7" fill="#2a2620"/><ellipse cx="468" cy="47" rx="4.3" ry="2.6" fill="#2a2620"/></svg>
+    <div class="yard-head">
+      <h2 id="yard-h" class="rise">No disk? Open one of ours.</h2>
+      <p class="rise">Three floppies written for the demo. Pick one and the graveyard below is read live, in this page.</p>
+    </div>
+
+    <div class="pick" role="group" aria-label="Demo disks">
+      <button aria-pressed="true" data-disk="writers"><svg aria-hidden="true"><use href="#d-writers"/></svg><span><b>The writer's disk</b><span>Novel chapters, two deleted drafts</span></span></button>
+      <button aria-pressed="false" data-disk="office"><svg aria-hidden="true"><use href="#d-office"/></svg><span><b>The small-business disk</b><span>Customers, a logo, an invoice</span></span></button>
+      <button aria-pressed="false" data-disk="damaged"><svg aria-hidden="true"><use href="#d-damaged"/></svg><span><b>The damaged disk</b><span>Broken boot sector, looping chain</span></span></button>
+    </div>
+
+    <div class="app" data-ui>
+      <div class="panel">
+        <div class="summary"><b id="vol">WRITER DEMO</b><span id="count">6 files · 2 deleted</span></div>
+        <div id="warn"></div>
+        <ul class="graves" id="graves"></ul>
+      </div>
+      <div class="panel preview">
+        <div class="preview-top"><div><b id="pname">CHAPTER1.WS</b><span id="pkind">WordStar, read as Markdown</span></div><button class="save" id="save">Download .md</button></div>
+        <div class="paper" id="paper"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="deep stratum">
+  <svg class="edge" viewBox="0 0 1440 64" preserveAspectRatio="none" aria-hidden="true"><path d="M0 64 L0 35 L0 35 L40 28 L91 11 L127 27 L169 25 L206 33 L246 14 L278 8 L315 23 L348 7 L398 23 L445 7 L484 33 L518 37 L554 12 L611 16 L648 19 L676 6 L710 12 L755 10 L794 25 L845 34 L883 11 L922 16 L953 25 L998 29 L1041 39 L1068 6 L1115 25 L1163 14 L1207 35 L1244 18 L1278 31 L1328 8 L1353 20 L1401 22 L1440 37 L1440 64Z" fill="currentColor"/><ellipse cx="492" cy="45" rx="7.3" ry="4.4" fill="#2a2620"/><ellipse cx="595" cy="49" rx="4.3" ry="2.6" fill="#2a2620"/><ellipse cx="1237" cy="45" rx="7.0" ry="4.2" fill="#2a2620"/><ellipse cx="1345" cy="45" rx="6.6" ry="3.9" fill="#2a2620"/><ellipse cx="282" cy="51" rx="8.9" ry="5.3" fill="#2a2620"/><ellipse cx="1027" cy="36" rx="7.9" ry="4.7" fill="#2a2620"/><ellipse cx="92" cy="60" rx="3.1" ry="1.9" fill="#2a2620"/></svg>
+  <section class="bar-sec" id="bar" aria-labelledby="bar-h">
+    <h2 id="bar-h" class="rise">Deleted is not the same as gone.</h2>
+    <div class="bar" id="thebar" data-ui role="img" aria-label="The writer's disk: 10.6 KB alive, 3.4 KB recovered, 2 KB partly back, 1 KB lost">
+      <div class="seg alive"><strong>10.6 KB alive</strong><em>Four files read exactly as written.</em></div>
+      <div class="seg recovered"><strong>3.4 KB back</strong><em>A deleted draft, every cluster still free.</em></div>
+      <div class="seg partial"><strong>2 KB</strong><em>A second draft, two of three clusters free.</em></div>
+      <div class="seg lost"><strong>1 KB lost</strong><em>Written over by a later file.</em></div>
+    </div>
+    <div class="clauses" aria-hidden="true">
+      <p class="c1">First, the files DOS still lists, read as written. <span>Four on the writer's disk.</span></p>
+      <p class="c2">Then deleted drafts whose clusters were never reused.</p>
+      <p class="c3">Then what survives of half-overwritten ones.</p>
+      <p class="c4">The rest is honestly marked lost.</p>
+    </div>
+  </section>
+
+  <figure class="band" aria-labelledby="band-h">
+    <img class="rise" src="assets/disks-band.jpg" width="1900" height="900" loading="lazy" alt="An 8-inch, a 5.25-inch and a 3.5-inch floppy disk side by side">
+    <figcaption><h2 id="band-h">From 8 to 3½ inches.</h2><p>Any DOS floppy image with a FAT12 file system, from 160 KB to 2.88 MB.</p></figcaption>
+  </figure>
+  </div>
+
+  <section class="formats stratum" id="formats" aria-labelledby="fmt-h">
+    <svg class="edge" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 L0 16 L12 20 L24 8 L36 21 L48 11 L60 32 L72 8 L84 19 L96 16 L108 18 L120 13 L132 22 L144 7 L156 19 L168 16 L180 26 L192 9 L204 23 L216 21 L228 14 L240 14 L252 32 L264 9 L276 29 L288 17 L300 29 L312 14 L324 17 L336 10 L348 23 L360 13 L372 22 L384 11 L396 23 L408 20 L420 20 L432 12 L444 31 L456 9 L468 15 L480 13 L492 16 L504 14 L516 18 L528 19 L540 31 L552 12 L564 26 L576 17 L588 19 L600 16 L612 32 L624 11 L636 22 L648 17 L660 27 L672 18 L684 21 L696 9 L708 27 L720 17 L732 21 L744 20 L756 16 L768 6 L780 31 L792 8 L804 27 L816 12 L828 24 L840 10 L852 25 L864 17 L876 24 L888 7 L900 25 L912 9 L924 20 L936 19 L948 15 L960 14 L972 18 L984 5 L996 22 L1008 20 L1020 33 L1032 21 L1044 34 L1056 5 L1068 14 L1080 6 L1092 21 L1104 8 L1116 17 L1128 5 L1140 20 L1152 15 L1164 33 L1176 17 L1188 33 L1200 16 L1212 26 L1224 12 L1236 32 L1248 19 L1260 31 L1272 16 L1284 18 L1296 9 L1308 28 L1320 12 L1332 16 L1344 8 L1356 20 L1368 5 L1380 24 L1392 17 L1404 28 L1416 8 L1428 26 L1440 21 L1440 40Z" fill="currentColor"/></svg>
+    <h2 id="fmt-h" class="rise">Files from 1989, readable today.</h2>
+
+    <div class="fmt">
+      <div class="what rise"><h3>WordStar becomes Markdown.</h3><p>Bold, underline and soft hyphens come through; the printer codes do not.</p></div>
+      <div class="proof rise" data-ui>
+        <div class="doc"><b>Chapter One: The Morning Crossing</b><br><br>Marta Voss opened the ticket office at half past five, when the harbor was still gray and the gulls had not yet started their daily argument. The stove was cold. The kettle was dented.</div>
+        <p class="cap">CHAPTER1.WS from the writer's disk, as Exhume shows it.</p>
+      </div>
+    </div>
+
+    <div class="fmt flip">
+      <div class="what rise"><h3>dBase III becomes CSV.</h3><p>Field names, dates and accented names intact, ready for any spreadsheet.</p></div>
+      <div class="proof rise" data-ui>
+        <table class="csv">
+          <thead><tr><th>CUSTNO</th><th>NAME</th><th>CITY</th><th>SINCE</th><th>BALANCE</th></tr></thead>
+          <tbody>
+            <tr><td>1001</td><td>Marguerite Oakhollow</td><td>Lantern Bay</td><td>1987-03-12</td><td class="num">1250.00</td></tr>
+            <tr><td>1003</td><td>Renée Waterford</td><td>Pinéhaven</td><td>1988-01-19</td><td class="num">0.00</td></tr>
+            <tr><td>1004</td><td>Tallow &amp; Wick Chandlers</td><td>Ellis Narrows</td><td>1988-08-30</td><td class="num">412.75</td></tr>
+            <tr><td>1008</td><td>Dolores Núñez-Hale</td><td>Pinéhaven</td><td>1989-09-01</td><td class="num">175.25</td></tr>
+          </tbody>
+        </table>
+        <p class="cap">CUSTOMER.DBF from the small-business disk.</p>
+      </div>
+    </div>
+
+    <div class="fmt">
+      <div class="what rise"><h3>PCX becomes PNG.</h3><p>Paintbrush pictures decoded pixel for pixel, palette and all.</p></div>
+      <div class="proof rise logo-proof" data-ui>
+        <img class="pixel" src="assets/office-disk___LOGO.PCX.png" width="64" height="40" alt="The small-business logo decoded from LOGO.PCX, shown enlarged">
+        <p class="cap">LOGO.PCX, 64 × 40 pixels, shown at seven times its size.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot stratum" aria-labelledby="foot-h">
+  <svg class="edge" viewBox="0 0 1440 64" preserveAspectRatio="none" aria-hidden="true"><path d="M0 64 L0 24 L0 24 L46 14 L76 41 L114 39 L162 34 L209 49 L241 28 L290 22 L317 32 L364 34 L396 14 L438 47 L471 27 L510 46 L571 48 L610 44 L632 24 L680 40 L712 48 L755 25 L811 20 L838 29 L886 23 L909 50 L952 46 L1006 23 L1050 44 L1081 21 L1116 44 L1152 32 L1194 49 L1248 50 L1283 43 L1330 39 L1351 31 L1393 29 L1440 33 L1440 64Z" fill="currentColor"/><ellipse cx="422" cy="47" rx="3.4" ry="2.1" fill="#2a2620"/><ellipse cx="779" cy="56" rx="4.8" ry="2.9" fill="#2a2620"/><ellipse cx="1365" cy="43" rx="3.1" ry="1.9" fill="#2a2620"/><ellipse cx="973" cy="37" rx="5.7" ry="3.4" fill="#2a2620"/><ellipse cx="874" cy="53" rx="5.1" ry="3.1" fill="#2a2620"/><ellipse cx="190" cy="54" rx="6.1" ry="3.6" fill="#2a2620"/><ellipse cx="976" cy="37" rx="6.5" ry="3.9" fill="#2a2620"/><ellipse cx="677" cy="36" rx="5.7" ry="3.4" fill="#2a2620"/><ellipse cx="837" cy="44" rx="6.7" ry="4.0" fill="#2a2620"/><ellipse cx="161" cy="38" rx="8.6" ry="5.2" fill="#2a2620"/></svg>
+  <div class="inv">
+    <div>
+      <h2 id="foot-h">Found an old disk in a drawer?</h2>
+      <button class="btn open-disk">Open a disk image</button>
+    </div>
+    <ul>
+      <li><a href="#">Source on GitHub</a></li>
+      <li><a href="#">Prior art: disk-peek</a></li>
+      <li><a href="#">Kiroween 2026</a></li>
+    </ul>
+  </div>
+  <div class="legal"><span>Reads FAT12 floppy images. Runs entirely in your browser.</span><span>Demo disks written for Exhume. Photograph: “Floppy disk 2009 G1” by George Chernilevsky, public domain, via Wikimedia Commons.</span></div>
+  <div class="bury"><div class="soil" aria-hidden="true"><svg class="edge" viewBox="0 0 1440 64" preserveAspectRatio="none"><path d="M0 64 L0 35 L0 35 L40 28 L91 11 L127 27 L169 25 L206 33 L246 14 L278 8 L315 23 L348 7 L398 23 L445 7 L484 33 L518 37 L554 12 L611 16 L648 19 L676 6 L710 12 L755 10 L794 25 L845 34 L883 11 L922 16 L953 25 L998 29 L1041 39 L1068 6 L1115 25 L1163 14 L1207 35 L1244 18 L1278 31 L1328 8 L1353 20 L1401 22 L1440 37 L1440 64Z" fill="currentColor"/></svg></div><p class="buried" aria-hidden="true">Exhume</p></div>
+</footer>
+
+<script>
+const DISKS={
+ writers:{vol:'WRITER DEMO',warn:null,files:[
+  ['CHAPTER1.WS','2.6 KB · 1989-03-14','alive',null,'ch1'],
+  ['_RAFT1.WS','3.4 KB · 1989-02-27','recovered','4 clusters are contiguous and unallocated','r1'],
+  ['CHAPTER2.WS','3.2 KB · 1989-04-02','alive',null,'ch1'],
+  ['_RAFT2.WS','3.0 KB · 1989-03-20','partial','2 of 3 clusters still free; cluster 15 is allocated','r2'],
+  ['CHAPTER3.WS','4.2 KB · 1989-05-09','alive',null,'ch1'],
+  ['README.TXT','360 B · 1989-05-10','alive',null,'rw']]},
+ office:{vol:'OFFICE DEMO',warn:null,files:[
+  ['CUSTOMER.DBF','1.2 KB · 1991-06-28','alive',null,'csv'],
+  ['LOGO.PCX','1.3 KB · 1991-02-11','alive',null,'logo'],
+  ['INVOICES/INV8903.TXT','428 B · 1991-06-03','alive',null,'inv'],
+  ['_LDCUST.DBF','188 B · 1990-11-19','lost','start cluster 2 has been reused',null],
+  ['README.TXT','346 B · 1991-06-30','alive',null,'ro']]},
+ damaged:{vol:'DAMAGE DEMO',warn:'Two warnings: the boot sector field for sectors per cluster is zero, and the cluster chain of LETTER.WS loops back on itself. Exhume still shows what it can read.',files:[
+  ['LETTER.WS','4.0 KB · 1992-09-15','partial','cluster chain is damaged (cycle) after 3 clusters','letter'],
+  ['MEMO.WS','476 B · 1992-09-16','alive',null,'memo'],
+  ['README.TXT','353 B · 1992-09-17','alive',null,'rd']]}
+};
+const P={
+ ch1:['WordStar, read as Markdown','<h4>Chapter One: The Morning Crossing</h4><p>Marta Voss opened the ticket office at half past five, when the harbor was still gray and the gulls had not yet started their daily argument. The stove was cold. The kettle was dented. The ledger lay open on the counter exactly where she had left it the night before, with one line still unfinished.</p><p>She wrote the date, then the weather, then the word calm, which was how she began every day that deserved it.</p>'],
+ r1:['Recovered WordStar draft, whole','<h4>Chapter Two (first draft)</h4><p>Draft note: this version opens on the noon boat instead of in the office. The mail sack is heavy that day and Marta suspects something before she opens a single envelope. Too much suspicion too early, I think.</p>'],
+ r2:['Partly recovered draft','<h4>Chapter Three (rough scene)</h4><p>Rough draft of the hall scene. Not sure about the cello. The cello may be too much. But I like the moment where the man with the instrument case stands up and says nothing, and the room waits for him anyway.</p><p>Idea: let the board member have a daughter on the island. Never say so.</p><p class="cut">The last 1 KB was overwritten by a later file. Exhume stops here instead of guessing.</p>'],
+ rw:['Plain text','<p>WRITER DEMO</p><p>It holds three chapters of a short story as WordStar files. Two earlier drafts were deleted on purpose. One can be raised whole, the other has been partly overwritten by a later chapter.</p>'],
+ csv:['dBase III, read as CSV','<table class="csv"><thead><tr><th>CUSTNO</th><th>NAME</th><th>CITY</th><th>BALANCE</th></tr></thead><tbody><tr><td>1001</td><td>Marguerite Oakhollow</td><td>Lantern Bay</td><td class="num">1250.00</td></tr><tr><td>1002</td><td>Ibbetson Rope Works</td><td>Gull Island</td><td class="num">86.40</td></tr><tr><td>1003</td><td>Renée Waterford</td><td>Pinéhaven</td><td class="num">0.00</td></tr><tr><td>1004</td><td>Tallow &amp; Wick Chandlers</td><td>Ellis Narrows</td><td class="num">412.75</td></tr><tr><td>1005</td><td>José Quillfeather</td><td>Lantern Bay</td><td class="num">39.90</td></tr><tr><td>1006</td><td>Brannock Ferry Office</td><td>Gull Island</td><td class="num">2210.10</td></tr><tr><td>1007</td><td>Anselm Pottersby</td><td>Marrow Cross</td><td class="num">0.00</td></tr></tbody></table>'],
+ logo:['PCX picture, read as PNG','<img class="pixel" src="assets/office-disk___LOGO.PCX.png" width="64" height="40" alt="Logo decoded from LOGO.PCX">'],
+ inv:['Plain text','<pre class="inv">LANTERN BAY SUPPLY COMPANY\nInvoice number 8903\nDate: March 14, 1989\n\nBill to: Harbor Office, Gull Island\n\nItem                          Qty    Price    Total\nRope, tarred, per coil          4    12.50    50.00\nLamp oil, per can               6     4.25    25.50\nBrass stamp die                 1    18.00    18.00\n\nAmount due                                    93.50</pre>'],
+ ro:['Plain text','<p>OFFICE DEMO</p><p>Everything on this disk was written for the demo.</p>'],
+ letter:['WordStar, read as Markdown, partly','<h4>Harbor Office, Gull Island</h4><p>Dear members of the County Transit Board,</p><p>Thank you for your letter about the future of the Gull Island route. We are glad the board has chosen to hold its meeting in person, and we look forward to showing you the crossing as it is lived.</p><p class="cut">The cluster chain loops back here. Exhume shows what it read once and stops.</p>'],
+ memo:['WordStar, read as Markdown','<h4>Memo: winter schedule</h4><p>To all staff: the winter timetable begins on the first Monday of November. The first boat leaves at half past six, the last at five.</p><p>Coffee is in the tin under the counter. Please leave the kettle as you found it.</p>'],
+ rd:['Plain text','<p>DAMAGE DEMO. It is broken on purpose in two ways, and Exhume still shows what it can read.</p>']
+};
+const stone=s=>s==='alive'
+ ?'<svg class="stone" viewBox="0 0 26 32" aria-hidden="true"><path d="M3 31V12a10 10 0 0 1 20 0v19z" fill="#8d877a"/><rect x="8" y="12" width="10" height="2" fill="#58534a"/><rect x="8" y="17" width="10" height="2" fill="#58534a"/></svg>'
+ :'<svg class="stone" viewBox="0 0 26 32" aria-hidden="true"><path d="M3 31V12a10 10 0 0 1 20 0v19" fill="none" stroke="'+({recovered:'#9ad49c',partial:'#e8b65a',lost:'#ee8b72'})[s]+'" stroke-width="2" stroke-dasharray="3 3"/><rect x="2" y="29" width="22" height="3" fill="#3a2f22"/></svg>';
+const label={alive:'Alive',recovered:'Recovered',partial:'Partly back',lost:'Lost'};
+function show(key){
+ const d=DISKS[key];
+ document.querySelectorAll('.pick button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.disk===key));
+ vol.textContent=d.vol;
+ const del=d.files.filter(f=>f[2]!=='alive').length;
+ count.textContent=d.files.length+' files · '+del+' deleted or damaged';
+ warn.innerHTML=d.warn?'<div class="warn">'+d.warn+'</div>':'';
+ graves.innerHTML=d.files.map((f,i)=>'<li><button class="grave" data-i="'+i+'"'+(f[4]?'':' disabled')+'>'+stone(f[2])+'<span><span class="n">'+f[0]+'</span><span class="m">'+f[1]+'</span></span><span class="tag '+f[2]+'">'+label[f[2]]+'</span>'+(f[3]?'<span class="why">'+f[3]+(f[0].startsWith('_')?' · the "_" is where DOS erased the first letter':'')+'</span>':'')+'</button></li>').join('');
+ graves.querySelectorAll('.grave').forEach(b=>b.onclick=()=>pick(key,+b.dataset.i));
+ pick(key,0);
+}
+function pick(key,i){
+ const f=DISKS[key].files[i]; if(!f[4])return;
+ graves.querySelectorAll('.grave').forEach((b,j)=>b.setAttribute('aria-current',j===i));
+ pname.textContent=f[0]; pkind.textContent=P[f[4]][0]; paper.innerHTML=P[f[4]][1];
+ const ext=({ch1:'.md',r1:'.md',r2:'.md',letter:'.md',memo:'.md',csv:'.csv',logo:'.png'}[f[4]]||'.txt');
+ save.textContent='Download '+ext; save.hidden=false;
+ save.onclick=()=>download(f,ext);
+ paper.animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&paper.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:320,easing:'cubic-bezier(.2,.7,.1,1)'});
+}
+function download(f,ext){
+ const name=f[0].replace(/^.*\//,'').replace(/\.[^.]+$/,'')+ext;
+ const go=blob=>{const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+ if(ext==='.png'){fetch('assets/office-disk___LOGO.PCX.png').then(r=>r.blob()).then(go);return}
+ let text;
+ if(ext==='.csv'){text=[...paper.querySelectorAll('tr')].map(tr=>[...tr.children].map(c=>c.textContent.includes(',')?'"'+c.textContent+'"':c.textContent).join(',')).join('\n')}
+ else if(ext==='.md'){text=[...paper.children].filter(e=>!e.classList.contains('cut')).map(e=>e.tagName==='H4'?'# '+e.textContent:e.textContent).join('\n\n')}
+ else text=paper.innerText;
+ go(new Blob([text+'\n'],{type:ext==='.csv'?'text/csv':ext==='.md'?'text/markdown':'text/plain'}));
+}
+document.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>show(b.dataset.disk));
+show('writers');
+document.querySelectorAll('a.hs').forEach(a=>a.onclick=()=>{show('writers');pick('writers',+a.dataset.file)});
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.2});
+document.querySelectorAll('.rise,.bar').forEach((el,i)=>{el.style.transitionDelay=(i%2)*80+'ms';io.observe(el)});
+addEventListener('dragover',e=>{e.preventDefault();document.body.classList.add('dropping')});
+addEventListener('dragleave',()=>document.body.classList.remove('dropping'));
+addEventListener('drop',e=>{e.preventDefault();document.body.classList.remove('dropping');const f=e.dataTransfer.files[0];if(f)window.openReal&&openReal(f)});
+document.querySelectorAll('.open-disk').forEach(b=>b.onclick=()=>file.click());
+file.onchange=()=>{if(file.files[0])window.openReal&&openReal(file.files[0]);file.value=''};
+</script>
+<script type="module">
+import { openDisk, convertAuto } from './core.js';
+const esc=t=>t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const kb=n=>n<1024?n+' B':(n/1024).toFixed(1)+' KB';
+const label={alive:'Alive',recovered:'Recovered',partial:'Partly back',lost:'Lost'};
+let urls=[];
+function md(t){return t.split(/\n{2,}/).map(b=>/^#+ /.test(b)?'<h4>'+esc(b.replace(/^#+ /,''))+'</h4>':'<p>'+esc(b).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>')+'</p>').join('')}
+function csv(t){const rows=t.trim().split(/\r?\n/).map(r=>{const out=[];let cur='',q=false;for(const ch of r){if(ch=='"'){q=!q}else if(ch==','&&!q){out.push(cur);cur=''}else cur+=ch}out.push(cur);return out});
+ return '<table class="csv"><thead><tr>'+rows[0].map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>'+rows.slice(1,200).map(r=>'<tr>'+r.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table>'}
+window.openReal=async function(f){
+ const bytes=new Uint8Array(await f.arrayBuffer());
+ let h; try{h=openDisk(bytes)}catch(e){h=null}
+ document.querySelectorAll('.pick button').forEach(b=>b.setAttribute('aria-pressed','false'));
+ urls.forEach(URL.revokeObjectURL);urls=[];
+ const r=h?h.report:{volume:{label:''},files:[],warnings:[{message:'This file could not be read as a disk image.'}]};
+ const files=r.files.filter(g=>g.kind==='file');
+ vol.textContent=(r.volume.label||f.name).toUpperCase();
+ const del=files.filter(g=>g.state!=='alive').length;
+ count.textContent=files.length+' files · '+del+' deleted or damaged';
+ warn.innerHTML=r.warnings.length?'<div class="warn">'+r.warnings.map(w=>esc(w.message)).join('<br>')+'</div>':'';
+ graves.innerHTML=files.length?files.map((g,i)=>'<li><button class="grave" data-i="'+i+'">'+stone(g.state)+'<span><span class="n">'+esc(g.path.replace(/^\//,''))+'</span><span class="m">'+kb(g.size)+(g.date?' · '+g.date.slice(0,10):'')+'</span></span><span class="tag '+g.state+'">'+label[g.state]+'</span>'+(g.reason?'<span class="why">'+esc(g.reason)+'</span>':'')+'</button></li>').join(''):'<li class="m">No files found on this disk.</li>';
+ graves.querySelectorAll('.grave').forEach(b=>b.onclick=()=>view(files[+b.dataset.i],+b.dataset.i));
+ if(files.length)view(files[0],0);else{pname.textContent=f.name;pkind.textContent='';paper.innerHTML='';save.hidden=true}
+ document.getElementById('yard').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+ function view(g,i){
+  graves.querySelectorAll('.grave').forEach((b,j)=>b.setAttribute('aria-current',j===i));
+  const name=g.path.split('/').pop();pname.textContent=name;
+  const rb=h.readBytes(g);
+  if(!rb.ok){pkind.textContent='Nothing to read';paper.innerHTML='<p>'+esc(rb.error)+'.</p>';save.hidden=true;return}
+  const c=convertAuto(rb.bytes,name);
+  if(!c.ok){pkind.textContent='Raw bytes';paper.innerHTML='<p>'+esc(c.error)+'</p>';save.hidden=true;return}
+  save.hidden=false;
+  const base=name.replace(/\.[^.]+$/,'');
+  pkind.textContent=({'.md':'Read as Markdown','.csv':'Read as CSV','.txt':'Plain text','.png':'Read as PNG'})[c.extension]+(g.state==='partial'?', partly':'');
+  const blob=new Blob([c.output],{type:c.mime});const u=URL.createObjectURL(blob);urls.push(u);
+  paper.innerHTML=c.extension==='.png'?'<img class="pixel" src="'+u+'" alt="'+esc(name)+' decoded">':c.extension==='.csv'?csv(c.output):c.extension==='.md'?md(c.output):'<p>'+esc(c.output).replace(/\n/g,'<br>')+'</p>';
+  save.textContent='Download '+c.extension;
+  save.onclick=()=>{const a=document.createElement('a');a.href=u;a.download=base+c.extension;a.click()};
+ }
+};
+</script>
+</body>
+</html>

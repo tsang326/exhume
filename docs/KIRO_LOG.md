@@ -127,3 +127,22 @@ what had to be fixed by hand. Be honest — the write-up is built from this.
   the reveal ran before the Cancel button was hidden. I added task 12 for it; Kiro's fix moved `refreshControls()`
   before the reveal and added a DOM test. Kiro's shell returned nothing in that run, so I verified it: the new test
   fails with the old order, the full suite passes (1870 + 181 DOM), and the heading now lands at top 0.
+
+## 2026-11-10 — page-redesign (spec 11, requirements)
+- Kiro wrote requirements.md for the page-redesign spec from the Spec 11 brief and the reviewed mockup in `docs/design/redesign/`.
+- Helped: the brief's hard rules (CSP, element-contract ids, retired ids) came through as numbered requirements, including removing the canvas effects and the preview dialog.
+- By hand: reviewed the requirements and sent seven corrections back (decorative alt on the heading photo, headstones limited to the writer's six files, byte totals that split a partial file 2,048 / 1,024, plain-text event name, a testable motion rule, explicit Tab order, italic font only if used). Kiro is revising and writing design.md next.
+
+## 2026-11-11 — page-redesign (spec 11, design)
+- Kiro applied the seven requirement corrections and wrote design.md: static markup for the demo-disk facts (stones, bar figures, excerpts, logo) checked by tests against the committed disks, an inline preview replacing the dialog, CSS-only strata, and twelve correctness properties.
+- Helped: the design listed fourteen open questions with trade-offs, which made the review quick; it also caught two mockup colours that fail contrast.
+- By hand: answered the open questions and asked for two changes: the auto-opened writer's disk previews CHAPTER1.WS quietly so the first view is not empty, and focus stays on the row on wide layouts. The screenshot pass at three widths stays a manual task for me.
+
+## 2026-11-11 — page-redesign (spec 11, run all tasks)
+- Kiro ran the 42 required tasks through sub-agents: new page markup and stylesheet, inline preview replacing the dialog, headstones, auto-open, motion module, demo-facts checks against the committed disks, and the rewritten tests. Effects and focus-trap code were deleted.
+- Helped: the property test for superseded requests (task 7.9) failed during the run and Kiro fixed the race before finishing.
+- By hand: made four property tests required before the run (disk text never becomes elements, Blob URL count, superseded requests, auto-open). Re-ran the suite myself: typecheck clean, `npm test` 1890 passed / 1 skipped, `test:dom` 222/222, build ok, `make:demos --check` all match, IOC scan clean. Headless Chrome at 1440x900, 768x1024 and 390x844: auto-open shows CHAPTER1.WS with no focus move or scroll, no horizontal scroll. Found five visual problems (grain fell back to section backgrounds over one 4.44:1 pair, headstones overlap at 768 px, back row reads as broken on phones, "Three files" should be four, favicon 404) and sent them back as tasks 10-14.
+
+## 2026-11-11 — page-redesign (spec 11, owner fixes 10-14)
+- Kiro fixed the five problems from my screenshot pass: grain overlay restored at 0.22 after darkening the paper accent (worst pair 4.54:1), six stones in one row from 761 to 1180 px, a back row and a front row on phones, "Four files" with a checkBar guard, and an SVG favicon.
+- By hand: re-ran everything (typecheck, `npm test` 1899 passed / 1 skipped, `test:dom` 222/222, build, `make:demos --check`, IOC scan clean) and the owner checks in headless Chrome at 1440x900, 768x1024 and 390x844: no horizontal scroll, no console errors, auto-open shows CHAPTER1.WS without focus or scroll, Tab order nav → Open → demo link → six stones → cards → rows → preview → footer, and with reduced motion no animation runs and nothing stays hidden.

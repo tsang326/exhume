@@ -1,59 +1,193 @@
 /*
-  Exhume: a lantern-lit graveyard in fog. CSS only, no external resources.
+  Exhume: dig up lost files. CSS only, same-origin assets only (fonts and images under src/assets).
+
+  Sections of this file, in order:
+    1. Contrast pairs and palette tokens (this block)
+    2. Fonts and base rules
+    3. Grain and strata (.edge, .stratum, .yard, .deep, #formats, footer, .soil)
+    4. (task 5.3) nav, hero, headstones, yard, panels, bar, band, formats, footer
+    5. (task 5.4) motion, narrow block (max-width: 760px), reduced motion
 
   Contrast pairs are literal hex values (--pair-<id>-fg / --pair-<id>-bg) so tests can read them.
-  Ids ending -large or -ui need 3:1; all others 4.5:1.
+  Ids ending -large or -ui need 3:1; all others 4.5:1. Every text and background combination the
+  page uses has a pair here. A pair that is declared here but not used is harmless; a combination
+  that is used and not declared here is a bug.
 
-  Layers (z-index): .preview-backdrop 100, .content 10, fx glow 1 (opacity 0.45), .fx-canvas 0 (opacity 0.5).
-  Every .fx-* rule has pointer-events: none. Fallback contract (Req 11.4): an effect placed above
-  .content must have opacity <= 0.15 and keep text pairs at 4.5:1 under a black or white layer.
+  Layers (z-index): body::after (grain overlay) 60, .edge 2, .stoneline 1.
+  Decorative layers (.edge, .soil, .sprite, .buried, .clauses, body::after, .rise-ghost) all have
+  pointer-events: none and are aria-hidden in the markup. No gradient, filter, blur or shadow is
+  used anywhere: every fill is flat.
 */
 
 :root {
   color-scheme: dark;
 
-  /* Contrast pairs */
-  --pair-body-fg: #dfe6d8;
+  /* ---- Contrast pairs: page text ---- */
+  --pair-body-fg: #e6e6e1;
   --pair-body-bg: #0b0f10;
-  --pair-body-panel-fg: #dfe6d8;
-  --pair-body-panel-bg: #141c1e;
-  --pair-muted-fg: #a9b7a8;
-  --pair-muted-bg: #141c1e;
-  --pair-muted-raised-fg: #a9b7a8;
-  --pair-muted-raised-bg: #1c2629;
-  --pair-lantern-fg: #ffbf5e;
-  --pair-lantern-bg: #141c1e;
-  --pair-state-recovered-fg: #8fe3a1;
-  --pair-state-recovered-bg: #141c1e;
-  --pair-state-partial-fg: #f0c36a;
-  --pair-state-partial-bg: #141c1e;
-  --pair-state-lost-fg: #ff9a8a;
-  --pair-state-lost-bg: #141c1e;
+  --pair-body-soil-fg: #e6e6e1;
+  --pair-body-soil-bg: #12110e;
+  --pair-body-surface-fg: #e6e6e1;
+  --pair-body-surface-bg: #1b1915;
+  --pair-body-surface2-fg: #e6e6e1;
+  --pair-body-surface2-bg: #26231d;
+
+  /* ---- Contrast pairs: secondary text ---- */
+  --pair-muted-fg: #a9b3a6;
+  --pair-muted-bg: #0b0f10;
+  --pair-muted-soil-fg: #a9b3a6;
+  --pair-muted-soil-bg: #12110e;
+  --pair-muted-soil2-fg: #a9b3a6;
+  --pair-muted-soil2-bg: #16130f;
+  --pair-muted-soil3-fg: #a9b3a6;
+  --pair-muted-soil3-bg: #0e0c0a;
+  --pair-muted-surface-fg: #a9b3a6;
+  --pair-muted-surface-bg: #1b1915;
+  --pair-muted-surface2-fg: #a9b3a6;
+  --pair-muted-surface2-bg: #26231d;
+
+  /* ---- Contrast pairs: accent and button ---- */
+  --pair-accent-fg: #ffbf5e;
+  --pair-accent-bg: #0b0f10;
   --pair-button-fg: #0b0f10;
   --pair-button-bg: #ffbf5e;
-  --pair-focus-ui-fg: #ffd27a;
-  --pair-focus-ui-bg: #141c1e;
-  --pair-focus-ui-ground-fg: #ffd27a;
+  --pair-button-hover-fg: #0b0f10;
+  --pair-button-hover-bg: #ffcd7f;
+
+  /* ---- Contrast pairs: paper field ---- */
+  --pair-field-fg: #121514;
+  --pair-field-bg: #e4e4df;
+  --pair-field-proof-fg: #121514;
+  --pair-field-proof-bg: #d5d6d0;
+  --pair-field-muted-fg: #4c524d;
+  --pair-field-muted-bg: #e4e4df;
+  --pair-field-muted-proof-fg: #4c524d;
+  --pair-field-muted-proof-bg: #d5d6d0;
+  --pair-field-cut-fg: #9a3b2c;
+  --pair-field-cut-bg: #e4e4df;
+  --pair-field-accent-fg: #824710;
+  --pair-field-accent-bg: #e4e4df;
+  --pair-field-accent-proof-fg: #824710;
+  --pair-field-accent-proof-bg: #d5d6d0;
+
+  /* ---- Contrast pairs: state words ---- */
+  --pair-state-ok-soil-fg: #9ad49c;
+  --pair-state-ok-soil-bg: #12110e;
+  --pair-state-part-soil-fg: #e8b65a;
+  --pair-state-part-soil-bg: #12110e;
+  --pair-state-lost-soil-fg: #ee8b72;
+  --pair-state-lost-soil-bg: #12110e;
+  --pair-state-alive-soil-fg: #d4cdb9;
+  --pair-state-alive-soil-bg: #12110e;
+  --pair-state-ok-surface2-fg: #9ad49c;
+  --pair-state-ok-surface2-bg: #26231d;
+  --pair-state-part-surface2-fg: #e8b65a;
+  --pair-state-part-surface2-bg: #26231d;
+  --pair-state-lost-surface2-fg: #ee8b72;
+  --pair-state-lost-surface2-bg: #26231d;
+  --pair-state-alive-surface2-fg: #d4cdb9;
+  --pair-state-alive-surface2-bg: #26231d;
+  --pair-state-part-warn-fg: #e8b65a;
+  --pair-state-part-warn-bg: #2a1f12;
+  --pair-state-part-surface-fg: #e8b65a;
+  --pair-state-part-surface-bg: #1b1915;
+  --pair-state-lost-surface-fg: #ee8b72;
+  --pair-state-lost-surface-bg: #1b1915;
+
+  /* ---- Contrast pairs: headstones ---- */
+  --pair-hs-alive-fg: #1a1814;
+  --pair-hs-alive-bg: #8d877a;
+  --pair-hs-recovered-fg: #10200f;
+  --pair-hs-recovered-bg: #9ad49c;
+  --pair-hs-partial-fg: #e8b65a;
+  --pair-hs-partial-bg: #12110e;
+  --pair-hs-lost-fg: #a08a7e;
+  --pair-hs-lost-bg: #12110e;
+  --pair-hs-lost-border-ui-fg: #a08a7e;
+  --pair-hs-lost-border-ui-bg: #12110e;
+  /* Back row of the narrow stone rows: a darker stone fill, so it reads as farther away. */
+  --pair-hs-back-fg: #efe9dc;
+  --pair-hs-back-bg: #5b564b;
+  --pair-hs-back-recovered-fg: #f4f1e8;
+  --pair-hs-back-recovered-bg: #3f6a43;
+
+  /* ---- Contrast pairs: disk bar segments ---- */
+  --pair-seg-alive-fg: #121514;
+  --pair-seg-alive-bg: #d4cdb9;
+  --pair-seg-recovered-fg: #121514;
+  --pair-seg-recovered-bg: #9ad49c;
+  --pair-seg-partial-fg: #121514;
+  --pair-seg-partial-bg: #e8b65a;
+  --pair-seg-lost-fg: #121514;
+  --pair-seg-lost-bg: #ee8b72;
+
+  /* ---- Contrast pairs: UI components ---- */
+  --pair-focus-ui-ground-fg: #ffbf5e;
   --pair-focus-ui-ground-bg: #0b0f10;
-  --pair-border-ui-fg: #5f7378;
-  --pair-border-ui-bg: #141c1e;
-  --pair-grave-art-ui-fg: #8fa5aa;
-  --pair-grave-art-ui-bg: #141c1e;
+  --pair-focus-ui-panel-fg: #ffbf5e;
+  --pair-focus-ui-panel-bg: #1b1915;
+  --pair-focus-ui-field-fg: #824710;
+  --pair-focus-ui-field-bg: #e4e4df;
+  --pair-border-ui-fg: #8a8274;
+  --pair-border-ui-bg: #1b1915;
+  --pair-buried-ui-fg: #6b6355;
+  --pair-buried-ui-bg: #0e0c0a;
 
-  /* Tokens */
-  --ground: var(--pair-body-bg);
-  --panel: var(--pair-body-panel-bg);
-  --raised: var(--pair-muted-raised-bg);
-  --stone: #6d8085;
-  --earth: #0d1312;
-  --radius: 0.5rem;
-  --gap: 1rem;
-  --font-body: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
-  --rise-ms: 900ms;
+  /* ---- Palette tokens ---- */
+  --bg: #0b0f10;
+  --surface: #1b1915;
+  --surface-2: #26231d;
+  --soil1: #12110e;
+  --soil2: #16130f;
+  --soil3: #0e0c0a;
+  --soil4: #080706;
+  --ink: #e6e6e1;
+  --muted: #a9b3a6;
+  --accent: #ffbf5e;
+  --accent-ink: #0b0f10;
+  --field: #e4e4df;
+  --field-ink: #121514;
+  --field-muted: #4c524d;
+  --field-focus: #824710;
+  --ok: #9ad49c;
+  --part: #e8b65a;
+  --lost: #ee8b72;
+  --alive: #d4cdb9;
+  --ground: var(--bg);
+  --grain-opacity: 0.22;
 
-  font-family: var(--font-body);
-  line-height: 1.5;
+  /* ---- Type, spacing, easing ---- */
+  --sans: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  --serif: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --step-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
+  --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+  --step-head: clamp(2.6rem, 1.4rem + 4.4vw, 5.6rem);
+  --step-hero: clamp(3.8rem, 1rem + 11vw, 12rem);
+  --m: clamp(16px, 3vw, 40px);
+  --ease: cubic-bezier(0.2, 0.7, 0.1, 1);
 }
+
+/* ---------------------------------------------------------------- fonts */
+
+@font-face {
+  font-family: 'Instrument Serif';
+  src: url('./assets/fonts/instrument-serif-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Hanken Grotesk';
+  src: url('./assets/fonts/hanken-grotesk-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------------------------------------------------------------- base */
 
 *,
 *::before,
@@ -63,804 +197,1696 @@
 
 html {
   margin: 0;
-  min-height: 100%;
   background: var(--pair-body-bg);
-  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  position: relative;
   margin: 0;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background: transparent;
-  color: var(--pair-body-fg);
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 var(--step-body) / 1.5 var(--sans);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.005em;
   overflow-x: hidden;
 }
 
-#app {
-  min-height: 100vh;
+a {
+  color: inherit;
 }
 
-/* ---------------------------------------------------------------- effect layers */
-
-#fx-host {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-/* Document-tall lantern glow. Fixed-size ellipses, so the light does not stretch with page height. */
-.fx-glow {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  opacity: 0.45;
-  pointer-events: none;
-}
-
-body::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  opacity: 0.45;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 60rem 40rem at 15% 0, rgb(255 191 94 / 0.45), transparent 100%),
-    radial-gradient(ellipse 60rem 40rem at 85% 100%, rgb(255 191 94 / 0.25), transparent 100%),
-    radial-gradient(ellipse 50rem 30rem at 30% 55%, rgb(169 183 168 / 0.09), transparent 100%);
-}
-
-.fx-canvas {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.fx-canvas.is-static {
-  opacity: 0.4;
-}
-
-/* ---------------------------------------------------------------- page */
-
-.content {
-  position: relative;
-  z-index: 10;
-  max-width: 64rem;
-  margin: 0 auto;
-  padding: 1rem;
-}
-
-main {
-  display: block;
+p {
+  margin: 0;
 }
 
 h1,
-h2 {
-  color: var(--pair-lantern-fg);
-  margin: 0 0 0.5rem;
-  overflow-wrap: anywhere;
-}
-
-h1 {
-  font-size: 2rem;
-  letter-spacing: 0.05em;
-}
-
-h2 {
-  font-size: 1.25rem;
-}
-
-.note {
-  margin: 0.25rem 0;
-  color: var(--pair-muted-fg);
-  overflow-wrap: anywhere;
-}
-
-footer {
-  margin-top: 2rem;
-}
-
-.content .note {
-  background: transparent;
-}
-
-.intro {
-  margin: 0.5rem 0 1rem;
-}
-
-.intro-lead {
-  margin: 0 0 0.5rem;
-  color: var(--pair-body-fg);
-  overflow-wrap: anywhere;
-}
-
-.intro-list {
-  margin: 0 0 0.75rem;
-  padding-left: 1.25rem;
-  color: var(--pair-muted-fg);
-  overflow-wrap: anywhere;
-}
-
-.intro-list li {
-  margin: 0.125rem 0;
-}
-
-.repo-link {
-  display: inline-block;
-  margin-top: 0.5rem;
-  color: var(--pair-lantern-fg);
-  text-underline-offset: 0.2em;
-}
-
-.repo-link:focus-visible {
-  outline: 2px solid var(--pair-focus-ui-ground-fg);
-  outline-offset: 2px;
-}
-
-/* ---------------------------------------------------------------- controls */
-
-button {
-  font: inherit;
-  cursor: pointer;
-}
-
-#pick-button,
-#cancel-button,
-#reopen-button,
-.preview-download,
-.graveyard-more {
-  background: var(--pair-button-bg);
-  color: var(--pair-button-fg);
-  border: 1px solid var(--pair-button-bg);
-  border-radius: var(--radius);
-  padding: 0.5rem 1rem;
-  min-height: 2.5rem;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-}
-
-#cancel-button,
-#reopen-button {
-  margin: 0.5rem 0.5rem 0.5rem 0;
-}
-
-button[disabled] {
-  cursor: not-allowed;
-  opacity: 0.7;
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 0.92;
 }
 
 [hidden] {
   display: none !important;
 }
 
+/* Amber ring on the dark grounds (3:1 or better on --bg, --surface, soil). */
 :focus-visible {
-  outline: 3px solid var(--pair-focus-ui-ground-fg);
-  outline-offset: 2px;
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
 }
 
-.drop-zone:focus-visible,
-.graveyard-list :focus-visible,
-.demo-slot :focus-visible,
-.preview :focus-visible {
-  outline-color: var(--pair-focus-ui-fg);
+/* On the paper field amber is 1.3:1, so the ring turns dark brown (5.3:1). */
+.paper:focus-visible,
+.paper :focus-visible,
+.proof:focus-visible,
+.proof :focus-visible,
+.formats :focus-visible,
+.formats:focus-visible {
+  outline-color: var(--field-focus);
 }
 
-.drop-zone {
-  background: var(--pair-body-panel-bg);
-  color: var(--pair-body-panel-fg);
-  border: 2px dashed var(--pair-border-ui-fg);
-  border-radius: var(--radius);
-  padding: 1.5rem 1rem;
-  margin: 1rem 0;
-  text-align: center;
+/* ---------------------------------------------------------------- grain */
+
+/* Req 6.8: fixed overlay above the strata, never intercepts pointer events. The opacity is the highest
+   step (src/web/grain-opacity.test.ts) at which every text pair still passes over the real texture. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background-image: url('./assets/img/grain.png');
+  opacity: var(--grain-opacity);
+  pointer-events: none;
 }
 
-.drop-zone p {
-  margin: 0 0 0.75rem;
-  overflow-wrap: anywhere;
+/* ---------------------------------------------------------------- strata */
+
+.stratum {
+  position: relative;
 }
 
-.drop-zone.is-dragover {
-  border-color: var(--pair-lantern-fg);
+/* Irregular top edge of a stratum: an inline svg filled with currentColor, no gradient. */
+.edge {
+  position: absolute;
+  left: 0;
+  top: -63px;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 64px;
+  pointer-events: none;
+}
+
+.yard {
+  background: var(--soil1);
+}
+
+.yard .edge {
+  color: var(--soil1);
+}
+
+.deep {
+  background: var(--soil2);
+  padding-bottom: 120px;
+}
+
+.deep .edge {
+  color: var(--soil2);
+}
+
+/* Torn paper edge into the formats section. */
+#formats,
+.formats {
+  background: var(--field);
+  color: var(--field-ink);
+}
+
+.formats .edge {
+  top: -39px;
+  height: 40px;
+  color: var(--field);
+}
+
+footer,
+.foot {
+  background: var(--soil3);
+}
+
+.foot .edge {
+  color: var(--soil3);
+}
+
+/* The soil that half buries the footer name. */
+.soil {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  height: 4.2vw;
+  background: var(--soil4);
+  pointer-events: none;
+}
+
+.soil .edge {
+  top: calc(-3vw + 1px);
+  height: 3vw;
+  color: var(--soil4);
+}
+
+/* ---------------------------------------------------------------- decorative layers */
+
+.sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.buried {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  color: var(--pair-buried-ui-fg);
+  pointer-events: none;
+  user-select: none;
+}
+
+.clauses {
+  pointer-events: none;
+}
+
+.rise-ghost {
+  pointer-events: none;
+}
+
+/* ================================================================ 4. page sections (task 5.3) */
+
+/* ---------------------------------------------------------------- nav */
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 20px var(--m);
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  text-decoration: none;
+}
+
+.nav .links {
+  display: flex;
+  gap: 1.6rem;
+  margin-left: auto;
+  font-size: var(--step-small);
+}
+
+.nav .links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.nav .links a:hover {
+  color: var(--ink);
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 1.4rem;
+  border: 0;
+  border-radius: 0;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 600 1rem var(--sans);
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.15s var(--ease);
+}
+
+.btn:hover {
+  background: var(--pair-button-hover-bg);
+  color: var(--pair-button-hover-fg);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-plain {
+  min-height: 40px;
+  padding: 0 1rem;
+  border: 1px solid var(--pair-border-ui-fg);
+  background: transparent;
+  color: var(--ink);
+  font: 600 var(--step-small) var(--sans);
+  cursor: pointer;
+}
+
+.btn-plain:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---------------------------------------------------------------- hero */
+
+.hero {
+  display: grid;
+  gap: 44px;
+  padding: clamp(80px, 16vh, 200px) var(--m) 0;
+}
+
+.hero h1 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.22em;
+  row-gap: 0.06em;
+  font-size: var(--step-hero);
+  line-height: 0.88;
+}
+
+.hero h1 .w {
+  white-space: nowrap;
+}
+
+.disk-glyph {
+  position: relative;
+  top: 0.02em;
+  display: inline-block;
+  width: 1.25em;
+  height: 0.7em;
+  align-self: baseline;
+  overflow: hidden;
+}
+
+.disk-glyph img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 55% 45%;
+}
+
+.hero-foot {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 24px;
+  align-items: center;
+}
+
+.hero-foot .say {
+  grid-column: 1 / 7;
+  max-width: 30ch;
+  font-size: var(--step-lead);
+  line-height: 1.3;
+}
+
+.hero-foot .act {
+  grid-column: 7 / 13;
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  justify-self: start;
+  gap: 20px;
+}
+
+.exts {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: var(--step-small);
+  line-height: 1.6;
+}
+
+.exts b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.note {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: var(--step-small);
 }
 
 .status {
-  min-height: 1.5rem;
-  margin: 0.5rem 0;
-  color: var(--pair-body-fg);
+  flex-basis: 100%;
+  min-height: 1.5em;
+  color: var(--muted);
+  font-size: var(--step-small);
+}
+
+.try {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+
+.try:hover {
+  color: var(--accent);
+}
+
+/* ---------------------------------------------------------------- headstones */
+
+/* A wrapping flex row in normal flow. The yard sits above it (z-index 2), so its soil covers the
+   foot of each stone: sink pushes a stone further into the ground. Tilt and sink are transforms,
+   so they never change the wrapped layout. */
+.stoneline {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 0 clamp(8px, 2vw, 32px);
+  padding: 0 var(--m);
+  margin-top: 40px;
+}
+
+.hs {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  width: min(var(--w), var(--wv));
+  height: min(var(--h), var(--hv));
+  min-height: 40px;
+  padding: 42px 6px 0;
+  border: 0;
+  border-radius: 999px 999px 4px 4px;
+  background: var(--pair-hs-alive-bg);
+  color: var(--pair-hs-alive-fg);
+  font-family: var(--sans);
+  text-align: center;
+  cursor: pointer;
+  transform-origin: 50% 100%;
+  transform: translateY(var(--sink)) rotate(var(--tilt));
+}
+
+.hs::before {
+  content: '';
+  position: absolute;
+  top: 22px;
+  width: 34%;
+  height: 2px;
+  background: currentColor;
+}
+
+.hs .sn {
+  font: 700 var(--step-small) / 1.1 var(--sans);
+  letter-spacing: 0.01em;
   overflow-wrap: anywhere;
 }
 
-/* ---------------------------------------------------------------- demo slot */
+.hs .st {
+  font: 500 var(--step-small) / 1 var(--sans);
+}
+
+.hs:hover {
+  background: #a39d8f;
+}
+
+.hs--recovered {
+  background: var(--pair-hs-recovered-bg);
+  color: var(--pair-hs-recovered-fg);
+}
+
+.hs--recovered:hover {
+  background: #aedcb0;
+}
+
+/* Partly back: dashed outline, no fill, sunk deeper than its neighbours. */
+.hs--partial {
+  background: transparent;
+  border: 2px dashed var(--part);
+  color: var(--pair-hs-partial-fg);
+}
+
+.hs--partial:hover {
+  background: var(--soil2);
+}
+
+.hs--lost {
+  background: transparent;
+  border: 2px dashed var(--pair-hs-lost-border-ui-fg);
+  color: var(--pair-hs-lost-fg);
+}
+
+.hs--lost:hover {
+  background: var(--soil2);
+}
+
+.stone-0 { --w: 128px; --h: 208px; --wv: 14.08vw; --hv: 22.88vw; --sinkv: 5.06vw; --sink: 46px; --tilt: -1.5deg; }
+.stone-1 { --w: 140px; --h: 228px; --wv: 15.40vw; --hv: 25.08vw; --sinkv: 0.00vw; --sink: 0px; --tilt: 0deg; }
+.stone-2 { --w: 120px; --h: 200px; --wv: 13.20vw; --hv: 22.00vw; --sinkv: 5.72vw; --sink: 52px; --tilt: 2deg; }
+.stone-3 { --w: 128px; --h: 236px; --wv: 14.08vw; --hv: 25.96vw; --sinkv: 7.92vw; --sink: 72px; --tilt: -6deg; }
+.stone-4 { --w: 124px; --h: 204px; --wv: 13.64vw; --hv: 22.44vw; --sinkv: 5.50vw; --sink: 50px; --tilt: 1deg; }
+.stone-5 { --w: 116px; --h: 196px; --wv: 12.76vw; --hv: 21.56vw; --sinkv: 3.96vw; --sink: 36px; --tilt: 5deg; }
+
+/* 761px and up: one row, never wrapped. Each stone is min(its px size, 0.11vw per px), so the six
+   (756px of stones) plus five gaps fit in 100vw - 2 * var(--m) down to 761px. */
+@media (min-width: 761px) {
+  .stoneline {
+    flex-wrap: nowrap;
+  }
+
+  /* The sink scales with the stone so its label stays above the soil. */
+  .hs {
+    padding-inline: 2px;
+    transform: translateY(min(var(--sink), var(--sinkv))) rotate(var(--tilt));
+  }
+
+  .hs .sn {
+    font-size: clamp(0.62rem, 1.45vw, var(--step-small));
+  }
+}
+
+/* ---------------------------------------------------------------- yard */
+
+/* Above the stoneline so the soil (and its edge) covers the foot of the stones. */
+.yard {
+  z-index: 2;
+  padding: 120px var(--m) 140px;
+}
+
+.yard-head {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 24px;
+  align-items: end;
+  margin-bottom: 48px;
+}
+
+.yard-head h2 {
+  grid-column: 1 / 8;
+  font-size: var(--step-head);
+}
+
+.yard-head p {
+  grid-column: 8 / 13;
+  max-width: 34ch;
+  color: var(--muted);
+}
+
+.yard-head .demo-note {
+  grid-column: 8 / 13;
+  font-size: var(--step-small);
+}
+
+/* ---------------------------------------------------------------- demo cards */
 
 .demo-slot {
-  background: var(--pair-body-panel-bg);
-  color: var(--pair-body-panel-fg);
-  border: 1px solid var(--pair-border-ui-fg);
-  border-radius: var(--radius);
-  padding: 1rem;
-  margin: 1rem 0;
+  margin-bottom: 8px;
 }
 
 .demo-slot-label {
-  color: var(--pair-lantern-fg);
-  font-size: 1.25rem;
-  margin: 0 0 0.5rem;
+  margin-bottom: 12px;
+  font-size: var(--step-lead);
 }
 
 .demo-slot-status {
-  margin: 0.25rem 0;
-  color: var(--pair-muted-fg);
-  min-height: 1.5rem;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: var(--step-small);
 }
 
 .demo-slot-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
-  gap: var(--gap);
-}
-
-.demo-slot-list > * {
-  min-width: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .demo-slot-button {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  column-gap: 18px;
+  align-items: center;
   width: 100%;
-  min-width: 0;
+  min-height: 72px;
+  padding: 18px;
+  border: 0;
+  border-bottom: 4px solid transparent;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
   text-align: left;
-  background: var(--pair-muted-raised-bg);
-  color: var(--pair-body-panel-fg);
-  border: 1px solid var(--pair-border-ui-fg);
-  border-radius: var(--radius);
-  padding: 0.75rem;
-  overflow-wrap: anywhere;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease);
 }
 
-.demo-slot-title {
-  color: var(--pair-lantern-fg);
+.demo-slot-button:hover {
+  background: var(--surface-2);
 }
 
-.demo-slot-description {
-  color: var(--pair-muted-raised-fg);
+.demo-slot-button:active {
+  transform: translateY(1px);
 }
 
 .demo-slot-button[aria-pressed='true'] {
-  border-width: 3px;
-  border-style: double;
+  background: var(--surface-2);
+  border-bottom-color: var(--accent);
 }
 
-.demo-slot-button[aria-pressed='true'] .demo-slot-title::after {
-  content: ' \2013  open now';
+.demo-art {
+  grid-row: 1 / span 2;
+  display: block;
+  width: 72px;
+  height: 72px;
 }
 
-@media (max-width: 600px) {
-  .demo-slot {
-    padding: 0.75rem;
-  }
+.demo-art svg {
+  display: block;
+  width: 72px;
+  height: 72px;
+}
 
-  .demo-slot-list {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-  }
+.demo-slot-title {
+  display: block;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
 
-  .demo-slot-button {
-    padding: 0.5rem;
-    gap: 0;
-  }
+.demo-slot-description {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: var(--step-small);
+}
 
-  .demo-slot-description {
-    font-size: 0.8125rem;
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    overflow: hidden;
-  }
+/* ---------------------------------------------------------------- workspace and panels */
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 8px;
+  align-items: start;
+}
+
+.panel {
+  min-width: 0;
+  padding: 24px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.preview {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ---------------------------------------------------------------- graveyard */
 
-#graveyard {
-  margin: 1rem 0;
-}
-
-.graveyard-summary,
-.graveyard-message,
-.graveyard-progress {
-  margin: 0.5rem 0;
-  color: var(--pair-muted-fg);
+#graveyard-heading {
+  margin-bottom: 6px;
+  font-size: var(--step-lead);
+  line-height: 1;
   overflow-wrap: anywhere;
 }
 
-.graveyard-guidance {
-  margin: 0.5rem 0;
-  color: var(--pair-muted-fg);
-  overflow-wrap: anywhere;
-}
-
-.graveyard-guidance[hidden],
-.graveyard-stats[hidden] {
-  display: none;
+.graveyard-guidance,
+.graveyard-message {
+  color: var(--muted);
 }
 
 .graveyard-stats {
-  margin: 0.5rem 0;
+  margin-bottom: 18px;
 }
 
-.graveyard-stats > * {
-  margin: 0.25rem 0;
-}
-
-.grave-hint {
-  color: var(--pair-muted-fg);
-  font-size: 0.875rem;
-  overflow-wrap: anywhere;
+.graveyard-summary,
+.graveyard-progress {
+  color: var(--muted);
+  font-size: var(--step-small);
 }
 
 .graveyard-warnings {
-  background: var(--pair-body-panel-bg);
-  color: var(--pair-body-panel-fg);
-  border: 1px solid var(--pair-border-ui-fg);
-  border-radius: var(--radius);
-  padding: 0.5rem 1rem;
-  margin: 0.5rem 0;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  background: var(--pair-state-part-warn-bg);
+  color: var(--pair-state-part-warn-fg);
+  font-size: var(--step-small);
+}
+
+.graveyard-warnings-title {
+  font-weight: 600;
+}
+
+.graveyard-warnings ul {
+  margin: 6px 0 0;
+  padding-left: 1.2em;
   overflow-wrap: anywhere;
 }
 
 .graveyard-list {
-  list-style: none;
-  margin: 1rem 0;
-  padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
-  gap: var(--gap);
-}
-
-.graveyard-list > * {
-  min-width: 0;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .graveyard-more {
-  display: block;
-  margin: 0.5rem 0;
+  min-height: 40px;
+  margin-top: 12px;
+  padding: 0 1rem;
+  border: 1px solid var(--pair-border-ui-fg);
+  background: transparent;
+  color: var(--ink);
+  font: 600 var(--step-small) var(--sans);
+  cursor: pointer;
+}
+
+.graveyard-more:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .grave {
-  position: relative;
-  background: var(--pair-body-panel-bg);
-  color: var(--pair-body-panel-fg);
-  border: 1px solid var(--pair-border-ui-fg);
-  border-radius: var(--radius);
-  overflow: hidden;
+  background: var(--soil1);
+  color: var(--ink);
 }
 
 .grave-action,
 .grave-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  column-gap: 14px;
+  align-items: center;
   width: 100%;
-  min-width: 0;
-  margin: 0;
-  padding: 0.75rem;
+  min-height: 56px;
+  padding: 12px;
+  border: 0;
   background: transparent;
   color: inherit;
-  border: 0;
-  border-radius: inherit;
   font: inherit;
   text-align: left;
 }
 
-.grave-action:hover:not([disabled]) {
-  background: var(--pair-muted-raised-bg);
+.grave-action {
+  min-height: 56px;
+  cursor: pointer;
+}
+
+.grave-action:hover {
+  background: var(--surface-2);
+}
+
+.grave-action[aria-current='true'] {
+  background: var(--surface-2);
+}
+
+.grave-action:disabled {
+  cursor: default;
+  color: var(--muted);
 }
 
 .grave-action:focus-visible {
-  outline-offset: -4px;
+  outline-offset: -3px;
 }
 
-.grave-action[disabled] {
-  cursor: not-allowed;
+.grave-art {
+  grid-column: 1;
+  grid-row: 1 / span 4;
+  display: block;
+  width: 26px;
+  height: 32px;
+  background: var(--alive);
+  border-radius: 999px 999px 2px 2px;
 }
 
-.grave-name,
-.grave-path,
-.preview-title,
-#preview-title {
-  min-width: 0;
-  overflow-wrap: anywhere;
+/* A stone shape per state, so state never relies on colour alone. */
+.grave--alive .grave-art {
+  background: var(--alive);
+}
+
+.grave--recovered .grave-art {
+  background: var(--ok);
+}
+
+.grave--partial .grave-art {
+  background: transparent;
+  border: 2px dashed var(--part);
+  border-bottom: 0;
+  height: 26px;
+  align-self: end;
+}
+
+.grave--lost .grave-art {
+  background: transparent;
+  border: 2px dashed var(--lost);
+  border-radius: 2px;
+  clip-path: polygon(0 18%, 40% 0, 62% 14%, 100% 4%, 100% 100%, 0 100%);
 }
 
 .grave-name {
-  color: var(--pair-lantern-fg);
-  font-weight: bold;
-}
-
-.grave-path,
-.grave-meta,
-.grave-reason,
-.grave-marker {
-  color: var(--pair-muted-fg);
+  grid-column: 2;
+  grid-row: 1;
+  font: 600 1rem var(--sans);
+  letter-spacing: 0;
   overflow-wrap: anywhere;
 }
 
 .grave-state {
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  grid-column: 3;
+  grid-row: 1;
+  font-size: var(--step-small);
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.grave--alive .grave-state {
-  color: var(--pair-body-panel-fg);
+.grave--alive .grave-state { color: var(--pair-state-alive-soil-fg); }
+.grave--recovered .grave-state { color: var(--pair-state-ok-soil-fg); }
+.grave--partial .grave-state { color: var(--pair-state-part-soil-fg); }
+.grave--lost .grave-state { color: var(--pair-state-lost-soil-fg); }
+
+.grave-hint,
+.grave-path,
+.grave-meta,
+.grave-reason,
+.grave-marker {
+  grid-column: 2 / 4;
+  color: var(--muted);
+  font: 400 var(--step-small) / 1.4 var(--sans);
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
 }
 
-.grave--recovered .grave-state {
-  color: var(--pair-state-recovered-fg);
+.grave-meta {
+  margin-top: 2px;
 }
 
-.grave--partial .grave-state {
-  color: var(--pair-state-partial-fg);
+.grave-marker {
+  font-weight: 600;
 }
 
-.grave--lost .grave-state {
-  color: var(--pair-state-lost-fg);
+/* ---------------------------------------------------------------- preview panel */
+
+.preview-empty {
+  color: var(--muted);
 }
 
-/* ---------------------------------------------------------------- grave art (CSS only) */
-
-.grave-art {
-  position: relative;
-  display: block;
-  flex: none;
-  width: 2.5rem;
-  height: 3rem;
-  margin-bottom: 0.25rem;
-  pointer-events: none;
+#preview-title {
+  font-size: var(--step-lead);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
 }
 
-/* Tombstone: solid rounded-top slab with a cross-bar and base shadow. */
-.grave--tombstone .grave-art {
-  background:
-    radial-gradient(circle at 50% 120%, rgb(255 191 94 / 0.25), transparent 70%),
-    linear-gradient(var(--stone), var(--stone));
-  background-size: 100% 100%, 70% 100%;
-  background-repeat: no-repeat;
-  background-position: center, center;
-  border-radius: 1.25rem 1.25rem 0.125rem 0.125rem;
-}
-
-.grave--tombstone .grave-art::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 0.6rem;
-  width: 1.1rem;
-  height: 0.2rem;
-  transform: translateX(-50%);
-  background: var(--earth);
-  box-shadow: 0 0.55rem 0 var(--earth);
-  opacity: 0.6;
-}
-
-.grave--tombstone .grave-art::after {
-  content: '';
-  position: absolute;
-  left: -0.25rem;
-  right: -0.25rem;
-  bottom: -0.2rem;
-  height: 0.35rem;
-  border-radius: 50%;
-  background: rgb(0 0 0 / 0.5);
-}
-
-/* Open grave: dark earth slab, dashed top edge, small mound, glow tinted by state. */
-.grave--open-grave .grave-art {
-  height: 3.5rem;
-  width: 5rem;
-  background:
-    radial-gradient(ellipse at 50% 0, var(--grave-glow, rgb(255 191 94 / 0.4)), transparent 75%),
-    linear-gradient(var(--raised), var(--raised));
-  border-top: 2px dashed var(--pair-grave-art-ui-fg);
-  border-radius: 0.25rem;
-}
-
-/* Shapes differ by state, so state is never carried by colour alone. */
-.grave--open-grave.grave--partial .grave-art {
-  background: linear-gradient(to right, var(--raised) 50%, transparent 50%);
-}
-
-.grave--open-grave.grave--lost .grave-art {
-  background: transparent;
-  border: 2px dashed var(--pair-grave-art-ui-fg);
-}
-
-.grave--open-grave.grave--lost .grave-art::after {
-  display: none;
-}
-
-/* State glyphs */
-.grave--recovered .grave-state::before {
-  content: '\25CF\00A0';
-}
-
-.grave--partial .grave-state::before {
-  content: '\25D0\00A0';
-}
-
-.grave--lost .grave-state::before {
-  content: '\2715\00A0';
-}
-
-.grave--alive .grave-state::before {
-  content: '\25A0\00A0';
-}
-
-.grave--open-grave .grave-art::after {
-  content: '';
-  position: absolute;
-  right: -0.4rem;
-  bottom: 0;
-  width: 1.2rem;
-  height: 0.6rem;
-  border-radius: 1.2rem 1.2rem 0 0;
-  background: var(--earth);
-}
-
-.grave--recovered {
-  --grave-glow: rgb(143 227 161 / 0.45);
-}
-
-.grave--partial {
-  --grave-glow: rgb(240 195 106 / 0.45);
-}
-
-.grave--lost {
-  --grave-glow: rgb(255 154 138 / 0.4);
-}
-
-/* ---------------------------------------------------------------- rising animation (transform and opacity only) */
-
-.is-rising .grave-art {
-  animation: grave-fade var(--rise-ms) ease-out both;
-}
-
-.rise-ghost {
-  position: absolute;
-  left: 1rem;
-  top: 1rem;
-  width: 2rem;
-  height: 2.5rem;
-  border-radius: 1rem 1rem 0.5rem 0.5rem;
-  background: radial-gradient(ellipse at 50% 30%, rgb(223 230 216 / 0.8), transparent 75%);
-  pointer-events: none;
-  animation: ghost-rise var(--rise-ms) ease-out both;
-}
-
-@keyframes ghost-rise {
-  from {
-    transform: translateY(0);
-    opacity: 0.9;
-  }
-  to {
-    transform: translateY(-3rem);
-    opacity: 0;
-  }
-}
-
-@keyframes grave-fade {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0.3;
-  }
-}
-
-/* ---------------------------------------------------------------- preview dialog */
-
-#preview-root {
-  position: relative;
-}
-
-.preview-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
+.preview-top {
   display: flex;
+  justify-content: space-between;
   align-items: flex-start;
-  justify-content: center;
-  padding: 1rem;
-  overflow-y: auto;
-  background: rgb(5 8 8 / 0.8);
+  gap: 1rem;
+  margin-bottom: 20px;
 }
 
-.preview {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  width: 100%;
-  max-width: 48rem;
+.preview-top > div:first-child {
   min-width: 0;
-  background: var(--pair-body-panel-bg);
-  color: var(--pair-body-panel-fg);
-  border: 1px solid var(--pair-border-ui-fg);
-  border-radius: var(--radius);
-  padding: 1rem;
 }
 
-.preview > * {
-  min-width: 0;
-  max-width: 100%;
+.preview-kind {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: var(--step-small);
 }
 
-.preview-header {
+.preview-actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.5rem;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
-.preview-header h2 {
-  flex: 1 1 10rem;
-  margin: 0;
-}
-
-.preview-close {
-  background: var(--pair-muted-raised-bg);
-  color: var(--pair-body-panel-fg);
+.preview-download {
+  min-height: 40px;
+  padding: 0 14px;
   border: 1px solid var(--pair-border-ui-fg);
-  border-radius: var(--radius);
-  padding: 0.5rem 1rem;
-  min-height: 2.5rem;
+  background: transparent;
+  color: var(--ink);
+  font: 600 var(--step-small) var(--sans);
+  white-space: nowrap;
+  cursor: pointer;
 }
 
-.preview-partial,
-.preview-shortened,
-.csv-note,
-.preview-status {
-  margin: 0;
-  color: var(--pair-muted-fg);
-  overflow-wrap: anywhere;
+.preview-download:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.preview-status,
+.preview-shortened {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: var(--step-small);
+}
+
+.preview-partial {
+  margin-bottom: 14px;
+  color: var(--pair-state-part-surface-fg);
+  font-size: var(--step-small);
 }
 
 .preview-error {
-  margin: 0;
-  color: var(--pair-state-lost-fg);
-  overflow-wrap: anywhere;
+  margin-top: 10px;
+  color: var(--pair-state-lost-surface-fg);
+  font-size: var(--step-small);
 }
 
 .preview-warnings {
-  margin: 0;
-  padding-left: 1.25rem;
-  color: var(--pair-state-partial-fg);
+  margin: 0 0 14px;
+  padding: 10px 12px 10px 2em;
+  background: var(--pair-state-part-warn-bg);
+  color: var(--pair-state-part-warn-fg);
+  font-size: var(--step-small);
   overflow-wrap: anywhere;
 }
 
-.preview-footer {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
+.paper {
+  max-height: 560px;
+  padding: clamp(20px, 3vw, 44px);
+  overflow: auto;
+  background: var(--field);
+  color: var(--field-ink);
+  font-size: var(--step-body);
+  line-height: 1.6;
 }
 
-.scroll-x,
+.paper p {
+  max-width: 62ch;
+  margin: 0 0 0.9em;
+  overflow-wrap: anywhere;
+}
+
+.paper hr {
+  border: 0;
+  border-top: 1px solid var(--field-muted);
+  margin: 1.2em 0;
+}
+
 .preview-scroll {
-  overflow-x: auto;
   max-width: 100%;
-  min-width: 0;
-}
-
-.preview-scroll {
-  max-height: 60vh;
-  overflow-y: auto;
-  background: var(--pair-muted-raised-bg);
-  color: var(--pair-body-panel-fg);
-  border: 1px solid var(--pair-border-ui-fg);
-  border-radius: var(--radius);
-  padding: 0.5rem;
+  overflow: auto;
 }
 
 .preview-markdown {
-  line-height: 1.5;
   overflow-wrap: anywhere;
 }
 
-.preview-markdown p {
-  margin: 0 0 0.75em;
-}
-
-.preview-markdown hr {
-  border: 0;
-  border-top: 1px solid var(--pair-border-ui-fg);
-}
-
+/* The only places the monospace face is allowed. */
 .preview-text {
+  font-family: var(--mono);
+  font-size: 0.88rem;
+  line-height: 1.5;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
-.preview-image {
-  text-align: center;
-}
-
-.preview-png {
-  display: inline-block;
-  max-width: 100%;
-  height: auto;
-  image-rendering: pixelated;
-}
-
-.csv-wrap {
-  margin: 0.5rem 0;
-}
-
-.csv-table {
-  border-collapse: collapse;
-  font-size: 0.875rem;
-}
-
-.csv-table th,
-.csv-table td {
-  border: 1px solid var(--pair-border-ui-fg);
-  padding: 0.25rem 0.5rem;
-  text-align: left;
-  white-space: nowrap;
-}
-
-.csv-table th {
-  color: var(--pair-lantern-fg);
-}
-
 .hex-view {
-  font-size: 0.8125rem;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  white-space: pre;
 }
 
 .hex-row {
   display: flex;
-  gap: 1rem;
-  white-space: pre;
-  width: max-content;
+  gap: 1.2em;
 }
 
 .hex-offset {
-  color: var(--pair-muted-raised-fg);
+  color: var(--field-muted);
 }
 
 .hex-bytes {
-  color: var(--pair-body-panel-fg);
-  letter-spacing: 0.02em;
+  flex: 0 0 auto;
 }
 
 .hex-text {
-  color: var(--pair-lantern-fg);
+  flex: 0 0 auto;
 }
 
-/* ---------------------------------------------------------------- small screens */
+.preview-image {
+  display: block;
+}
 
-@media (max-width: 480px) {
-  .content {
-    padding: 0.75rem;
+.preview-png {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  margin: auto;
+  image-rendering: pixelated;
+}
+
+.paper .cut,
+.cut {
+  margin-top: 1em;
+  padding-top: 0.7em;
+  border-top: 2px dashed var(--pair-field-cut-fg);
+  color: var(--pair-field-cut-fg);
+  font-family: var(--sans);
+  font-size: var(--step-small);
+}
+
+/* Tables: the dynamic CSV preview and the static dBase excerpt share one look. */
+.csv,
+.csv-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--field-ink);
+  font: 400 var(--step-small) var(--sans);
+}
+
+.csv th,
+.csv-table th {
+  padding: 6px 10px 6px 0;
+  border-bottom: 2px solid var(--field-ink);
+  font-weight: 600;
+  text-align: left;
+}
+
+.csv td,
+.csv-table td {
+  padding: 6px 10px 6px 0;
+  border-bottom: 1px solid var(--field-muted);
+  white-space: nowrap;
+}
+
+.csv td.num {
+  text-align: right;
+}
+
+.csv-wrap {
+  max-width: 100%;
+  overflow: auto;
+}
+
+.csv-note {
+  margin-top: 10px;
+  color: var(--field-muted);
+  font-size: var(--step-small);
+}
+
+/* ---------------------------------------------------------------- long names wrap, never scroll the page */
+
+.grave-name,
+.grave-path,
+.preview-title {
+  overflow-wrap: anywhere;
+}
+
+/* ---------------------------------------------------------------- disk bar */
+
+.bar-sec {
+  padding: 120px var(--m) 0;
+}
+
+.bar-sec h2 {
+  max-width: 14ch;
+  margin-bottom: 64px;
+  font-size: var(--step-head);
+}
+
+/* Widths are the byte totals of the writer's disk (a test compares them); no min-width, so the
+   proportions stay true. */
+.bar-track {
+  display: flex;
+  gap: 6px;
+  height: 22vh;
+  min-height: 150px;
+}
+
+.seg {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+  color: var(--pair-seg-alive-fg);
+  transform-origin: left;
+}
+
+.seg strong {
+  font-weight: 500;
+  font-size: clamp(20px, 2vw, 30px);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Words come from the caption row beside the bar; the narrow layout shows them inside. */
+.seg em {
+  display: none;
+  font-style: normal;
+  font-size: var(--step-small);
+}
+
+.seg--alive { flex: 10600; background: var(--pair-seg-alive-bg); }
+.seg--recovered { flex: 3468; background: var(--pair-seg-recovered-bg); }
+.seg--partial { flex: 2048; background: var(--pair-seg-partial-bg); }
+.seg--lost { flex: 1024; background: var(--pair-seg-lost-bg); }
+
+.clauses {
+  display: flex;
+  gap: 6px;
+  margin-top: 18px;
+}
+
+.clauses p {
+  min-width: 0;
+  padding-right: 12px;
+  color: var(--ink);
+  font-size: var(--step-small);
+  overflow-wrap: anywhere;
+}
+
+.clauses .c1 { flex: 10600; }
+.clauses .c2 { flex: 3468; }
+.clauses .c3 { flex: 2048; }
+.clauses .c4 { flex: 1024; }
+
+/* ---------------------------------------------------------------- photo band */
+
+.band {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 24px;
+  align-items: end;
+  margin: 160px 0 0;
+  padding: 0 var(--m);
+}
+
+.band img {
+  grid-column: 1 / 9;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.band figcaption {
+  grid-column: 9 / 13;
+}
+
+.band h2 {
+  margin-bottom: 16px;
+  font-size: clamp(2.2rem, 1rem + 3vw, 4rem);
+}
+
+.band p {
+  max-width: 34ch;
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------------- formats (paper field) */
+
+.formats {
+  padding: 120px var(--m) 140px;
+}
+
+.formats h2 {
+  max-width: 12ch;
+  margin-bottom: 48px;
+  font-size: var(--step-head);
+}
+
+.fmt {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+  padding: 56px 0;
+}
+
+.fmt + .fmt {
+  margin-top: 24px;
+}
+
+.fmt .what {
+  grid-column: 1 / 6;
+  min-width: 0;
+}
+
+.fmt .what h3 {
+  margin-bottom: 16px;
+  font-size: clamp(2.2rem, 1rem + 3vw, 4rem);
+}
+
+.fmt .what p {
+  max-width: 34ch;
+  color: var(--field-muted);
+}
+
+.proof-col {
+  grid-column: 6 / 13;
+  min-width: 0;
+}
+
+.proof {
+  min-width: 0;
+  padding: clamp(20px, 3vw, 40px);
+  overflow: auto;
+  background: var(--pair-field-proof-bg);
+  color: var(--pair-field-proof-fg);
+  font-size: var(--step-body);
+  line-height: 1.6;
+}
+
+.proof p {
+  max-width: 58ch;
+  margin: 0 0 0.9em;
+}
+
+.proof .csv th,
+.proof .csv td {
+  border-color: var(--pair-field-muted-proof-fg);
+}
+
+.proof :focus-visible {
+  outline-offset: -3px;
+}
+
+.cap {
+  margin-top: 16px;
+  color: var(--field-muted);
+  font: 400 var(--step-small) var(--sans);
+}
+
+.fmt.flip .what {
+  grid-column: 8 / 13;
+  grid-row: 1;
+}
+
+.fmt.flip .proof-col {
+  grid-column: 1 / 8;
+  grid-row: 1;
+}
+
+/* LOGO.PCX: 64 px wide, shown at an integer scale (7x here), pixel for pixel. */
+.proof--pcx img {
+  display: block;
+  width: 448px;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+/* ---------------------------------------------------------------- footer */
+
+.foot {
+  display: flex;
+  flex-direction: column;
+  padding: 160px var(--m) 0;
+  overflow: visible;
+}
+
+.foot .inv {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.foot .inv > div {
+  grid-column: 1 / 10;
+}
+
+.foot h2 {
+  max-width: 16ch;
+  margin-bottom: 32px;
+  font-size: clamp(3rem, 1rem + 6vw, 7.4rem);
+}
+
+.foot ul {
+  grid-column: 10 / 13;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.foot ul a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.foot ul a:hover {
+  color: var(--ink);
+}
+
+.foot ul span {
+  color: var(--muted);
+}
+
+.foot .note {
+  margin-top: 48px;
+}
+
+.legal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 48px;
+  padding-bottom: 12px;
+  color: var(--muted);
+  font-size: var(--step-small);
+}
+
+.legal p {
+  max-width: 60ch;
+}
+
+/* The buried name: centred with equal margins at every width, clipped by the soil. */
+.bury {
+  position: relative;
+  overflow: hidden;
+  padding-top: 4vw;
+}
+
+.buried {
+  display: block;
+  width: 100%;
+  margin: 0 auto;
+  font-size: 35vw;
+  line-height: 0.8;
+  letter-spacing: -0.02em;
+  text-align: center;
+  white-space: nowrap;
+  transform: translateY(6%);
+}
+
+.noscript {
+  padding: 16px var(--m);
+  color: var(--ink);
+}
+
+/* ================================================================ 5. motion, narrow block, reduced motion (task 5.4) */
+
+/* Only opacity, transform and clip-path move. A hidden start state lives either in the `from`
+   step of a keyframes block (with fill-mode both, so no animation means visible) or under `.js`
+   (set by dom/motion.ts, so no script means visible). */
+
+@keyframes up {
+  from {
+    opacity: 0;
+    transform: translateY(0.25em);
+  }
+}
+
+@keyframes shutter {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes settle {
+  from {
+    transform: scale(1.12);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* The recovered stone rises from deeper in the ground to its own sink and tilt. */
+@keyframes raise {
+  from {
+    transform: translateY(calc(var(--sink) + 170px)) rotate(var(--tilt));
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.hero h1 .w {
+  animation: up 1s var(--ease) both;
+}
+
+.hero h1 .w:last-child {
+  animation-delay: 0.18s;
+}
+
+.disk-glyph {
+  animation: shutter 1.1s 0.15s var(--ease) both;
+}
+
+.disk-glyph img {
+  animation: settle 1.1s 0.15s var(--ease) both;
+}
+
+.hs.hs--recovered {
+  animation: raise 1.6s 0.7s var(--ease) both;
+}
+
+/* The preview body is a new element on every show, so the fade restarts without script. */
+.preview .paper {
+  animation: fade 0.32s var(--ease) both;
+}
+
+/* Scroll entrances and the bar fill. */
+.js .rise {
+  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
+}
+
+.js .rise:not(.in) {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+.js .bar-track .seg {
+  transition: transform 0.9s var(--ease);
+}
+
+.js .bar-track:not(.in) .seg {
+  transform: scaleX(0.001);
+}
+
+.js .bar-track.in .seg:nth-child(2) {
+  transition-delay: 0.12s;
+}
+
+.js .bar-track.in .seg:nth-child(3) {
+  transition-delay: 0.24s;
+}
+
+.js .bar-track.in .seg:nth-child(4) {
+  transition-delay: 0.36s;
+}
+
+.js .fmt:nth-of-type(2) .rise,
+.js .yard-head p:nth-child(2) {
+  transition-delay: 0.08s;
+}
+
+.js .yard-head p:nth-child(3) {
+  transition-delay: 0.16s;
+}
+
+/* ---------------------------------------------------------------- narrow screens */
+
+@media (max-width: 760px) {
+  .nav .links a:not(#repo-link) {
+    display: none;
   }
 
-  h1 {
-    font-size: 1.5rem;
+  .hero {
+    gap: 48px;
+    padding-top: 56px;
   }
 
-  .preview-backdrop {
-    padding: 0.5rem;
+  .hero h1 {
+    font-size: 17vw;
+    line-height: 0.92;
+  }
+
+  .hero-foot {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .hero-foot .say,
+  .hero-foot .act {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .hero-foot .act {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-foot .act .btn {
+    width: 100%;
+  }
+
+  /* Two rows of three with depth; none is hidden. The back row (.stone-0 to .stone-2) is 85% size,
+     has a darker fill and its lower part (--back-overlap) tucks behind the front row, which sits
+     --front-sink into the soil (the yard covers its feet). What shows of a back stone above the
+     front row is --stone-h * --back-scale - --back-overlap + --front-sink = 21.9vw, enough for its
+     label block (about 74px) from 340px up. A focused back stone is raised above the front row. */
+  .stoneline {
+    --stone-w: 26vw;
+    --stone-h: 34vw;
+    --back-scale: 0.85;
+    --back-margin-x: 1.95vw;
+    --back-overlap: 11vw;
+    --front-sink: 4vw;
+    gap: 0 8px;
+    margin-top: 28px;
+  }
+
+  .hs {
+    z-index: 2;
+    width: var(--stone-w);
+    height: var(--stone-h);
+    min-height: 40px;
+    padding: 32px 4px 0;
+  }
+
+  .stone-0,
+  .stone-1,
+  .stone-2 {
+    --sink: 0px;
+    z-index: 1;
+    width: calc(var(--stone-w) * var(--back-scale));
+    height: calc(var(--stone-h) * var(--back-scale));
+    margin-inline: var(--back-margin-x);
+    margin-bottom: calc(var(--back-overlap) * -1);
+  }
+
+  .stone-3,
+  .stone-4,
+  .stone-5 {
+    --sink: var(--front-sink);
+  }
+
+  .hs.stone-0,
+  .hs.stone-1,
+  .hs.stone-2,
+  .hs.stone-0:hover,
+  .hs.stone-1:hover,
+  .hs.stone-2:hover {
+    background: var(--pair-hs-back-bg);
+    color: var(--pair-hs-back-fg);
+  }
+
+  .hs--recovered.stone-1,
+  .hs--recovered.stone-1:hover {
+    background: var(--pair-hs-back-recovered-bg);
+    color: var(--pair-hs-back-recovered-fg);
+  }
+
+  .hs.stone-0:focus-visible,
+  .hs.stone-1:focus-visible,
+  .hs.stone-2:focus-visible {
+    z-index: 3;
+  }
+
+  /* An opaque dashed stone, so the back stone behind it does not show through. */
+  .hs--partial.stone-3 {
+    background: var(--pair-hs-partial-bg);
+  }
+
+  .hs::before {
+    top: 16px;
+  }
+
+  .hs .sn {
+    font-size: 0.7rem;
+  }
+
+  .hs .st {
+    font-size: 0.7rem;
+  }
+
+  .hs.hs--recovered {
+    animation: none;
+  }
+
+  .edge {
+    top: -35px;
+    height: 36px;
+  }
+
+  .formats .edge {
+    top: -21px;
+    height: 22px;
+  }
+
+  .yard {
+    margin-top: 40px;
+    padding: 88px var(--m) 110px;
+  }
+
+  .yard-head {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .yard-head h2,
+  .yard-head p,
+  .yard-head .demo-note {
+    grid-column: 1;
+  }
+
+  .demo-slot-list {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-slot-button {
+    grid-template-columns: 52px minmax(0, 1fr);
+    column-gap: 14px;
+    padding: 14px;
+  }
+
+  .demo-art,
+  .demo-art svg {
+    width: 52px;
+    height: 52px;
+  }
+
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .preview {
+    position: static;
+  }
+
+  .paper {
+    max-height: 420px;
+  }
+
+  .bar-sec {
+    padding-top: 140px;
+  }
+
+  /* A column of blocks: proportional widths apply to wide screens only. */
+  .bar-track {
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+  }
+
+  .seg {
+    min-height: 96px;
+  }
+
+  .seg--alive {
+    flex: none;
+    height: 220px;
+  }
+
+  .seg--recovered {
+    flex: none;
+    height: 110px;
+  }
+
+  .seg--partial {
+    flex: none;
+    height: 96px;
+  }
+
+  .seg--lost {
+    flex: none;
+    height: 96px;
+  }
+
+  .seg em {
+    display: block;
+    max-width: 26ch;
+    font-size: 1rem;
+    line-height: 1.35;
+  }
+
+  .clauses {
+    display: none;
+  }
+
+  .band {
+    grid-template-columns: 1fr;
+    margin-top: 96px;
+  }
+
+  .band img,
+  .band figcaption {
+    grid-column: 1;
+  }
+
+  .formats {
+    padding: 96px var(--m) 110px;
+  }
+
+  .formats h2 {
+    margin-bottom: 48px;
+  }
+
+  .fmt,
+  .fmt.flip {
+    grid-template-columns: 1fr;
+    padding: 32px 0;
+  }
+
+  .fmt .what,
+  .fmt .proof-col,
+  .fmt.flip .what,
+  .fmt.flip .proof-col {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .proof--pcx img {
+    width: 256px;
+  }
+
+  .foot {
+    padding-top: 110px;
+  }
+
+  .foot .inv {
+    grid-template-columns: 1fr;
+  }
+
+  .foot .inv > div,
+  .foot ul {
+    grid-column: 1;
+  }
+
+  .foot ul {
+    grid-auto-flow: column;
+    justify-content: start;
+    gap: 20px;
+    margin-top: 32px;
+  }
+
+  .foot .btn {
+    width: 100%;
+  }
+
+  .buried {
+    font-size: 33.5vw;
   }
 }
 
@@ -871,10 +1897,25 @@ button[disabled] {
   *::before,
   *::after {
     animation: none !important;
-    animation-duration: 0s !important;
-    animation-delay: 0s !important;
     transition: none !important;
-    transition-duration: 0s !important;
-    scroll-behavior: auto !important;
+  }
+
+  .disk-glyph {
+    clip-path: none;
+  }
+
+  .disk-glyph img {
+    transform: none;
+  }
+
+  .js .rise,
+  .js .rise:not(.in) {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .js .bar-track .seg,
+  .js .bar-track:not(.in) .seg {
+    transform: none !important;
   }
 }

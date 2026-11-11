@@ -1,39 +1,38 @@
-// Preview dialog. Built with h() and Text nodes only; the page behind is made inert while it is open.
+// Inline preview panel. Built with h() and Text nodes only.
+// show() and clear() never move focus and never scroll; app.ts decides when to call focusHeading() or reveal().
 import { parseMarkdown } from '../logic/markdown';
 import type { DownloadSpec, PreviewModel } from '../logic/preview-model';
 import type { BlobUrlManager } from './blob-urls';
 import type { Downloader } from './download';
-import { trapTab } from './focus-trap';
 import { clear, h, setSrcBlob } from './h';
 import { buildCsvTable, buildHexView, buildMarkdown } from './preview-content';
 
 export interface PreviewPanel {
-  open(model: PreviewModel, opener: HTMLElement | null): void;
-  close(): void;
-  isOpen(): boolean;
+  show(model: PreviewModel): void;
+  clear(): void;
+  isShowing(): boolean;
+  focusHeading(): void;
+  reveal(reducedMotion: boolean): void;
+  headingElement(): HTMLElement;
 }
 
 export interface PreviewDeps {
   blobs: BlobUrlManager;
   downloader: Downloader;
-  fallbackFocus: () => HTMLElement;
-  background: HTMLElement;
 }
 
 const SHORTENED_NOTE = 'Only the start of the text is shown here. The download has all of it.';
 const IMAGE_FAILED_MESSAGE = 'The image could not be shown.';
+const EMPTY_TITLE = 'Preview';
+const EMPTY_TEXT = 'Choose a file to read it here.';
+const CUT_LINE = 'The rest of this file was overwritten. Exhume stops here instead of guessing.';
 
-interface Mounted {
-  backdrop: HTMLElement;
-  opener: HTMLElement | null;
-  urls: string[];
-  wasInert: boolean;
-}
+export function createPreviewPanel(root: HTMLElement, deps: PreviewDeps): PreviewPanel {
+  let urls: string[] = [];
+  let showing = false;
+  let heading: HTMLElement = h('h3', { id: 'preview-title', tabindex: '-1' }, EMPTY_TITLE);
 
-export function createPreviewPanel(deps: PreviewDeps): PreviewPanel {
-  let mounted: Mounted | null = null;
-
-  function buildBody(model: PreviewModel, urls: string[]): HTMLElement[] {
+  function buildBody(model: PreviewModel, owned: string[]): HTMLElement[] {
     const out: HTMLElement[] = [];
     const body = model.body;
     switch (body.kind) {
@@ -60,12 +59,16 @@ export function createPreviewPanel(deps: PreviewDeps): PreviewPanel {
         let url: string | null = null;
         try {
           url = deps.blobs.create(new Blob([body.png as BlobPart], { type: 'image/png' }));
-          urls.push(url);
+          owned.push(url);
           const img = h('img', { class: 'preview-png' }) as HTMLImageElement;
           setSrcBlob(img, url, safeName, deps.blobs.isOwned);
           out.push(h('div', { class: 'preview-scroll preview-image' }, img));
         } catch {
-          if (url !== null) deps.blobs.revoke(url);
+          if (url !== null) {
+            deps.blobs.revoke(url);
+            const i = owned.indexOf(url);
+            if (i >= 0) owned.splice(i, 1);
+          }
           out.push(h('p', { class: 'preview-error', role: 'alert' }, IMAGE_FAILED_MESSAGE));
         }
         break;
@@ -92,70 +95,72 @@ export function createPreviewPanel(deps: PreviewDeps): PreviewPanel {
     return button;
   }
 
-  function teardown(): Mounted | null {
-    const m = mounted;
-    if (m === null) return null;
-    mounted = null;
-    for (const url of m.urls) deps.blobs.revoke(url);
-    if (m.backdrop.parentNode !== null) m.backdrop.parentNode.removeChild(m.backdrop);
-    return m;
+  function releaseUrls(): void {
+    for (const url of urls) deps.blobs.revoke(url);
+    urls = [];
   }
 
-  function open(model: PreviewModel, opener: HTMLElement | null): void {
-    // A second preview replaces the first; the page stays inert and the first opener is kept.
-    const previous = teardown();
-    const urls: string[] = [];
+  function renderEmpty(): void {
+    releaseUrls();
+    clear(root);
+    heading = h('h3', { id: 'preview-title', tabindex: '-1' }, EMPTY_TITLE);
+    root.appendChild(heading);
+    root.appendChild(h('p', { class: 'preview-empty' }, EMPTY_TEXT));
+    showing = false;
+  }
 
-    const heading = h('h2', { id: 'preview-title', tabindex: '-1' }, model.title);
-    const closeButton = h('button', { class: 'preview-close', type: 'button' }, 'Close');
-    closeButton.addEventListener('click', () => close());
-    const dialog = h(
-      'div',
-      { class: 'preview', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'preview-title' },
-      h('header', { class: 'preview-header' }, heading, closeButton),
+  function show(model: PreviewModel): void {
+    releaseUrls();
+    clear(root);
+    const owned: string[] = [];
+
+    heading = h('h3', { id: 'preview-title', tabindex: '-1' }, model.title);
+    const status = h('p', { class: 'preview-status', role: 'alert' });
+    const actions = h('div', { class: 'preview-actions' }, ...model.downloads.map((d) => buildDownload(d, status)));
+    root.appendChild(
+      h('div', { class: 'preview-top' }, h('div', {}, heading, h('p', { class: 'preview-kind' }, model.kindLabel)), actions),
     );
-    if (model.partialNote !== null) dialog.appendChild(h('p', { class: 'preview-partial' }, model.partialNote));
-    if (model.error !== null) dialog.appendChild(h('p', { class: 'preview-error', role: 'alert' }, model.error));
+
+    if (model.partialNote !== null) root.appendChild(h('p', { class: 'preview-partial' }, model.partialNote));
+    if (model.error !== null) root.appendChild(h('p', { class: 'preview-error', role: 'alert' }, model.error));
     if (model.warnings.length > 0) {
-      dialog.appendChild(
+      root.appendChild(
         h('ul', { class: 'preview-warnings', 'aria-label': 'Warnings' }, ...model.warnings.map((w) => h('li', {}, w))),
       );
     }
-    for (const el of buildBody(model, urls)) dialog.appendChild(el);
 
-    const status = h('p', { class: 'preview-status', role: 'alert' });
-    const footer = h('footer', { class: 'preview-footer' }, ...model.downloads.map((d) => buildDownload(d, status)));
-    footer.appendChild(status);
-    dialog.appendChild(footer);
+    const bodyEls = buildBody(model, owned);
+    if (bodyEls.length > 0) {
+      const paper = h('div', { class: 'paper' });
+      for (const el of bodyEls) paper.appendChild(el);
+      root.appendChild(paper);
+    }
+    if (model.partialNote !== null) root.appendChild(h('p', { class: 'cut' }, CUT_LINE));
+    root.appendChild(status);
 
-    const backdrop = h('div', { class: 'preview-backdrop' }, dialog);
-    backdrop.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        close();
-      } else if (e.key === 'Tab') {
-        trapTab(dialog, e);
-      }
-    });
-
-    const wasInert = previous !== null ? previous.wasInert : deps.background.hasAttribute('inert');
-    deps.background.setAttribute('inert', '');
-    document.body.appendChild(backdrop);
-    mounted = { backdrop, opener: previous !== null ? previous.opener : opener, urls, wasInert };
-    heading.focus();
+    urls = owned;
+    showing = true;
   }
 
-  function close(): void {
-    const m = teardown();
-    if (m === null) return;
-    if (!m.wasInert) deps.background.removeAttribute('inert');
-    const target = m.opener !== null && m.opener.isConnected ? m.opener : deps.fallbackFocus();
-    target.focus();
+  function focusHeading(): void {
+    heading.focus({ preventScroll: true });
   }
+
+  function reveal(reducedMotion: boolean): void {
+    focusHeading();
+    if (typeof heading.scrollIntoView === 'function') {
+      heading.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'start' });
+    }
+  }
+
+  renderEmpty();
 
   return {
-    open,
-    close,
-    isOpen: () => mounted !== null,
+    show,
+    clear: renderEmpty,
+    isShowing: () => showing,
+    focusHeading,
+    reveal,
+    headingElement: () => heading,
   };
 }

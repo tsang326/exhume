@@ -120,6 +120,8 @@ describe('h attribute allow-list at runtime', () => {
     'data-X',
     'data-',
     'data-a_b',
+    'inert',
+    'aria-modal',
     'Class',
     'class ',
   ];
@@ -135,6 +137,11 @@ describe('h attribute allow-list at runtime', () => {
     h('div', { class: 'a', id: 'b', 'aria-label': 'c', 'data-foo-1': 'd', download: 'e' }, 'text');
     expect(made[0]?.attrs).toEqual({ class: 'a', id: 'b', 'aria-label': 'c', 'data-foo-1': 'd', download: 'e' });
     expect(made[0]?.children).toEqual([{ text: 'text' }]);
+  });
+
+  it('accepts aria-pressed and aria-current', () => {
+    h('button', { 'aria-pressed': 'true', 'aria-current': 'true' });
+    expect(made[0]?.attrs).toEqual({ 'aria-pressed': 'true', 'aria-current': 'true' });
   });
 });
 

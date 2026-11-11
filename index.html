@@ -4,64 +4,241 @@
     <meta charset="UTF-8" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Open old DOS floppy disk images in your browser. Read WordStar, dBase III and PCX files and see deleted files. Nothing is uploaded." />
+    <meta name="description" content="Open 1980s DOS floppy disk images in your browser and bring deleted files back. Nothing is uploaded." />
     <title>Exhume - read old floppy disks in your browser</title>
+    <link rel="icon" type="image/svg+xml" href="/src/assets/img/favicon.svg" />
   </head>
   <body>
     <!--
       Element contract for src/main.ts / app.ts (look up by id):
-        #fx-host         effects layer host; the effects module appends its canvas here. aria-hidden.
-        #app             page wrapper; gets the inert attribute while the preview dialog is open.
-        .content         wrapper for all page text (inside #app).
-        #drop-zone       drop target section (labelled); dragover and drop listeners go here.
-        #pick-button     visible button; click opens #file-input.
-        #file-input      hidden input type=file; change reads the chosen file.
-        #status          p with role=status, aria-live=polite, aria-atomic=true; the status module writes text here.
-        #cancel-button   hidden until a worker request is pending; click cancels it. Remove hidden to show.
-        #reopen-button   hidden until the disk is lost; click reopens the last file. Remove hidden to show.
-        #demo-slot       mount point for the demo disk list (spec 5 slot).
-        #graveyard       mount point for the graveyard display.
-        #preview-root    preview dialog root; sibling of #app, not inside it, so it is not inert.
-        #intro           static intro block in the header (summary, capability list, privacy note).
-        #repo-link       footer link to the GitHub repository.
+      Retained:
+        #app               page wrapper.
+        #drop-zone         the hero section; a drop anywhere on the page opens the file.
+        #pick-button       visible amber button; click opens #file-input.
+        #file-input        hidden input type=file, no accept attribute; change reads the chosen file.
+        #status            p with role=status, aria-live=polite, aria-atomic=true; the status module writes text here.
+        #cancel-button     hidden until a worker request is pending; click cancels it. Remove hidden to show.
+        #reopen-button     hidden until the disk is lost; click reopens the last file. Remove hidden to show.
+        #demo-slot         mount point for the demo disk cards (the slot module renders into it).
+        #graveyard         mount point for the graveyard view (left column).
+        #privacy-note      hero privacy line.
+        #honesty-note      footer prior-art line.
+        #repo-link         nav link to the GitHub repository.
+      Added:
+        #hero-heading      the one h1.
+        #demo-link         hero link to the demo section.
+        #headstones        row of six button.hs[data-path], one per file of the writer's disk (data-demo=writers-disk).
+        #yard              demo section (heading, demo cards, graveyard and preview columns).
+        #yard-heading      h2 that labels the demo cards.
+        #preview           mount point for the inline preview panel (right column).
+        #bar-section       "Deleted is not the same as gone." section.
+        #bar-heading       its h2.
+        #disk-bar          role=img bar with four segments; aria-label names all four figures.
+        #band              photo band figure.
+        #formats           "Files from 1989, readable today." section, three .fmt blocks.
+        #foot              footer.
+        #pick-button-footer second open button; click opens #file-input.
+      Retired:
+        #intro (replaced by the hero), #fx-host (effects removed), #preview-root (dialog removed).
     -->
-    <div id="fx-host" aria-hidden="true"></div>
+    <svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false">
+      <defs>
+        <symbol id="d-mark" viewBox="0 0 100 100">
+          <path d="M8 6h78l8 8v78a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" fill="#ffbf5e" />
+          <rect x="28" y="6" width="44" height="30" fill="#0b0f10" />
+          <rect x="56" y="11" width="10" height="20" fill="#ffbf5e" />
+          <rect x="18" y="50" width="64" height="44" fill="#0b0f10" />
+        </symbol>
+        <symbol id="d-writers" viewBox="0 0 100 100">
+          <path d="M8 6h78l8 8v78a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" fill="#2f5fb3" />
+          <rect x="28" y="6" width="44" height="30" fill="#c9ced0" />
+          <rect x="56" y="11" width="10" height="20" fill="#2f5fb3" />
+          <rect x="18" y="50" width="64" height="44" fill="#f1efe6" />
+          <rect x="24" y="60" width="44" height="2" fill="#2f5fb3" />
+          <rect x="24" y="68" width="34" height="2" fill="#9aa8c4" />
+          <rect x="24" y="76" width="40" height="2" fill="#9aa8c4" />
+        </symbol>
+        <symbol id="d-office" viewBox="0 0 100 100">
+          <rect x="4" y="4" width="92" height="92" rx="2" fill="#d9573b" />
+          <circle cx="50" cy="50" r="14" fill="#1a1512" />
+          <circle cx="50" cy="50" r="7" fill="#d9573b" />
+          <rect x="44" y="70" width="12" height="22" rx="6" fill="#1a1512" />
+          <rect x="12" y="10" width="44" height="16" fill="#f1efe6" />
+          <rect x="16" y="15" width="30" height="2" fill="#d9573b" />
+          <rect x="16" y="20" width="22" height="2" fill="#c9b9a8" />
+          <circle cx="68" cy="40" r="2.5" fill="#1a1512" />
+        </symbol>
+        <symbol id="d-damaged" viewBox="0 0 100 100">
+          <path d="M8 6h78l8 8v78a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" fill="#2b2925" />
+          <rect x="28" y="6" width="44" height="30" fill="#8b8a84" />
+          <rect x="40" y="11" width="10" height="20" fill="#2b2925" />
+          <path d="M18 50h64v44H18z" fill="#e1dccd" />
+          <path d="M50 50l14 0-8 18 10 26H50z" fill="#2b2925" />
+          <path d="M6 40l18 6-6 10 14 8" fill="none" stroke="#ee8b72" stroke-width="2.5" />
+        </symbol>
+      </defs>
+    </svg>
     <div id="app">
-      <div class="content">
-        <header>
-          <h1>Exhume</h1>
-          <section id="intro" class="intro" aria-label="About Exhume">
-            <p class="intro-lead">Exhume opens old DOS floppy disk images in your browser, so you can read what is on them.</p>
-            <ul class="intro-list">
-              <li>WordStar documents are read as Markdown.</li>
-              <li>dBase III tables are read as CSV.</li>
-              <li>PCX pictures are read as PNG.</li>
-              <li>Plain text files are read as text.</li>
-              <li>Deleted files are shown as open graves, with how much of each can come back.</li>
-            </ul>
-            <p id="privacy-note" class="note">Your files stay in this browser. Nothing is uploaded.</p>
-          </section>
-        </header>
-        <main>
-          <section id="drop-zone" class="drop-zone" aria-label="Drop a floppy image here">
-            <p>Drop a floppy image here</p>
-            <button id="pick-button" type="button">Choose a disk image</button>
-            <input id="file-input" type="file" hidden />
-          </section>
-          <p id="status" class="status" role="status" aria-live="polite" aria-atomic="true"></p>
-          <button id="cancel-button" type="button" hidden>Cancel</button>
-          <button id="reopen-button" type="button" hidden>Reopen disk</button>
-          <!-- SLOT for spec 5 demo disks: the demo slot module mounts its list here. Keep this container empty. -->
+      <header class="nav">
+        <a class="wordmark" href="#app"><svg width="22" height="22" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><use href="#d-mark" /></svg>Exhume</a>
+        <nav class="links" aria-label="Page">
+          <a href="#yard">Demo disks</a>
+          <a href="#bar-section">How it works</a>
+          <a href="#formats">Formats</a>
+          <a id="repo-link" href="https://github.com/tsang326/exhume" rel="noopener noreferrer" aria-label="Exhume on GitHub">GitHub</a>
+        </nav>
+      </header>
+      <main>
+        <section id="drop-zone" class="hero" aria-labelledby="hero-heading">
+          <h1 id="hero-heading">
+            <span class="w">Dig up</span>
+            <span class="disk-glyph"><img src="/src/assets/img/disk35.jpg" width="600" height="560" alt="" /></span>
+            <span class="w">lost files.</span>
+          </h1>
+          <div class="hero-foot">
+            <p class="say">Exhume opens 1980s DOS floppy images in your browser and brings deleted files back, as far as the disk allows.</p>
+            <div class="act">
+              <button id="pick-button" class="btn" type="button">Open a disk image</button>
+              <input id="file-input" type="file" hidden />
+              <a id="demo-link" class="try" href="#yard">or try a demo disk</a>
+              <small class="exts">Opens <b>.img</b> <b>.ima</b> <b>.vfd</b> <b>.flp</b> <b>.dsk</b>, raw floppy images up to 2.88 MB. Drop one anywhere on the page.</small>
+              <p id="privacy-note" class="note">Your files stay in this browser. Nothing is uploaded.</p>
+              <p id="status" class="status" role="status" aria-live="polite" aria-atomic="true"></p>
+              <button id="cancel-button" class="btn-plain" type="button" hidden>Cancel</button>
+              <button id="reopen-button" class="btn-plain" type="button" hidden>Reopen disk</button>
+            </div>
+          </div>
+        </section>
+
+        <div id="headstones" class="stoneline" aria-label="Files on the writer's disk" data-demo="writers-disk">
+          <button type="button" class="hs hs--alive stone-0" data-path="/CHAPTER1.WS"><span class="sn">CHAPTER1.WS</span><span class="st">Alive</span></button>
+          <button type="button" class="hs hs--recovered stone-1" data-path="/_RAFT1.WS"><span class="sn">_RAFT1.WS</span><span class="st">Recovered</span></button>
+          <button type="button" class="hs hs--alive stone-2" data-path="/CHAPTER2.WS"><span class="sn">CHAPTER2.WS</span><span class="st">Alive</span></button>
+          <button type="button" class="hs hs--partial stone-3" data-path="/_RAFT2.WS"><span class="sn">_RAFT2.WS</span><span class="st">Partly back</span></button>
+          <button type="button" class="hs hs--alive stone-4" data-path="/CHAPTER3.WS"><span class="sn">CHAPTER3.WS</span><span class="st">Alive</span></button>
+          <button type="button" class="hs hs--alive stone-5" data-path="/README.TXT"><span class="sn">README.TXT</span><span class="st">Alive</span></button>
+        </div>
+
+        <section id="yard" class="yard stratum" aria-labelledby="yard-heading">
+          <svg class="edge" viewBox="0 0 1440 64" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0 64 L0 28 L29 30 L80 15 L114 41 L155 13 L210 13 L242 27 L277 46 L319 13 L371 30 L393 12 L446 15 L486 37 L527 13 L568 18 L600 17 L636 30 L678 29 L717 21 L750 23 L794 42 L832 13 L891 18 L927 13 L963 23 L992 42 L1037 44 L1091 22 L1117 34 L1160 31 L1199 12 L1248 36 L1270 18 L1319 15 L1361 35 L1391 33 L1440 46 L1440 64Z" fill="currentColor" /><ellipse cx="922" cy="37" rx="5.2" ry="3.1" fill="#2a2620" /><ellipse cx="1276" cy="57" rx="8.9" ry="5.4" fill="#2a2620" /><ellipse cx="782" cy="49" rx="3.9" ry="2.4" fill="#2a2620" /><ellipse cx="1065" cy="36" rx="5.2" ry="3.1" fill="#2a2620" /><ellipse cx="606" cy="58" rx="4.5" ry="2.7" fill="#2a2620" /><ellipse cx="468" cy="47" rx="4.3" ry="2.6" fill="#2a2620" /></svg>
+          <div class="yard-head">
+            <h2 id="yard-heading" class="rise">No disk? Open one of ours.</h2>
+            <p class="rise">Three floppies written for the demo. Pick one and the graveyard below is read live, in this page.</p>
+            <p class="demo-note rise">The three demo disks are generated by our own script, scripts/make-demo-disks.ts. They are not real archive disks.</p>
+          </div>
           <div id="demo-slot"></div>
-          <section id="graveyard" aria-label="Graveyard"></section>
-        </main>
-        <footer>
-          <p id="honesty-note" class="note">Prior art: andete/disk-peek, an existing browser tool for FAT12 images and deleted-entry recovery.</p>
-          <a id="repo-link" class="repo-link" href="https://github.com/tsang326/exhume" rel="noopener noreferrer" aria-label="Exhume on GitHub">Exhume on GitHub</a>
-        </footer>
-      </div>
+          <div class="workspace">
+            <section id="graveyard" class="panel" aria-label="Graveyard"></section>
+            <section id="preview" class="panel preview" aria-label="Preview"></section>
+          </div>
+        </section>
+
+        <div class="deep stratum">
+          <svg class="edge" viewBox="0 0 1440 64" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0 64 L0 35 L40 28 L91 11 L127 27 L169 25 L206 33 L246 14 L278 8 L315 23 L348 7 L398 23 L445 7 L484 33 L518 37 L554 12 L611 16 L648 19 L676 6 L710 12 L755 10 L794 25 L845 34 L883 11 L922 16 L953 25 L998 29 L1041 39 L1068 6 L1115 25 L1163 14 L1207 35 L1244 18 L1278 31 L1328 8 L1353 20 L1401 22 L1440 37 L1440 64Z" fill="currentColor" /><ellipse cx="492" cy="45" rx="7.3" ry="4.4" fill="#2a2620" /><ellipse cx="1237" cy="45" rx="7" ry="4.2" fill="#2a2620" /><ellipse cx="282" cy="51" rx="8.9" ry="5.3" fill="#2a2620" /><ellipse cx="1027" cy="36" rx="7.9" ry="4.7" fill="#2a2620" /></svg>
+          <section id="bar-section" class="bar-sec" aria-labelledby="bar-heading">
+            <h2 id="bar-heading" class="rise">Deleted is not the same as gone.</h2>
+            <div id="disk-bar" class="bar-track" role="img" aria-label="The writer's disk: 10.4 KB alive, 3.4 KB recovered, 2.0 KB partly back, 1.0 KB lost">
+              <div class="seg seg--alive"><strong>10.4 KB</strong><em>Alive. Four files read exactly as written.</em></div>
+              <div class="seg seg--recovered"><strong>3.4 KB</strong><em>Recovered. A deleted draft whose clusters were all still free.</em></div>
+              <div class="seg seg--partial"><strong>2.0 KB</strong><em>Partly back. Some clusters were still free.</em></div>
+              <div class="seg seg--lost"><strong>1.0 KB</strong><em>Lost. A later file wrote over it.</em></div>
+            </div>
+            <div class="clauses" aria-hidden="true">
+              <p class="c1">First, the files DOS still lists, read as written.</p>
+              <p class="c2">Then deleted drafts whose clusters were never reused.</p>
+              <p class="c3">Then what survives of half-overwritten ones.</p>
+              <p class="c4">The rest is honestly marked lost.</p>
+            </div>
+          </section>
+          <figure id="band" class="band" aria-labelledby="band-heading">
+            <img class="rise" src="/src/assets/img/disks-band.jpg" width="1900" height="900" loading="lazy" alt="An 8-inch, a 5.25-inch and a 3.5-inch floppy disk side by side" />
+            <figcaption>
+              <h2 id="band-heading">From 8 to 3½ inches.</h2>
+              <p>Any DOS floppy image with a FAT12 file system, from 160 KB to 2.88 MB, can be opened.</p>
+            </figcaption>
+          </figure>
+        </div>
+
+        <section id="formats" class="formats stratum" aria-labelledby="formats-heading">
+          <svg class="edge" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0 40 L0 16 L48 11 L72 8 L96 16 L144 7 L192 9 L240 14 L288 17 L336 10 L384 11 L432 12 L480 13 L528 19 L576 17 L624 11 L672 18 L720 17 L768 6 L816 12 L864 17 L912 9 L960 14 L1008 20 L1056 5 L1104 8 L1152 15 L1200 16 L1248 19 L1296 9 L1344 8 L1392 17 L1440 21 L1440 40Z" fill="currentColor" /></svg>
+          <h2 id="formats-heading" class="rise">Files from 1989, readable today.</h2>
+
+          <div class="fmt">
+            <div class="what rise">
+              <h3>WordStar becomes Markdown.</h3>
+              <p>Bold, underline and soft hyphens come through; the printer codes do not.</p>
+            </div>
+            <div class="proof-col rise">
+              <div class="proof" tabindex="0" role="region" aria-label="WordStar excerpt, read as Markdown">
+                <p><strong>Chapter One: The Morning Crossing</strong></p>
+                <p>Marta Voss opened the ticket office at half past five, when the harbor was still gray and the gulls had not yet started their daily argument. The stove was cold. The kettle was dented.</p>
+              </div>
+              <p class="cap">CHAPTER1.WS from the WRITER DEMO disk, the writer's disk, as Exhume shows it.</p>
+            </div>
+          </div>
+
+          <div class="fmt flip">
+            <div class="what rise">
+              <h3>dBase III becomes CSV.</h3>
+              <p>Field names, dates and accented names intact, ready for any spreadsheet.</p>
+            </div>
+            <div class="proof-col rise">
+              <div class="proof" tabindex="0" role="region" aria-label="dBase excerpt, read as a table">
+                <table class="csv">
+                  <thead><tr><th>CUSTNO</th><th>NAME</th><th>CITY</th><th>SINCE</th><th>BALANCE</th></tr></thead>
+                  <tbody>
+                    <tr><td>1001</td><td>Marguerite Oakhollow</td><td>Lantern Bay</td><td>1987-03-12</td><td class="num">1250.00</td></tr>
+                    <tr><td>1003</td><td>Renée Waterford</td><td>Pinéhaven</td><td>1988-01-19</td><td class="num">0.00</td></tr>
+                    <tr><td>1004</td><td>Tallow &amp; Wick Chandlers</td><td>Ellis Narrows</td><td>1988-08-30</td><td class="num">412.75</td></tr>
+                    <tr><td>1008</td><td>Dolores Núñez-Hale</td><td>Pinéhaven</td><td>1989-09-01</td><td class="num">175.25</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="cap">CUSTOMER.DBF from the OFFICE DEMO disk, the small-business disk.</p>
+            </div>
+          </div>
+
+          <div class="fmt">
+            <div class="what rise">
+              <h3>PCX becomes PNG.</h3>
+              <p>Paintbrush pictures decoded pixel for pixel, palette and all.</p>
+            </div>
+            <div class="proof-col rise">
+              <div class="proof proof--pcx">
+                <img src="/src/assets/img/logo-pcx.png" width="64" height="40" alt="The small-business logo decoded from LOGO.PCX, shown enlarged" />
+              </div>
+              <p class="cap">LOGO.PCX from the OFFICE DEMO disk, the small-business disk, 64 × 40 pixels, shown enlarged.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer id="foot" class="foot stratum" aria-labelledby="foot-heading">
+        <svg class="edge" viewBox="0 0 1440 64" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0 64 L0 24 L46 14 L76 41 L114 39 L162 34 L209 49 L241 28 L290 22 L317 32 L364 34 L396 14 L438 47 L471 27 L510 46 L571 48 L610 44 L632 24 L680 40 L712 48 L755 25 L811 20 L838 29 L886 23 L909 50 L952 46 L1006 23 L1050 44 L1081 21 L1116 44 L1152 32 L1194 49 L1248 50 L1283 43 L1330 39 L1351 31 L1393 29 L1440 33 L1440 64Z" fill="currentColor" /><ellipse cx="422" cy="47" rx="3.4" ry="2.1" fill="#2a2620" /><ellipse cx="973" cy="37" rx="5.7" ry="3.4" fill="#2a2620" /><ellipse cx="190" cy="54" rx="6.1" ry="3.6" fill="#2a2620" /><ellipse cx="837" cy="44" rx="6.7" ry="4" fill="#2a2620" /></svg>
+        <div class="inv">
+          <div>
+            <h2 id="foot-heading">Found an old disk in a drawer?</h2>
+            <button id="pick-button-footer" class="btn" type="button">Open a disk image</button>
+          </div>
+          <ul>
+            <li><a href="https://github.com/tsang326/exhume" rel="noopener noreferrer">Source on GitHub</a></li>
+            <li><a href="https://github.com/andete/disk-peek" rel="noopener noreferrer">Prior art: disk-peek</a></li>
+            <li><span>Kiroween 2026</span></li>
+          </ul>
+        </div>
+        <p id="honesty-note" class="note">Prior art: andete/disk-peek, an existing browser tool for FAT12 images and deleted-entry recovery.</p>
+        <div class="legal">
+          <p>Reads FAT12 floppy images. Runs entirely in your browser.</p>
+          <p>Demo disks are generated by our own script. Photograph: “Floppy disk 2009 G1” by George Chernilevsky, public domain, via Wikimedia Commons.</p>
+          <p>Type: Instrument Serif and Hanken Grotesk, under the SIL Open Font License 1.1.</p>
+        </div>
+        <div class="bury">
+          <div class="soil" aria-hidden="true"><svg class="edge" viewBox="0 0 1440 64" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0 64 L0 35 L40 28 L91 11 L127 27 L169 25 L206 33 L246 14 L278 8 L315 23 L348 7 L398 23 L445 7 L484 33 L518 37 L554 12 L611 16 L648 19 L676 6 L710 12 L755 10 L794 25 L845 34 L883 11 L922 16 L953 25 L998 29 L1041 39 L1068 6 L1115 25 L1163 14 L1207 35 L1244 18 L1278 31 L1328 8 L1353 20 L1401 22 L1440 37 L1440 64Z" fill="currentColor" /></svg></div>
+          <p class="buried" aria-hidden="true">Exhume</p>
+        </div>
+      </footer>
     </div>
-    <div id="preview-root"></div>
+    <noscript><p class="noscript">Exhume needs JavaScript to read a disk image.</p></noscript>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

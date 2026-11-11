@@ -19,19 +19,19 @@ export const DEMO_REGISTRY: readonly DemoDisk[] = [
   {
     id: 'writers-disk',
     title: "The writer's disk",
-    description: 'Three WordStar chapters and two deleted drafts: one comes back whole, one only in part.',
+    description: 'Novel chapters, two deleted drafts',
     url: '/disks/writers-disk.img',
   },
   {
     id: 'office-disk',
     title: 'The small-business disk',
-    description: 'A customer table, a logo and an invoice folder, plus one deleted file that is truly lost.',
+    description: 'Customers, a logo, an invoice',
     url: '/disks/office-disk.img',
   },
   {
     id: 'damaged-disk',
     title: 'The damaged disk',
-    description: 'A broken disk with a bad boot sector and a looping file chain. It produces warnings and still shows what it can read.',
+    description: 'Broken boot sector, looping chain',
     url: '/disks/damaged-disk.img',
   },
 ];

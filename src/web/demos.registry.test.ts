@@ -1,14 +1,14 @@
 // Demo registry against the Generator's disk specs (demo-disks spec, task 11.4).
-// Requirements 9.1, 9.2, 9.3, 9.4, 9.9.
+// Requirements 9.1, 9.2, 9.4, 9.9; page-redesign 7.2 (shortened descriptions).
 import { describe, expect, it } from 'vitest';
 import { DEMO_DISK_SPECS } from '../demo-disks/specs';
 import { DEMO_REGISTRY } from './demos';
 import { validateDemoDisk } from './logic/demo-validate';
 
 const KEYWORDS: readonly (readonly string[])[] = [
-  ['WordStar', 'two deleted'],
-  ['customer table', 'logo', 'lost'],
-  ['broken', 'warnings'],
+  ['Novel chapters', 'two deleted drafts'],
+  ['Customers', 'logo', 'invoice'],
+  ['Broken boot sector', 'looping chain'],
 ];
 
 describe('DEMO_REGISTRY', () => {
@@ -22,12 +22,12 @@ describe('DEMO_REGISTRY', () => {
     expect(DEMO_REGISTRY.map((d) => d.url)).toEqual(DEMO_DISK_SPECS.map((s) => `/disks/${s.fileName}`));
   });
 
-  it('has a title of 1 to 80 and a one-line description of 1 to 200 characters', () => {
+  it('has a title of 1 to 80 and a short one-line description of 1 to 60 characters', () => {
     for (const d of DEMO_REGISTRY) {
       expect(d.title.length).toBeGreaterThanOrEqual(1);
       expect(d.title.length).toBeLessThanOrEqual(80);
       expect(d.description.length).toBeGreaterThanOrEqual(1);
-      expect(d.description.length).toBeLessThanOrEqual(200);
+      expect(d.description.length).toBeLessThanOrEqual(60);
       expect(d.description).not.toMatch(/[\r\n]/);
     }
   });
@@ -38,7 +38,7 @@ describe('DEMO_REGISTRY', () => {
     }
   });
 
-  it('holds the keywords of Requirement 9.3 in each description', () => {
+  it('holds the mockup one-liner keywords in each description', () => {
     DEMO_REGISTRY.forEach((d, i) => {
       for (const word of KEYWORDS[i] ?? []) {
         expect(d.description, `${d.id} needs "${word}"`).toContain(word);

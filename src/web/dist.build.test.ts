@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { checkCsp } from '../test-support/web/csp';
-import { scanHtml } from '../test-support/web/html-scan';
+import { parseHtml, scanHtml } from '../test-support/web/html-scan';
 
 const DIST = fileURLToPath(new URL('../../dist/', import.meta.url));
 const INDEX = join(DIST, 'index.html');
@@ -63,6 +63,46 @@ describe.skipIf(!existsSync(INDEX))('built dist/', () => {
   it('emits exactly one separate disk.worker chunk', () => {
     const workers = emittedFiles('.js').filter((f) => /^disk\.worker-.*\.js$/.test(f));
     expect(workers).toHaveLength(1);
+  });
+
+  it('resolves every img src inside dist/ and leaves no /src/ path', () => {
+    const imgs = parseHtml(html).elements.filter((e) => e.tag === 'img');
+    expect(imgs.length).toBeGreaterThan(0);
+    for (const img of imgs) {
+      const src = img.attrs['src'] ?? '';
+      expect(src).not.toBe('');
+      expect(src).not.toMatch(/^[a-z][a-z0-9+.-]*:/i);
+      expect(src).not.toMatch(/^\/\//);
+      expect(existsSync(join(DIST, src.replace(/^\//, '')))).toBe(true);
+    }
+    expect(html).not.toContain('/src/');
+    for (const f of [...emittedFiles('.js'), ...emittedFiles('.css')]) {
+      expect(readFileSync(join(ASSETS, f), 'utf8')).not.toContain('/src/assets/');
+    }
+  });
+
+  it('resolves the favicon href to an emitted SVG file in dist/', () => {
+    const icons = parseHtml(html).elements.filter((e) => e.tag === 'link' && e.attrs['rel'] === 'icon');
+    expect(icons).toHaveLength(1);
+    const href = icons[0]!.attrs['href'] ?? '';
+    expect(href).toMatch(/^\/(?!\/)/);
+    expect(href).not.toContain('/src/');
+    expect(href.endsWith('.svg')).toBe(true);
+    const file = join(DIST, href.replace(/^\//, ''));
+    expect(existsSync(file)).toBe(true);
+    expect(readFileSync(file, 'utf8')).toContain('xmlns="http://www.w3.org/2000/svg"');
+  });
+
+  it('emits exactly two .woff2 files', () => {
+    const fonts = readdirSync(ASSETS).filter((f) => f.endsWith('.woff2'));
+    expect(fonts).toHaveLength(2);
+  });
+
+  it('emits the grain, disk35, disks-band and logo-pcx images', () => {
+    const files = readdirSync(ASSETS);
+    for (const stem of ['grain', 'disk35', 'disks-band', 'logo-pcx']) {
+      expect(files.some((f) => f.startsWith(stem + '-'))).toBe(true);
+    }
   });
 
   it('has no data: URL in the emitted CSS or JS', () => {

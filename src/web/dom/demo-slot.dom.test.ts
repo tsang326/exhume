@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import fc from 'fast-check';
 import { numRuns } from '../../test-support/runs';
 import { createDemoSlot } from './demo-slot';
+import { demoArt } from './svg-art';
 import type { DemoDisk, DemoLoad } from '../demos';
 
 const good = (id: string, over: Partial<DemoDisk> = {}): DemoDisk => ({
@@ -49,6 +50,73 @@ describe('createDemoSlot (happy-dom)', () => {
     expect(buttons[0].textContent).toContain('Title a');
     expect(buttons[0].textContent).toContain('Description a');
     expect(load).not.toHaveBeenCalled();
+  });
+
+  it('puts aria-hidden art first in each known card and none in unknown ones', () => {
+    const slot = createDemoSlot(vi.fn(), [good('writers-disk'), good('office-disk'), good('damaged-disk'), good('zzz')], vi.fn());
+    const buttons = Array.from(slot.element.querySelectorAll('button'));
+    const hrefs = buttons.map((b) => b.querySelector('span.demo-art use')?.getAttribute('href') ?? null);
+    expect(hrefs).toEqual(['#d-writers', '#d-office', '#d-damaged', null]);
+    for (const b of buttons.slice(0, 3)) {
+      expect(b.querySelector('span.demo-art')?.getAttribute('aria-hidden')).toBe('true');
+      expect(b.firstElementChild?.classList.contains('demo-art')).toBe(true);
+    }
+    expect(buttons[3].querySelector('.demo-art')).toBeNull();
+    expect(demoArt('nope')).toBeNull();
+  });
+
+  it('labels the group by the page heading and renders no heading of its own', () => {
+    const slot = createDemoSlot(vi.fn(), [good('a')], vi.fn(), { labelledBy: 'yard-heading' });
+    expect(slot.element.querySelector('h2')).toBeNull();
+    expect(slot.element.getAttribute('aria-labelledby')).toBe('yard-heading');
+    expect(slot.element.querySelector('[role="group"]')?.getAttribute('aria-labelledby')).toBe('yard-heading');
+  });
+
+  it('calls onIntent synchronously on a click, before the load starts', () => {
+    const order: string[] = [];
+    const load = vi.fn(async (): Promise<DemoLoad> => {
+      order.push('load');
+      return { ok: true, bytes: new Uint8Array(1) };
+    });
+    const slot = createDemoSlot(vi.fn(), [good('a')], load, { onIntent: () => order.push('intent') });
+    (slot.element.querySelector('button') as HTMLButtonElement).click();
+    expect(order[0]).toBe('intent');
+    expect(order).toEqual(['intent', 'load']);
+  });
+
+  it('openDemo runs quietly: no busy state, no loading text, no onIntent', async () => {
+    const onIntent = vi.fn();
+    const onBytes = vi.fn();
+    let resolve!: (v: DemoLoad) => void;
+    const load = vi.fn(() => new Promise<DemoLoad>((r) => (resolve = r)));
+    const slot = createDemoSlot(onBytes, [good('a')], load, { onIntent });
+    expect(slot.has('a')).toBe(true);
+    expect(slot.has('b')).toBe(false);
+    const p = slot.openDemo('a', { quiet: true });
+    expect(slot.element.hasAttribute('aria-busy')).toBe(false);
+    expect(slot.element.querySelector('button')?.hasAttribute('disabled')).toBe(false);
+    expect(slot.element.querySelector('[role="status"]')?.textContent).toBe('');
+    resolve({ ok: true, bytes: new Uint8Array([7]) });
+    expect(await p).toBe(true);
+    expect(onBytes).toHaveBeenCalledTimes(1);
+    expect(onIntent).not.toHaveBeenCalled();
+  });
+
+  it('openDemo drops the result when accept says no, and returns false for unknown ids', async () => {
+    const onBytes = vi.fn();
+    const load = vi.fn(async (): Promise<DemoLoad> => ({ ok: true, bytes: new Uint8Array(1) }));
+    const slot = createDemoSlot(onBytes, [good('a')], load);
+    expect(await slot.openDemo('a', { quiet: true, accept: () => false })).toBe(false);
+    expect(onBytes).not.toHaveBeenCalled();
+    expect(await slot.openDemo('missing')).toBe(false);
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it('openDemo shows a failure in the slot status even when quiet', async () => {
+    const load = vi.fn(async (): Promise<DemoLoad> => ({ ok: false, reason: 'http', message: 'Nope.' }));
+    const slot = createDemoSlot(vi.fn(), [good('a')], load);
+    expect(await slot.openDemo('a', { quiet: true })).toBe(false);
+    expect(slot.element.querySelector('[role="status"]')?.textContent).toBe('Nope.');
   });
 
   it('renders hostile titles as text only', () => {

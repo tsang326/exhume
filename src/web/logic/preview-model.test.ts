@@ -3,10 +3,12 @@ import fc from 'fast-check';
 import type { Warning } from '../../core/fat12/index';
 import type { ConversionWarning } from '../../core/formats/index';
 import { numRuns } from '../../test-support/runs';
-import { buildPreviewModel } from './preview-model';
-import type { ExhumeOutcome } from './preview-model';
+import { buildPreviewModel, kindLabel } from './preview-model';
+import type { ExhumeOutcome, PreviewBody } from './preview-model';
+import type { CsvTable } from './csv-display';
 import type { ExhumeResult } from './protocol';
 import type { ItemViewModel } from './viewmodel';
+import { stateWord } from './viewmodel';
 import { sanitizeFileName } from './filename';
 import { truncateForPreview } from './markdown';
 import { toLabel } from './text';
@@ -25,7 +27,7 @@ const itemArb: fc.Arbitrary<ItemViewModel> = fc
       id: 1,
       kind: 'file',
       state: r.state,
-      stateLabel: r.state,
+      stateLabel: stateWord(r.state),
       visual: r.state === 'alive' ? 'tombstone' : 'open-grave',
       name: r.name,
       path: r.name,
@@ -207,6 +209,25 @@ describe('buildPreviewModel', () => {
       ),
       { numRuns: numRuns(100) },
     );
+  });
+
+  it('kindLabel names each body kind and marks partial items', () => {
+    const item = fc.sample(itemArb, 1)[0]!;
+    const cases: Array<[PreviewBody, string]> = [
+      [{ kind: 'markdown', text: '', shortened: false }, 'Read as Markdown'],
+      [{ kind: 'csv', table: { header: [], rows: [] } as unknown as CsvTable }, 'Read as CSV'],
+      [{ kind: 'text', text: '', shortened: false }, 'Plain text'],
+      [{ kind: 'png', png: new Uint8Array(0), alt: 'x' }, 'Read as PNG'],
+      [{ kind: 'hex', rows: [], totalBytes: 0, shownBytes: 0 }, 'Raw bytes'],
+      [{ kind: 'none' }, 'Nothing to read'],
+    ];
+    for (const [body, label] of cases) {
+      expect(kindLabel(body, 'alive')).toBe(label);
+      expect(kindLabel(body, 'recovered')).toBe(label);
+      expect(kindLabel(body, 'partial')).toBe(`${label}, partly`);
+    }
+    const failed = buildPreviewModel({ ...item, state: 'partial' }, { status: 'read-failed', error: 'x' });
+    expect(failed.kindLabel).toBe('Nothing to read, partly');
   });
 
   it('Property 28: a read failure gives error, no body and no downloads', () => {

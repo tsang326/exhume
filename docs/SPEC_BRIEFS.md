@@ -191,3 +191,68 @@ no change to Workspace_Mode, the tool list or the confinement rules.
    show why it is timing-sensitive under a loaded machine (the full suite runs files in parallel), and make it
    deterministic without weakening what it proves: prefer counting operations or comparing ratios with a margin
    over wall-clock thresholds. Prove it by running that file and the full suite several times.
+
+## Spec 11 — page-redesign (after owner review of a mockup, 2026-11-10)
+The owner found the Spec 9 page too wordy and flat (one monospace face, no hierarchy, intro bullets read like steps).
+An approved mockup is in `docs/design/redesign/` (`mockup.html`, `screens/` at 1440, 768 and 390 px). It is the
+target look and behaviour; match it, adapting to the rules below. The mockup is a static file: its demo data is
+hard-coded and its `core.js` import (a local build of `src/core`) is not committed, so its "Open" button only works in
+the real app. Scope: `index.html`, `src/style.css`, `src/web/` and their tests, new static assets. No change to
+`src/core`, `src/mcp`, the worker protocol or the demo disk generator.
+
+Hard rules (keep): the CSP in `index.html` exactly as is (no inline styles or scripts, no external fonts, scripts or
+images); untrusted text via `textContent` only (`safety.md`); the element contract ids in the `index.html` comment
+keep working (update the comment for any id you add or retire); status region, Cancel and Reopen behave as now;
+keyboard and screen-reader paths stay complete; `prefers-reduced-motion` turns every animation off; contrast pairs
+stay tested in `style.css`; no new runtime dependency; nothing under `public/fonts/` (that path is blocked on the
+owner's machine) – put fonts under `src/assets/fonts/` so Vite bundles them.
+
+1. **Type and colour.** Two self-hosted faces, both SIL OFL 1.1 (files and licence texts are in
+   `docs/design/redesign/type/`): Instrument Serif 400 for headings only, Hanken Grotesk (variable) for everything
+   else. No monospace outside the plain-text preview. Commit the OFL texts next to the fonts. Palette tokens as in the
+   mockup `:root` (night `#0b0f10`, soil layers, bone paper field, amber accent `#ffbf5e`, state colours alive /
+   recovered / partial / lost); add every new text/background pair to the contrast tests.
+2. **Hero.** Nav (disk mark + "Exhume" in Hanken bold, anchors Demo disks / How it works / Formats / GitHub).
+   Headline "Dig up [3.5-inch disk photo] lost files." with the photo as an inline image in the line; one supporting
+   sentence; the existing pick button restyled as the amber "Open a disk image"; a link "or try a demo disk" to the
+   demo section; the line "Opens .img .ima .vfd .flp .dsk, raw floppy images up to 2.88 MB" plus the privacy line.
+   List the extensions, but do not restrict the file input by extension (the core reads by content; wrong files
+   already get an error). Drop anywhere on the page keeps working. Retire the Spec 9 intro list.
+3. **Headstone row.** On the ground line under the hero, headstones for the writer's demo disk files (state colour,
+   name, state label; deleted ones dashed and sunk, the recovered one rises once on load). Each stone is a button that
+   opens the writer's disk and that file. Names and states must come from, or be tested against, the real demo disk
+   report, never typed by hand without a test.
+4. **Strata background.** Night surface, then soil layers with irregular edges (inline SVG shapes, flat fills, no
+   gradients), a torn paper edge into the formats section, a soil edge into the footer, a subtle tiled grain image
+   over the page. Decorative layers are `aria-hidden` and never cover text. Retire the canvas fog and lantern layer
+   from Spec 9 (and its tests) unless it can sit behind the strata without visible gradients or glows.
+5. **Demo section, open by default.** "No disk? Open one of ours." with three cards, each with its own drawn floppy
+   (blue 3.5-inch, red 5.25-inch, damaged with a torn label), `aria-pressed` on the open one. On first load the
+   writer's disk opens automatically through the normal pipeline, without moving focus or scrolling, so the page is
+   never empty. Opening a disk from the button, drop or a headstone scrolls to this section (instant under reduced
+   motion) and moves focus as Spec 9 does.
+6. **Graveyard and inline preview.** Replace the preview dialog with an inline two-column layout (list left, preview
+   right; stacked on narrow screens with the preview after the list): volume label and counts, warnings banner,
+   grave rows with stone icon, name, size, date, state label and reason, the `_` hint, `aria-current` on the open row.
+   The preview shows the converted file on the paper field (Markdown as document, CSV as a table, PNG pixelated, text
+   as text, the partial/lost note where content stops) with "Download .md/.csv/.txt/.png" and "Download raw bytes"
+   (existing downloader). Remove focus-trap/inert code that only served the dialog; keep a sensible Tab order and
+   announce the opened file in the status region. Update the affected tests rather than deleting coverage.
+7. **"Deleted is not the same as gone."** Segmented bar for the writer's disk: alive / recovered / partly back / lost,
+   widths proportional to bytes, with short captions (stacked on phones). Figures must be tested against the demo
+   disk, not hard-coded without a test. One accessible text equivalent.
+8. **Photo band and formats.** The three-disk photo with "From 8 to 3½ inches." and the FAT12 160 KB–2.88 MB line.
+   Then the paper section "Files from 1989, readable today." with three rows: WordStar to Markdown (CHAPTER1.WS
+   excerpt), dBase III to CSV (CUSTOMER.DBF rows), PCX to PNG (LOGO.PCX at 7x, pixelated). Excerpts must match
+   `make:demos` output (test it). Photos: copy `disk35.jpg` and `disks-band.jpg` from the mockup assets; both are
+   crops of "Floppy disk 2009 G1" by George Chernilevsky, public domain, via Wikimedia Commons (see `credits.json`).
+9. **Footer.** "Found an old disk in a drawer?" with the open button, links (Source on GitHub, Prior art: disk-peek
+   linking `https://github.com/andete/disk-peek`, Kiroween 2026), the photo credit and the prior-art line, and the
+   large serif "Exhume" half buried in soil, centred with equal side margins at every width, no horizontal scroll.
+10. **Motion.** Only: headline words rise on load, the disk photo shutter, the recovered stone rising, section
+    entrances, the bar filling, a short fade when the preview changes. All off under reduced motion.
+Tests: DOM tests per item (hero text and links, extension line, headstones match the report, auto-open without focus
+move, inline preview content and downloads, bar figures, formats excerpts, footer credit, reduced motion), contrast
+pairs, existing suites green (`typecheck`, `test`, `test:dom`, `build`, `make:demos -- --check`). Check by
+screenshot at 1440×900, 768×1024 and 390×844: no horizontal scroll, no console errors, no CSP violations.
+Out of scope: new formats, core or MCP changes, deployment, video.

@@ -7,18 +7,18 @@ export type AttrName =
   | 'role'
   | 'type'
   | 'hidden'
-  | 'inert'
   | 'tabindex'
   | 'disabled'
   | 'open'
   | 'aria-label'
   | 'aria-labelledby'
   | 'aria-describedby'
-  | 'aria-modal'
   | 'aria-live'
   | 'aria-hidden'
   | 'aria-disabled'
   | 'aria-expanded'
+  | 'aria-pressed'
+  | 'aria-current'
   | 'aria-busy'
   | 'title'
   | 'lang'
@@ -68,18 +68,18 @@ const ALLOWED_ATTRS: ReadonlySet<string> = new Set([
   'role',
   'type',
   'hidden',
-  'inert',
   'tabindex',
   'disabled',
   'open',
   'aria-label',
   'aria-labelledby',
   'aria-describedby',
-  'aria-modal',
   'aria-live',
   'aria-hidden',
   'aria-disabled',
   'aria-expanded',
+  'aria-pressed',
+  'aria-current',
   'aria-busy',
   'title',
   'lang',

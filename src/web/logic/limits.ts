@@ -15,7 +15,4 @@ export const DEMO_TIMEOUT_MS = 10_000;
 export const RISE_MS = 900; // must stay <= RISE_MAX_MS
 export const RISE_MAX_MS = 1_200;
 export const DOWNLOAD_REVOKE_MS = 500; // must stay <= 1000
-export const FX_MAX_FPS = 30;
-export const FX_MAX_SHAPES = 60; // must stay <= 200
-export const FX_MAX_BACKING = { width: 1920, height: 1080 } as const;
 export const FILE_NAME_MAX = 64;

@@ -12,6 +12,10 @@ export interface GraveyardView {
   showMore(): void;
   setActionsEnabled(enabled: boolean): void;
   itemElement(id: number): HTMLElement | null;
+  /** The interactive row button for an id, or null for non-interactive or unknown rows. */
+  rowButton(id: number): HTMLButtonElement | null;
+  /** Marks the open file's row with aria-current="true"; null clears the marker. */
+  setCurrent(id: number | null): void;
   headingElement(): HTMLElement;
 }
 
@@ -57,7 +61,7 @@ export function createGraveyardView(
 ): GraveyardView {
   const guidance = h('p', { class: 'graveyard-guidance' }, 'Open a disk to see its files.');
   const heading = h(
-    'h2',
+    'h3',
     {
       id: 'graveyard-heading',
       tabindex: '-1',
@@ -70,7 +74,12 @@ export function createGraveyardView(
   const progress = h('p', { class: 'graveyard-progress', hidden: '' });
   const stats = h('div', { class: 'graveyard-stats', hidden: '' }, summary, progress);
   const message = h('p', { class: 'graveyard-message', hidden: '' });
-  const warnings = h('div', { class: 'graveyard-warnings', hidden: '' });
+  const warnings = h('div', {
+    class: 'graveyard-warnings',
+    role: 'group',
+    'aria-label': 'Warnings',
+    hidden: '',
+  });
   const list = h('ul', { class: 'graveyard-list', 'aria-labelledby': 'graveyard-heading' });
   const moreButton = h('button', { class: 'graveyard-more', type: 'button', hidden: '' }, 'Show more') as HTMLButtonElement;
   root.appendChild(guidance);
@@ -85,7 +94,20 @@ export function createGraveyardView(
   let pages = 0;
   let rendered = 0;
   let enabled = true;
+  let currentId: number | null = null;
   const byId = new Map<number, HTMLElement>();
+
+  function rowButton(id: number): HTMLButtonElement | null {
+    const li = byId.get(id);
+    if (li === undefined) return null;
+    return li.querySelector('button.grave-action') as HTMLButtonElement | null;
+  }
+
+  function applyCurrent(): void {
+    for (const el of Array.from(list.querySelectorAll('[aria-current]'))) el.removeAttribute('aria-current');
+    if (currentId === null) return;
+    rowButton(currentId)?.setAttribute('aria-current', 'true');
+  }
 
   function setHidden(el: HTMLElement, hidden: boolean): void {
     if (hidden) el.setAttribute('hidden', '');
@@ -105,6 +127,7 @@ export function createGraveyardView(
       if (first === null) first = li;
     }
     rendered = Math.max(rendered, target);
+    applyCurrent();
     const total = current.length;
     setHidden(progress, total === 0);
     clear(progress);
@@ -118,13 +141,18 @@ export function createGraveyardView(
     pages = 1;
     rendered = 0;
     byId.clear();
+    currentId = null;
     clear(list);
     clear(summary);
     clear(message);
     clear(warnings);
+    clear(heading);
     const s = summarize(report);
+    heading.appendChild(document.createTextNode(s.label));
     summary.appendChild(
-      document.createTextNode(`${s.label}: ${s.fileCount} files, ${s.directoryCount} directories`),
+      document.createTextNode(
+        `${s.fileCount} files, ${s.directoryCount} directories, ${s.deletedCount} deleted`,
+      ),
     );
     if (s.empty === 'unreadable') {
       message.appendChild(document.createTextNode('This image could not be read as a FAT12 floppy disk.'));
@@ -134,14 +162,8 @@ export function createGraveyardView(
     setHidden(message, s.empty === null);
     const lines = warningLines(report);
     if (lines.length > 0) {
-      warnings.appendChild(
-        h(
-          'details',
-          {},
-          h('summary', {}, `Warnings (${lines.length})`),
-          h('ul', {}, ...lines.map((line) => h('li', {}, line))),
-        ),
-      );
+      warnings.appendChild(h('p', { class: 'graveyard-warnings-title' }, `Warnings (${lines.length})`));
+      warnings.appendChild(h('ul', {}, ...lines.map((line) => h('li', {}, line))));
     }
     setHidden(warnings, lines.length === 0);
     setHidden(guidance, true);
@@ -185,6 +207,11 @@ export function createGraveyardView(
     },
     itemElement(id: number): HTMLElement | null {
       return byId.get(id) ?? null;
+    },
+    rowButton,
+    setCurrent(id: number | null): void {
+      currentId = id;
+      applyCurrent();
     },
     headingElement(): HTMLElement {
       return heading;

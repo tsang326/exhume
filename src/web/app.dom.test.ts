@@ -1,19 +1,18 @@
 // @vitest-environment happy-dom
-// End-to-end test of startApp() in happy-dom. The Worker is replaced by an in-process fake that
-// answers with the real handleRequest, so drop -> graveyard -> preview -> download -> close runs
-// through the real modules. The page elements are built with createElement from the 15.1 element
-// contract, and the contract is checked against index.html so the two cannot drift.
+// End-to-end test of startApp() in happy-dom. The page is the real body of index.html. The Worker is
+// replaced by an in-process fake that answers with the real handleRequest, fetch serves the committed
+// demo disks, and matchMedia is a double passed to startApp. Drop -> graveyard -> inline preview ->
+// download runs through the real modules.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { writeFat12Image } from '../test-support/fat12/index';
 import type { FileTree } from '../test-support/fat12/index';
 import { encodePcx, writeDbf, writeWordStar } from '../test-support/formats/index';
-import { parseHtml } from '../test-support/web/html-scan';
-import type { HtmlElement } from '../test-support/web/html-scan';
 import { startApp } from './app';
 import { GLOBAL_ERROR_MESSAGE } from './dom/errors';
 import { DROP_REJECT_MESSAGE } from './logic/drop';
+import { NARROW_QUERY } from './logic/layout';
 import { MAX_IMAGE_BYTES } from './logic/limits';
 import { CANCELLED_MESSAGE } from './logic/session';
 import { checkImageSize } from './logic/size';
@@ -21,49 +20,16 @@ import { handleRequest, createSession as createWorkerSession } from './worker/di
 import type { WorkerSession } from './worker/disk-handler';
 
 // ---------------------------------------------------------------------------------------------
-// The element contract (15.1) and the page it builds
+// The page: the real body of index.html
 // ---------------------------------------------------------------------------------------------
 
-interface ContractEntry {
-  key: string;
-  tag: string;
-  attrs: Record<string, string>;
-  /** Key of the nearest keyed ancestor, or null for a child of body. */
-  parent: string | null;
-}
-
-const CONTRACT: ContractEntry[] = [
-  { key: 'fx-host', tag: 'div', attrs: { id: 'fx-host', 'aria-hidden': 'true' }, parent: null },
-  { key: 'app', tag: 'div', attrs: { id: 'app' }, parent: null },
-  { key: '.content', tag: 'div', attrs: { class: 'content' }, parent: 'app' },
-  { key: 'drop-zone', tag: 'section', attrs: { id: 'drop-zone' }, parent: '.content' },
-  { key: 'pick-button', tag: 'button', attrs: { id: 'pick-button', type: 'button' }, parent: 'drop-zone' },
-  { key: 'file-input', tag: 'input', attrs: { id: 'file-input', type: 'file', hidden: '' }, parent: 'drop-zone' },
-  { key: 'status', tag: 'p', attrs: { id: 'status', role: 'status', 'aria-live': 'polite' }, parent: '.content' },
-  { key: 'cancel-button', tag: 'button', attrs: { id: 'cancel-button', type: 'button', hidden: '' }, parent: '.content' },
-  { key: 'reopen-button', tag: 'button', attrs: { id: 'reopen-button', type: 'button', hidden: '' }, parent: '.content' },
-  { key: 'demo-slot', tag: 'div', attrs: { id: 'demo-slot' }, parent: '.content' },
-  { key: 'graveyard', tag: 'section', attrs: { id: 'graveyard' }, parent: '.content' },
-  { key: 'preview-root', tag: 'div', attrs: { id: 'preview-root' }, parent: null },
-];
-
-function keyOf(el: HtmlElement): string | undefined {
-  const id = el.attrs['id'];
-  if (id !== undefined) return id;
-  return el.attrs['class'] === 'content' ? '.content' : undefined;
-}
+const INDEX_HTML = readFileSync(join(process.cwd(), 'index.html'), 'utf8');
 
 function buildPage(): void {
+  const doc = new DOMParser().parseFromString(INDEX_HTML, 'text/html');
+  for (const s of Array.from(doc.querySelectorAll('script'))) s.remove();
   document.body.textContent = '';
-  const made = new Map<string, HTMLElement>();
-  for (const entry of CONTRACT) {
-    const el = document.createElement(entry.tag);
-    for (const [name, value] of Object.entries(entry.attrs)) el.setAttribute(name, value);
-    const parent = entry.parent === null ? document.body : made.get(entry.parent);
-    if (parent === undefined) throw new Error('contract order');
-    parent.appendChild(el);
-    made.set(entry.key, el);
-  }
+  for (const node of Array.from(doc.body.childNodes)) document.body.appendChild(document.importNode(node, true));
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -75,6 +41,8 @@ class FakeWorker {
   static auto = true;
   /** When true, answers every open request with a failed response. */
   static failOpen = false;
+  /** Request types that are queued but not answered until releaseHeld(). */
+  static hold = new Set<string>();
   static last(): FakeWorker {
     const w = FakeWorker.instances[FakeWorker.instances.length - 1];
     if (w === undefined) throw new Error('no worker was created');
@@ -84,6 +52,7 @@ class FakeWorker {
   readonly sent: unknown[] = [];
   terminated = false;
   private readonly queue: unknown[] = [];
+  private held: unknown[] = [];
   private readonly listeners = new Map<string, Array<(event: unknown) => void>>();
   private readonly session: WorkerSession = createWorkerSession();
 
@@ -109,21 +78,36 @@ class FakeWorker {
     this.terminated = true;
   }
 
-  /** Answers every queued request in order, using the real handler. */
+  /** Answers every queued request in order, using the real handler. Held types wait. */
   flush(): void {
     while (this.queue.length > 0) {
       const message = this.queue.shift();
       if (this.terminated) continue;
       const req = message as { type?: string; id?: number };
-      if (FakeWorker.failOpen && req.type === 'open') {
-        this.emit('message', {
-          data: { type: 'failed', id: req.id, request: 'open', cause: 'internal', error: 'boom' },
-        });
+      if (req.type !== undefined && FakeWorker.hold.has(req.type)) {
+        this.held.push(message);
         continue;
       }
-      const data = handleRequest(this.session, message);
-      this.emit('message', { data });
+      this.answer(message);
     }
+  }
+
+  /** Answers the held requests, oldest first. */
+  releaseHeld(): void {
+    const list = this.held;
+    this.held = [];
+    for (const message of list) if (!this.terminated) this.answer(message);
+  }
+
+  private answer(message: unknown): void {
+    const req = message as { type?: string; id?: number };
+    if (FakeWorker.failOpen && req.type === 'open') {
+      this.emit('message', {
+        data: { type: 'failed', id: req.id, request: 'open', cause: 'internal', error: 'boom' },
+      });
+      return;
+    }
+    this.emit('message', { data: handleRequest(this.session, message) });
   }
 
   fail(): void {
@@ -136,7 +120,7 @@ class FakeWorker {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Fixture disk
+// Fixture disks
 // ---------------------------------------------------------------------------------------------
 
 const ascii = (s: string): Uint8Array => new TextEncoder().encode(s);
@@ -189,6 +173,11 @@ function randomBytes(n: number): Uint8Array {
   return out;
 }
 
+const demoDisk = (url: string): Uint8Array => {
+  const base = url.split('/').pop() ?? '';
+  return new Uint8Array(readFileSync(join(process.cwd(), 'public', 'disks', base)));
+};
+
 // ---------------------------------------------------------------------------------------------
 // Test environment
 // ---------------------------------------------------------------------------------------------
@@ -230,6 +219,7 @@ const $ = <T extends HTMLElement = HTMLElement>(sel: string): T => {
 };
 const statusText = (): string => $('#status').textContent ?? '';
 const graves = (): HTMLElement[] => Array.from(document.querySelectorAll<HTMLElement>('#graveyard li.grave'));
+const graveNames = (): Array<string | null | undefined> => graves().map((g) => g.querySelector('.grave-name')?.textContent);
 const graveByName = (name: string): HTMLElement => {
   const li = graves().find((g) => g.querySelector('.grave-name')?.textContent === name);
   if (li === undefined) throw new Error(`no grave named ${name}`);
@@ -240,7 +230,10 @@ const graveButton = (name: string): HTMLButtonElement => {
   if (b === null) throw new Error(`no button for ${name}`);
   return b;
 };
-const dialog = (): HTMLElement | null => document.querySelector<HTMLElement>('.preview');
+/** True when the inline panel shows a file (the empty state has no .preview-kind line). */
+const previewShown = (): boolean => document.querySelector('#preview .preview-kind') !== null;
+const previewTitle = (): string => $('#preview-title').textContent ?? '';
+const currentRows = (): HTMLElement[] => Array.from(document.querySelectorAll<HTMLElement>('#graveyard [aria-current]'));
 const hidden = (id: string): boolean => $(`#${id}`).hasAttribute('hidden');
 
 async function exhume(name: string): Promise<void> {
@@ -248,28 +241,77 @@ async function exhume(name: string): Promise<void> {
   await settle();
 }
 
-function pressEscape(): void {
-  const target = document.activeElement ?? document.body;
-  target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+interface FakeResponse {
+  status: number;
+  headers: { get(name: string): string | null };
+  body: null;
+  arrayBuffer(): Promise<ArrayBuffer>;
+}
+const respond = (bytes: Uint8Array, status = 200, headers: Record<string, string> = {}): FakeResponse => ({
+  status,
+  headers: { get: (name) => headers[name.toLowerCase()] ?? null },
+  body: null,
+  arrayBuffer: () => Promise.resolve(bytes.slice().buffer),
+});
+/** Stubs the global fetch that demos.ts uses; the registry and loader stay real. */
+const stubFetch = (make: (url: string) => FakeResponse): void => {
+  vi.stubGlobal('fetch', (url: string) => Promise.resolve(make(url)));
+};
+
+type NetMode = 'hang' | 'disks' | 'fail' | 'deferred';
+interface BootOptions {
+  net?: NetMode;
 }
 
-let reducedMotion = false;
+const env = { reduced: false, narrow: false };
+let releaseNet: () => void = () => {};
 let revoked: string[] = [];
 let downloads: Array<{ href: string; download: string }> = [];
 const recorded: Array<{ target: EventTarget; type: string; listener: EventListenerOrEventListenerObject }> = [];
 const saved: Record<string, unknown> = {};
 let scrollSpy = vi.fn();
+let focusSpy = vi.spyOn(HTMLElement.prototype, 'focus');
+
+const matchMedia = (query: string): { matches: boolean } => ({
+  matches: query.includes('prefers-reduced-motion') ? env.reduced : query === NARROW_QUERY ? env.narrow : false,
+});
+
+/** Builds the page from index.html and starts the app. Default net mode: the Auto_Open fetch never answers. */
+function boot(options: BootOptions = {}): void {
+  const net = options.net ?? 'hang';
+  if (net === 'hang') {
+    vi.stubGlobal('fetch', () => new Promise(() => {}));
+  } else if (net === 'disks') {
+    stubFetch((url) => respond(demoDisk(url)));
+  } else if (net === 'fail') {
+    stubFetch(() => respond(new Uint8Array(0), 404));
+  } else {
+    const gate = new Promise<void>((resolve) => {
+      releaseNet = resolve;
+    });
+    vi.stubGlobal('fetch', (url: string) => gate.then(() => respond(demoDisk(url))));
+  }
+  buildPage();
+  startApp({ matchMedia });
+}
+
+function removeListeners(): void {
+  for (const r of recorded.splice(0)) r.target.removeEventListener(r.type, r.listener);
+}
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
   FakeWorker.instances = [];
   FakeWorker.auto = true;
   FakeWorker.failOpen = false;
+  FakeWorker.hold = new Set();
+  env.reduced = false;
+  env.narrow = false;
   scrollSpy = vi.fn();
   saved['scrollIntoView'] = HTMLElement.prototype.scrollIntoView;
   HTMLElement.prototype.scrollIntoView = scrollSpy as unknown as typeof HTMLElement.prototype.scrollIntoView;
+  focusSpy = vi.spyOn(HTMLElement.prototype, 'focus');
   vi.stubGlobal('Worker', FakeWorker);
-  reducedMotion = false;
   revoked = [];
   downloads = [];
 
@@ -282,11 +324,6 @@ beforeEach(() => {
     });
   }
 
-  const w = window as unknown as Record<string, unknown>;
-  saved['matchMedia'] = w['matchMedia'];
-  w['matchMedia'] = () => ({ matches: reducedMotion, addEventListener() {}, removeEventListener() {} });
-  saved['getContext'] = HTMLCanvasElement.prototype.getContext;
-  (HTMLCanvasElement.prototype as unknown as { getContext: () => null }).getContext = () => null;
   saved['click'] = HTMLAnchorElement.prototype.click;
   HTMLAnchorElement.prototype.click = function (this: HTMLAnchorElement): void {
     downloads.push({ href: this.getAttribute('href') ?? '', download: this.getAttribute('download') ?? '' });
@@ -298,20 +335,14 @@ beforeEach(() => {
   URL.revokeObjectURL = (u: string) => {
     revoked.push(u);
   };
-
-  buildPage();
-  startApp();
 });
 
 afterEach(() => {
-  for (const r of recorded.splice(0)) r.target.removeEventListener(r.type, r.listener);
+  removeListeners();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.useRealTimers();
-  const w = window as unknown as Record<string, unknown>;
-  w['matchMedia'] = saved['matchMedia'];
   HTMLElement.prototype.scrollIntoView = saved['scrollIntoView'] as typeof HTMLElement.prototype.scrollIntoView;
-  (HTMLCanvasElement.prototype as unknown as Record<string, unknown>)['getContext'] = saved['getContext'];
   (HTMLAnchorElement.prototype as unknown as Record<string, unknown>)['click'] = saved['click'];
   URL.createObjectURL = saved['create'] as typeof URL.createObjectURL;
   URL.revokeObjectURL = saved['revoke'] as typeof URL.revokeObjectURL;
@@ -320,33 +351,44 @@ afterEach(() => {
 
 // ---------------------------------------------------------------------------------------------
 
-describe('page contract', () => {
-  it('matches the ids, tags, attributes and nesting in index.html', () => {
-    const html = readFileSync(join(process.cwd(), 'index.html'), 'utf8');
-    const doc = parseHtml(html);
-    const parents = new Map<HtmlElement, string | null>();
-    const walk = (el: HtmlElement, nearest: string | null): void => {
-      parents.set(el, nearest);
-      const key = keyOf(el);
-      for (const c of el.children) if (c.kind === 'element') walk(c, key ?? nearest);
-    };
-    walk(doc.root, null);
-    for (const entry of CONTRACT) {
-      const el = doc.elements.find((e) => keyOf(e) === entry.key);
-      expect(el, entry.key).toBeDefined();
-      expect(el?.tag, entry.key).toBe(entry.tag);
-      for (const [name, value] of Object.entries(entry.attrs)) {
-        expect(el?.attrs[name], `${entry.key}[${name}]`).toBe(value);
-      }
-      expect(parents.get(el as HtmlElement), `${entry.key} parent`).toBe(entry.parent);
-    }
+describe('the real page', () => {
+  it('has each retained and added id once, no retired id, and no dialog', () => {
+    boot();
+    const ids = [
+      'app', 'drop-zone', 'pick-button', 'file-input', 'status', 'cancel-button', 'reopen-button', 'demo-slot',
+      'graveyard', 'privacy-note', 'honesty-note', 'repo-link', 'yard', 'yard-heading', 'preview', 'headstones',
+      'pick-button-footer',
+    ];
+    for (const id of ids) expect(document.querySelectorAll(`#${CSS.escape(id)}`).length, id).toBe(1);
+    for (const id of ['intro', 'fx-host', 'preview-root']) expect(document.getElementById(id), id).toBeNull();
+    expect(document.querySelector('[role="dialog"], [aria-modal], [inert]')).toBeNull();
+    expect($('#status').getAttribute('aria-live')).toBe('polite');
+    expect($('#status').getAttribute('role')).toBe('status');
+  });
+
+  it('shows the empty preview and the guidance before any disk is open', () => {
+    boot();
+    expect(previewShown()).toBe(false);
+    expect($('#preview .preview-empty').textContent).toBe('Choose a file to read it here.');
+    expect($('#graveyard .graveyard-guidance').hasAttribute('hidden')).toBe(false);
+    expect(hidden('cancel-button')).toBe(true);
+    expect(hidden('reopen-button')).toBe(true);
+  });
+
+  it('opens the file chooser from the hero and the footer buttons (4.5, 11.1)', () => {
+    boot();
+    const clicks = vi.spyOn($('#file-input'), 'click');
+    $('#pick-button').click();
+    expect(clicks).toHaveBeenCalledTimes(1);
+    $('#pick-button-footer').click();
+    expect(clicks).toHaveBeenCalledTimes(2);
   });
 });
 
 describe('opening a disk', () => {
+  beforeEach(() => boot());
+
   it('renders tombstones and open graves for a valid disk', async () => {
-    expect(hidden('cancel-button')).toBe(true);
-    expect(hidden('reopen-button')).toBe(true);
     await drop(makeDisk());
     const all = graves();
     expect(all.length).toBeGreaterThanOrEqual(6);
@@ -404,27 +446,40 @@ describe('opening a disk', () => {
     expect(message.textContent).toBe('This image could not be read as a FAT12 floppy disk.');
   });
 
-  it('replaces the graveyard and closes the preview on a successful second open', async () => {
+  it('replaces the graveyard and clears the preview on a successful second open', async () => {
     await drop(makeDisk());
     await exhume('NOTES.BIN');
-    expect(dialog()).not.toBeNull();
+    expect(previewShown()).toBe(true);
+    expect(currentRows().length).toBe(1);
     await drop(smallDisk());
-    expect(dialog()).toBeNull();
-    expect(graves().map((g) => g.querySelector('.grave-name')?.textContent)).toEqual(['ONLY.BIN']);
-    expect($('#app').hasAttribute('inert')).toBe(false);
+    expect(previewShown()).toBe(false);
+    expect($('#preview .preview-empty')).not.toBeNull();
+    expect(currentRows().length).toBe(0);
+    expect(graveNames()).toEqual(['ONLY.BIN']);
   });
 
-  it('keeps the preview open when a later open is rejected', async () => {
+  it('revokes the preview image URL when the next disk opens', async () => {
+    await drop(makeDisk());
+    await exhume('PIC.PCX');
+    const src = $('#preview img.preview-png').getAttribute('src') ?? '';
+    expect(src).toMatch(/^blob:test\//);
+    await drop(smallDisk());
+    expect(revoked).toContain(src);
+    expect(document.querySelector('#preview img')).toBeNull();
+  });
+
+  it('keeps the preview when a later open is rejected', async () => {
     await drop(makeDisk());
     await exhume('NOTES.BIN');
     dropFiles([fileOf(new Uint8Array(0))]);
     await settle();
-    expect(dialog()).not.toBeNull();
+    expect(previewShown()).toBe(true);
     expect(statusText()).toBe('This file is empty.');
   });
 });
 
-describe('open flow: focus, reveal and guidance (4.3, 4.4, 5.1-5.6)', () => {
+describe('open flow: focus, reveal and guidance', () => {
+  beforeEach(() => boot());
   const heading = (): HTMLElement => $('#graveyard-heading');
   const guidanceHidden = (): boolean => $('#graveyard .graveyard-guidance').hasAttribute('hidden');
 
@@ -447,7 +502,7 @@ describe('open flow: focus, reveal and guidance (4.3, 4.4, 5.1-5.6)', () => {
   });
 
   it('scrolls instantly when reduced motion is on', async () => {
-    reducedMotion = true;
+    env.reduced = true;
     await drop(makeDisk());
     expect(document.activeElement).toBe(heading());
     expect(scrollSpy).toHaveBeenCalledTimes(1);
@@ -468,48 +523,302 @@ describe('open flow: focus, reveal and guidance (4.3, 4.4, 5.1-5.6)', () => {
 
   it('a failed open after a good one keeps the earlier disk and hides the guidance', async () => {
     await drop(makeDisk());
-    const names = graves().map((g) => g.querySelector('.grave-name')?.textContent);
+    const names = graveNames();
     scrollSpy.mockClear();
     const pick = $('#pick-button');
     pick.focus();
     FakeWorker.failOpen = true;
     await drop(smallDisk());
-    expect(graves().map((g) => g.querySelector('.grave-name')?.textContent)).toEqual(names);
+    expect(graveNames()).toEqual(names);
     expect(guidanceHidden()).toBe(true);
     expect(document.activeElement).toBe(pick);
     expect(scrollSpy).not.toHaveBeenCalled();
   });
+});
 
-  it('does not reveal or take focus when a preview was open during the open', async () => {
-    await drop(makeDisk());
-    await exhume('NOTES.BIN');
-    expect(dialog()).not.toBeNull();
-    scrollSpy.mockClear();
-    await drop(smallDisk());
-    expect(dialog()).toBeNull();
-    expect(graves().map((g) => g.querySelector('.grave-name')?.textContent)).toEqual(['ONLY.BIN']);
+describe('Auto_Open (7.5, 7.7, 7.8, 7.9, 8.8, 8.14)', () => {
+  it('opens the Writer_Disk and shows CHAPTER1.WS quietly', async () => {
+    boot({ net: 'disks' });
+    await settle();
+    expect(graveNames()).toContain('CHAPTER1.WS');
+    expect(graveNames().length).toBe(6);
+    expect(previewShown()).toBe(true);
+    expect(previewTitle()).toBe('CHAPTER1.WS');
+    expect($('#preview .paper')).not.toBeNull();
+    expect(currentRows()).toEqual([graveButton('CHAPTER1.WS')]);
+    expect(graveButton('CHAPTER1.WS').getAttribute('aria-current')).toBe('true');
+    expect(statusText()).toBe('');
+    expect(document.activeElement === document.body || document.activeElement === null).toBe(true);
+    expect(focusSpy).not.toHaveBeenCalled();
     expect(scrollSpy).not.toHaveBeenCalled();
-    expect(document.activeElement).not.toBe(heading());
+    expect(hidden('cancel-button')).toBe(true);
+    const pressed = Array.from(document.querySelectorAll('#demo-slot .demo-slot-button')).map((c) => c.getAttribute('aria-pressed'));
+    expect(pressed).toEqual(['true', 'false', 'false']);
+  });
+
+  it('a drop during the disk load wins and the Writer_Disk never appears', async () => {
+    boot({ net: 'deferred' });
+    await settle(0);
+    await drop(smallDisk());
+    expect(graveNames()).toEqual(['ONLY.BIN']);
+    releaseNet();
+    await settle();
+    expect(graveNames()).toEqual(['ONLY.BIN']);
+    expect(previewShown()).toBe(false);
+    expect(currentRows().length).toBe(0);
+    expect(FakeWorker.instances.length).toBe(1);
+  });
+
+  it('a click on Open during the disk load drops the automatic open', async () => {
+    boot({ net: 'deferred' });
+    await settle(0);
+    $('#pick-button').click();
+    releaseNet();
+    await settle();
+    expect(graves().length).toBe(0);
+    expect(previewShown()).toBe(false);
+    expect(FakeWorker.instances.length).toBe(0);
+  });
+
+  // REAL app.ts BUG (reported, not masked): when accept() returns false the automatic result is
+  // dropped on purpose, but the `.then` in app.ts reads `accepted === false` as "the load failed" and
+  // writes "The demo disk could not be loaded." into #status. That overwrites the user's own
+  // "Opened a disk ..." message (7.8) and announces something on the quiet path (7.5).
+  it('a dropped automatic open announces nothing and keeps the user result in #status', async () => {
+    boot({ net: 'deferred' });
+    await settle(0);
+    await drop(smallDisk());
+    releaseNet();
+    await settle();
+    expect(statusText()).toBe('Opened a disk with 1 entries.');
+  });
+
+  it('a dropped automatic open leaves #status empty when the user only clicked Open', async () => {
+    boot({ net: 'deferred' });
+    await settle(0);
+    $('#pick-button').click();
+    releaseNet();
+    await settle();
+    expect(statusText()).toBe('');
+  });
+
+  it('a row click during the automatic preview wins', async () => {
+    FakeWorker.hold = new Set(['exhume']);
+    boot({ net: 'disks' });
+    await settle();
+    expect(graves().length).toBe(6);
+    expect(previewShown()).toBe(false);
+    graveButton('README.TXT').click();
+    await settle();
+    FakeWorker.last().releaseHeld();
+    await settle();
+    expect(previewTitle()).toBe('README.TXT');
+    expect(currentRows()).toEqual([graveButton('README.TXT')]);
+    expect(statusText()).toBe('Opened README.TXT.');
+  });
+
+  it('a new disk during the automatic preview wins', async () => {
+    FakeWorker.hold = new Set(['exhume']);
+    boot({ net: 'disks' });
+    await settle();
+    expect(graves().length).toBe(6);
+    await drop(smallDisk());
+    FakeWorker.last().releaseHeld();
+    await settle();
+    expect(graveNames()).toEqual(['ONLY.BIN']);
+    expect(previewShown()).toBe(false);
+    expect(currentRows().length).toBe(0);
+  });
+
+  it('shows the failure message and leaves the demo cards usable', async () => {
+    boot({ net: 'fail' });
+    await settle();
+    expect(statusText()).toBe('The demo disk request failed (status 404).');
+    expect(graves().length).toBe(0);
+    const cards = Array.from(document.querySelectorAll<HTMLButtonElement>('#demo-slot .demo-slot-button'));
+    expect(cards.length).toBe(3);
+    expect(cards.every((c) => !c.disabled)).toBe(true);
+    stubFetch((url) => respond(demoDisk(url)));
+    cards[1]?.click();
+    await settle();
+    expect(graveNames()).toContain('LOGO.PCX');
+    expect(cards.map((c) => c.getAttribute('aria-pressed'))).toEqual(['false', 'true', 'false']);
+  });
+});
+
+describe('headstones (5.5, 7.6, 8.19)', () => {
+  for (const narrow of [false, true]) {
+    const width = narrow ? 'narrow' : 'wide';
+
+    it(`${width}: a headstone on the open Writer_Disk ends on the preview heading`, async () => {
+      env.narrow = narrow;
+      boot({ net: 'disks' });
+      await settle();
+      scrollSpy.mockClear();
+      $('#headstones [data-path="/README.TXT"]').click();
+      await settle();
+      expect(document.activeElement).toBe($('#preview-title'));
+      expect(previewTitle()).toBe('README.TXT');
+      expect(scrollSpy.mock.contexts.at(-1)).toBe($('#preview-title'));
+      expect(scrollSpy).toHaveBeenLastCalledWith({ behavior: 'smooth', block: 'start' });
+      expect(statusText()).toBe('Opened README.TXT.');
+      expect(currentRows()).toEqual([graveButton('README.TXT')]);
+    });
+
+    it(`${width}: a headstone with no disk open loads the Writer_Disk, then ends on the preview heading`, async () => {
+      env.narrow = narrow;
+      boot();
+      stubFetch((url) => respond(demoDisk(url)));
+      $('#headstones [data-path="/CHAPTER3.WS"]').click();
+      await settle();
+      await settle();
+      expect(graves().length).toBe(6);
+      expect(previewTitle()).toBe('CHAPTER3.WS');
+      expect(document.activeElement).toBe($('#preview-title'));
+      expect(scrollSpy.mock.contexts.at(-1)).toBe($('#preview-title'));
+      expect(scrollSpy.mock.contexts).toContain($('#graveyard-heading'));
+    });
+  }
+
+  it('scrolls instantly under reduced motion', async () => {
+    env.reduced = true;
+    boot({ net: 'disks' });
+    await settle();
+    scrollSpy.mockClear();
+    $('#headstones [data-path="/CHAPTER2.WS"]').click();
+    await settle(0);
+    expect(document.activeElement).toBe($('#preview-title'));
+    expect(scrollSpy).toHaveBeenLastCalledWith({ behavior: 'instant', block: 'start' });
+  });
+
+  it('wins over the Auto_Open when clicked during the disk load', async () => {
+    boot({ net: 'deferred' });
+    await settle(0);
+    $('#headstones [data-path="/CHAPTER2.WS"]').click();
+    releaseNet();
+    await settle();
+    await settle();
+    expect(previewTitle()).toBe('CHAPTER2.WS');
+    expect(currentRows()).toEqual([graveButton('CHAPTER2.WS')]);
+    expect(document.activeElement).toBe($('#preview-title'));
+  });
+});
+
+describe('grave rows and the preview (8.6, 8.17, 8.18)', () => {
+  it('wide: focus stays on the row, the page does not scroll, "Opened NAME." is announced', async () => {
+    boot({ net: 'disks' });
+    await settle();
+    scrollSpy.mockClear();
+    const row = graveButton('CHAPTER2.WS');
+    row.focus();
+    row.click();
+    await settle();
+    expect(previewTitle()).toBe('CHAPTER2.WS');
+    expect(document.activeElement).toBe(row);
+    expect(scrollSpy).not.toHaveBeenCalled();
+    expect(statusText()).toBe('Opened CHAPTER2.WS.');
+    expect(currentRows()).toEqual([row]);
+  });
+
+  it('narrow: focus moves to the preview heading and the panel scrolls into view', async () => {
+    env.narrow = true;
+    boot({ net: 'disks' });
+    await settle();
+    scrollSpy.mockClear();
+    const row = graveButton('CHAPTER2.WS');
+    row.focus();
+    row.click();
+    await settle();
+    expect(document.activeElement).toBe($('#preview-title'));
+    expect(scrollSpy.mock.contexts.at(-1)).toBe($('#preview-title'));
+    expect(scrollSpy).toHaveBeenLastCalledWith({ behavior: 'smooth', block: 'start' });
+    expect(statusText()).toBe('Opened CHAPTER2.WS.');
+  });
+
+  it('narrow with reduced motion scrolls instantly', async () => {
+    env.narrow = true;
+    boot({ net: 'disks' });
+    await settle();
+    env.reduced = true;
+    scrollSpy.mockClear();
+    graveButton('CHAPTER2.WS').click();
+    await settle(0);
+    expect(scrollSpy).toHaveBeenLastCalledWith({ behavior: 'instant', block: 'start' });
+  });
+
+  it('judges the layout when the preview arrives, not when the row was clicked', async () => {
+    boot({ net: 'disks' });
+    await settle();
+    scrollSpy.mockClear();
+    FakeWorker.hold = new Set(['exhume']);
+    const row = graveButton('CHAPTER2.WS');
+    row.focus();
+    row.click();
+    await settle();
+    env.narrow = true;
+    FakeWorker.last().releaseHeld();
+    await settle();
+    expect(document.activeElement).toBe($('#preview-title'));
+  });
+});
+
+describe('footer and tab order (8.13, 11.1)', () => {
+  it('lists the page groups in visual order with no positive tabindex', async () => {
+    boot({ net: 'disks' });
+    await settle();
+    const all = Array.from(document.querySelectorAll<HTMLElement>('a[href], button, input, [tabindex]'));
+    const tabbable = all.filter(
+      (el) =>
+        el.closest('[hidden]') === null &&
+        !(el as HTMLButtonElement).disabled &&
+        el.getAttribute('tabindex') !== '-1' &&
+        !(el.tagName === 'A' && el.closest('svg') !== null),
+    );
+    expect(all.some((el) => Number(el.getAttribute('tabindex') ?? '0') > 0)).toBe(false);
+    const index = (el: Element | null): number => {
+      if (el === null) throw new Error('missing group member');
+      const i = tabbable.indexOf(el as HTMLElement);
+      if (i < 0) throw new Error(`not tabbable: ${el.className || el.id}`);
+      return i;
+    };
+    const range = (els: Element[]): [number, number] => {
+      expect(els.length).toBeGreaterThan(0);
+      const at = els.map(index);
+      return [Math.min(...at), Math.max(...at)];
+    };
+    const groups: Array<[string, [number, number]]> = [
+      ['nav', range(Array.from(document.querySelectorAll('.nav a')))],
+      ['open', range([$('#pick-button')])],
+      ['demo link', range([$('#demo-link')])],
+      ['headstones', range(Array.from(document.querySelectorAll('#headstones button')))],
+      ['demo cards', range(Array.from(document.querySelectorAll('#demo-slot button')))],
+      ['rows', range(Array.from(document.querySelectorAll('#graveyard button.grave-action')))],
+      ['preview', range(Array.from(document.querySelectorAll('#preview button.preview-download, #preview [tabindex="0"]')))],
+      ['footer button', range([$('#pick-button-footer')])],
+      ['footer links', range(Array.from(document.querySelectorAll('#foot a')))],
+    ];
+    expect(document.querySelectorAll('#headstones button').length).toBe(6);
+    for (let i = 1; i < groups.length; i++) {
+      const prev = groups[i - 1];
+      const next = groups[i];
+      if (prev === undefined || next === undefined) continue;
+      expect(prev[1][1], `${prev[0]} before ${next[0]}`).toBeLessThan(next[1][0]);
+    }
+  });
+
+  it('the footer button counts as user intent and drops the Auto_Open', async () => {
+    boot({ net: 'deferred' });
+    await settle(0);
+    $('#pick-button-footer').click();
+    releaseNet();
+    await settle();
+    expect(graves().length).toBe(0);
+    expect(previewShown()).toBe(false);
   });
 });
 
 describe('pressed demo card (8.5, 8.6, 8.8)', () => {
-  interface FakeResponse {
-    status: number;
-    headers: { get(name: string): string | null };
-    body: null;
-    arrayBuffer(): Promise<ArrayBuffer>;
-  }
-  const respond = (bytes: Uint8Array, status = 200, headers: Record<string, string> = {}): FakeResponse => ({
-    status,
-    headers: { get: (name) => headers[name.toLowerCase()] ?? null },
-    body: null,
-    arrayBuffer: () => Promise.resolve(bytes.slice().buffer),
-  });
-  /** Stubs the global fetch that demos.ts uses; the registry and loader stay real. */
-  const stubFetch = (make: () => FakeResponse): void => {
-    vi.stubGlobal('fetch', () => Promise.resolve(make()));
-  };
+  beforeEach(() => boot());
   const cards = (): HTMLButtonElement[] => Array.from(document.querySelectorAll<HTMLButtonElement>('#demo-slot .demo-slot-button'));
   const pressed = (): string[] => cards().map((c) => c.getAttribute('aria-pressed') ?? '');
   const demoStatus = (): string => $('#demo-slot .demo-slot-status').textContent ?? '';
@@ -544,20 +853,29 @@ describe('pressed demo card (8.5, 8.6, 8.8)', () => {
     await clickCard(0);
     expect(pressed()).toContain('true');
     await drop(smallDisk());
-    expect(graves().map((g) => g.querySelector('.grave-name')?.textContent)).toEqual(['ONLY.BIN']);
+    expect(graveNames()).toEqual(['ONLY.BIN']);
     expect(pressed().every((v) => v === 'false')).toBe(true);
+  });
+
+  it('clears the preview when a demo opens', async () => {
+    stubFetch(() => respond(makeDisk()));
+    await clickCard(0);
+    await exhume('NOTES.BIN');
+    expect(previewShown()).toBe(true);
+    await clickCard(1);
+    expect(previewShown()).toBe(false);
   });
 
   it('leaves everything unchanged when a later demo fails to load', async () => {
     stubFetch(() => respond(makeDisk()));
     await clickCard(0);
     const before = pressed();
-    const names = graves().map((g) => g.querySelector('.grave-name')?.textContent);
+    const names = graveNames();
     stubFetch(() => respond(new Uint8Array(0), 404));
     await clickCard(1);
     expect(demoStatus()).toBe('The demo disk request failed (status 404).');
     expect(pressed()).toEqual(before);
-    expect(graves().map((g) => g.querySelector('.grave-name')?.textContent)).toEqual(names);
+    expect(graveNames()).toEqual(names);
   });
 
   it('does not leak a rejected demo id into a later open', async () => {
@@ -572,21 +890,26 @@ describe('pressed demo card (8.5, 8.6, 8.8)', () => {
   });
 });
 
-describe('previews', () => {
-  it('previews markdown, downloads it, and closes with Escape returning focus', async () => {
+describe('inline previews', () => {
+  beforeEach(() => boot());
+
+  it('previews markdown beside the list, with downloads, and keeps focus on the row', async () => {
     await drop(makeDisk());
     const opener = graveButton('LETTER.WS');
     opener.focus();
     await exhume('LETTER.WS');
 
-    const d = dialog();
-    expect(d).not.toBeNull();
-    expect(d?.querySelector('.preview-markdown')?.textContent).toContain('Hello');
-    expect($('#app').hasAttribute('inert')).toBe(true);
-    expect(document.activeElement?.id).toBe('preview-title');
-    expect(statusText()).toBe('');
+    const panel = $('#preview');
+    expect(panel.querySelector('.preview-markdown')?.textContent).toContain('Hello');
+    expect(previewTitle()).toBe('LETTER.WS');
+    expect(panel.querySelector('.preview-kind')?.textContent).toBe('Read as Markdown');
+    expect($('#app').hasAttribute('inert')).toBe(false);
+    expect(document.activeElement).toBe(opener);
+    expect(statusText()).toBe('Opened LETTER.WS.');
+    expect(opener.getAttribute('aria-current')).toBe('true');
+    expect(graveButton('NOTES.BIN').hasAttribute('aria-current')).toBe(false);
 
-    const buttons = Array.from(d?.querySelectorAll<HTMLButtonElement>('.preview-download') ?? []);
+    const buttons = Array.from(panel.querySelectorAll<HTMLButtonElement>('.preview-download'));
     expect(buttons.map((b) => b.textContent)).toEqual(['Download .md', 'Download raw bytes']);
     buttons[0]?.click();
     buttons[1]?.click();
@@ -596,64 +919,65 @@ describe('previews', () => {
     expect(downloads.every((x) => x.href.startsWith('blob:'))).toBe(true);
     await settle(600);
     expect(revoked.length).toBe(2);
+  });
 
-    pressEscape();
-    expect(dialog()).toBeNull();
-    expect($('#app').hasAttribute('inert')).toBe(false);
-    expect(document.activeElement).toBe(opener);
+  it('Escape does nothing to the inline preview', async () => {
+    await drop(makeDisk());
+    await exhume('LETTER.WS');
+    document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    expect(previewShown()).toBe(true);
   });
 
   it('previews csv as a table', async () => {
     await drop(makeDisk());
     await exhume('DATA.DBF');
-    const table = dialog()?.querySelector('table.csv-table');
-    expect(table?.textContent).toContain('ABCD');
-    expect(table?.textContent).toContain('WXYZ');
-    expect(dialog()?.querySelector('.preview-download')?.textContent).toBe('Download .csv');
+    const table = $('#preview table.csv-table');
+    expect(table.textContent).toContain('ABCD');
+    expect(table.textContent).toContain('WXYZ');
+    expect($('#preview .preview-download').textContent).toBe('Download .csv');
   });
 
-  it('previews png with an owned blob url and revokes it on close', async () => {
+  it('previews png with an owned blob url that is revoked when the preview is replaced', async () => {
     await drop(makeDisk());
     await exhume('PIC.PCX');
-    const img = dialog()?.querySelector<HTMLImageElement>('img.preview-png');
-    const src = img?.getAttribute('src') ?? '';
+    const src = $('#preview img.preview-png').getAttribute('src') ?? '';
     expect(src).toMatch(/^blob:test\//);
-    expect(dialog()?.querySelector('.preview-download')?.textContent).toBe('Download .png');
-    dialog()?.querySelector<HTMLButtonElement>('.preview-close')?.click();
-    expect(dialog()).toBeNull();
+    expect($('#preview .preview-download').textContent).toBe('Download .png');
+    await exhume('NOTES.BIN');
     expect(revoked).toContain(src);
   });
 
   it('falls back to a hex view with an error for unknown bytes', async () => {
     await drop(makeDisk());
     await exhume('NOTES.BIN');
-    const d = dialog();
-    expect(d?.querySelector('.hex-view')).not.toBeNull();
-    expect(d?.querySelector('.preview-error')?.textContent).not.toBe('');
-    expect(d?.querySelector('.hex-text')?.textContent).toContain('JUNKDATA');
-    expect(Array.from(d?.querySelectorAll('.preview-download') ?? []).map((b) => b.textContent)).toEqual(['Download raw bytes']);
+    const panel = $('#preview');
+    expect(panel.querySelector('.hex-view')).not.toBeNull();
+    expect(panel.querySelector('.preview-error')?.textContent).not.toBe('');
+    expect(panel.querySelector('.hex-text')?.textContent).toContain('JUNKDATA');
+    expect(Array.from(panel.querySelectorAll('.preview-download')).map((b) => b.textContent)).toEqual(['Download raw bytes']);
   });
 
   it('waits for the rising animation before showing the preview, unless motion is reduced', async () => {
     await drop(makeDisk());
     graveButton('NOTES.BIN').click();
     await settle(0);
-    expect(dialog()).toBeNull();
+    expect(previewShown()).toBe(false);
     expect(graveByName('NOTES.BIN').classList.contains('is-rising')).toBe(true);
     expect(statusText()).toBe('Rising: NOTES.BIN');
     await settle(1000);
-    expect(dialog()).not.toBeNull();
+    expect(previewShown()).toBe(true);
     expect(graveByName('NOTES.BIN').classList.contains('is-rising')).toBe(false);
-    pressEscape();
 
-    reducedMotion = true;
-    graveButton('NOTES.BIN').click();
+    env.reduced = true;
+    graveButton('LETTER.WS').click();
     await settle(0);
-    expect(dialog()).not.toBeNull();
+    expect(previewTitle()).toBe('LETTER.WS');
   });
 });
 
 describe('lost reader and cancel', () => {
+  beforeEach(() => boot());
+
   it('marks the disk lost on a worker error and Reopen restores it', async () => {
     await drop(makeDisk());
     const count = graves().length;
@@ -672,7 +996,7 @@ describe('lost reader and cancel', () => {
     expect(graveButton('LETTER.WS').disabled).toBe(false);
     expect(hidden('reopen-button')).toBe(true);
     await exhume('NOTES.BIN');
-    expect(dialog()).not.toBeNull();
+    expect(previewShown()).toBe(true);
   });
 
   it('shows Cancel only while a request is pending', async () => {
@@ -697,7 +1021,7 @@ describe('lost reader and cancel', () => {
     expect(hidden('cancel-button')).toBe(true);
     expect(hidden('reopen-button')).toBe(false);
     expect(graveButton('LETTER.WS').disabled).toBe(true);
-    expect(dialog()).toBeNull();
+    expect(previewShown()).toBe(false);
   });
 
   it('cancelling the very first open leaves nothing to reopen', async () => {
@@ -713,6 +1037,8 @@ describe('lost reader and cancel', () => {
 });
 
 describe('stale responses and errors', () => {
+  beforeEach(() => boot());
+
   it('ignores the answer to an open that a newer drop superseded', async () => {
     FakeWorker.auto = false;
     dropFiles([fileOf(makeDisk())]);
@@ -721,7 +1047,7 @@ describe('stale responses and errors', () => {
     await settle();
     FakeWorker.last().flush();
     await settle();
-    expect(graves().map((g) => g.querySelector('.grave-name')?.textContent)).toEqual(['ONLY.BIN']);
+    expect(graveNames()).toEqual(['ONLY.BIN']);
     expect(statusText()).toBe('Opened a disk with 1 entries.');
   });
 
@@ -734,8 +1060,8 @@ describe('stale responses and errors', () => {
     await settle();
     FakeWorker.last().flush();
     await settle();
-    expect(dialog()).toBeNull();
-    expect(graves().map((g) => g.querySelector('.grave-name')?.textContent)).toEqual(['ONLY.BIN']);
+    expect(previewShown()).toBe(false);
+    expect(graveNames()).toEqual(['ONLY.BIN']);
     expect(hidden('cancel-button')).toBe(true);
   });
 

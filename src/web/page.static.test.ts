@@ -1,19 +1,25 @@
-// Static checks of index.html and src/style.css (task 15.3).
-// Validates: Requirements 2.1, 2.2, 2.3, 8.7, 8.8, 11.1, 11.2, 11.3, 11.4, 11.7,
-// 12.12, 12.14, 12.15, 12.16, 12.17, 13.1, 13.3, 13.4.
-// The full-stylesheet run of checkCss lives in src/test-support/web/css-check.test.ts;
-// this file runs the individual checks and adds self-tests of the helpers.
+// Static checks of index.html and src/style.css for the page redesign (task 7.1).
+// Validates: Requirements 1.1-1.9, 2.1-2.4, 3.1-3.8, 4.1-4.13, 6.1-6.6, 11.1-11.7, 12.1-12.5, 13.1-13.6.
+// The full-stylesheet run of checkCss lives in src/test-support/web/css-check.test.ts; this file runs the
+// individual checks against the page. Rendered layout cannot be verified here (no layout engine).
 
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { checkCsp, EXPECTED_CSP, parseCsp } from '../test-support/web/csp';
 import {
-  checkBackground,
-  checkFxLayers,
-  checkLayout,
-  checkNarrowDemoLayout,
+  checkAnimatedProperties,
+  checkContentInteractive,
+  checkFontFamilies,
+  checkHiddenStartStates,
+  checkMinHeights,
+  checkNarrowCardList,
+  checkNarrowStoneDepth,
+  checkNarrowQuery,
   checkPairs,
   checkReducedMotion,
+  checkStoneRowFits,
+  checkStonesVisible,
+  checkStrata,
   checkUrls,
   findStyleApiUse,
   parseCss,
@@ -21,12 +27,29 @@ import {
   stripCssComments,
 } from '../test-support/web/css-scan';
 import { parseHtml, scanHtml, textContent, type HtmlElement } from '../test-support/web/html-scan';
-import { scanPhrasesInHtml } from '../test-support/web/scan';
+import { scanPhrasesInHtml, scanSinks } from '../test-support/web/scan';
+import { NARROW_QUERY } from './logic/layout';
 
-const html = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
-const css = readFileSync(new URL('../style.css', import.meta.url), 'utf8');
+const root = new URL('../../', import.meta.url);
+const html = readFileSync(new URL('index.html', root), 'utf8');
+const css = readFileSync(new URL('src/style.css', root), 'utf8');
+const readme = readFileSync(new URL('README.md', root), 'utf8');
 const facts = scanHtml(html);
 const doc = parseHtml(html);
+
+/** The CSP as captured before the redesign; it must stay byte for byte. */
+const CAPTURED_CSP =
+  "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'";
+
+const RETAINED_IDS = [
+  'app', 'drop-zone', 'pick-button', 'file-input', 'status', 'cancel-button', 'reopen-button',
+  'demo-slot', 'graveyard', 'privacy-note', 'honesty-note', 'repo-link',
+];
+const ADDED_IDS = [
+  'hero-heading', 'demo-link', 'headstones', 'yard', 'yard-heading', 'preview', 'bar-section',
+  'bar-heading', 'disk-bar', 'band', 'formats', 'foot', 'pick-button-footer',
+];
+const RETIRED_IDS = ['intro', 'fx-host', 'preview-root'];
 
 function byId(id: string): HtmlElement {
   const el = doc.elements.find((e) => e.attrs['id'] === id);
@@ -34,373 +57,471 @@ function byId(id: string): HtmlElement {
   return el;
 }
 
-describe('index.html', () => {
+function descendants(el: HtmlElement): HtmlElement[] {
+  const out: HtmlElement[] = [];
+  const walk = (e: HtmlElement): void => {
+    for (const c of e.children) {
+      if (c.kind === 'element') {
+        out.push(c);
+        walk(c);
+      }
+    }
+  };
+  walk(el);
+  return out;
+}
+
+const hasClass = (el: HtmlElement, c: string): boolean => (el.attrs['class'] ?? '').split(/\s+/).includes(c);
+const norm = (s: string): string => s.replace(/\s+/g, ' ').trim();
+
+/** Drops block comments and whole-line or trailing `//` comments (not inside `://`). */
+function stripTsComments(src: string): string {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n')
+    .map((line) => line.replace(/(^|[^:])\/\/.*$/, '$1'))
+    .join('\n');
+}
+
+const webDir = new URL('./', import.meta.url);
+const sources: { rel: string; code: string }[] = [];
+for (const rel of readdirSync(webDir, { recursive: true, encoding: 'utf8' })) {
+  const p = rel.split('\\').join('/');
+  if (!p.endsWith('.ts') || p.endsWith('.d.ts') || /\.test\.ts$/.test(p)) continue;
+  sources.push({ rel: p, code: readFileSync(new URL(p, webDir), 'utf8') });
+}
+
+describe('index.html safety (Req 1)', () => {
   it('has exactly one CSP meta, before any script, link or style', () => {
     expect(facts.cspMetaCount).toBe(1);
     expect(facts.cspBeforeResources).toBe(true);
   });
 
-  it('has the exact CSP directive set and no unsafe-*, data:, wildcard or remote source', () => {
-    expect(facts.cspContent).not.toBeNull();
-    const content = facts.cspContent!;
-    expect(checkCsp(content)).toEqual([]);
-    const parsed = parseCsp(content);
+  it('keeps the CSP equal to the captured string and passes checkCsp', () => {
+    expect(facts.cspContent).toBe(CAPTURED_CSP);
+    expect(checkCsp(facts.cspContent!)).toEqual([]);
+    const parsed = parseCsp(facts.cspContent!);
     expect(parsed.duplicates).toEqual([]);
-    const get = (name: string): readonly string[] | undefined =>
-      parsed.directives.find((d) => d.name === name)?.values;
-    expect(get('connect-src')).toEqual(["'self'"]);
-    expect([...(get('img-src') ?? [])].sort()).toEqual(["'self'", 'blob:']);
     expect(parsed.directives.map((d) => d.name).sort()).toEqual(Object.keys(EXPECTED_CSP).sort());
-    expect(content).not.toMatch(/unsafe-|data:|\*/i);
+    expect(facts.cspContent).not.toMatch(/unsafe-|data:|\*/i);
   });
 
-  it('has no inline script content, on* attribute, style attribute or style element', () => {
+  it('has no inline style, script or on* attribute', () => {
     expect(facts.inlineScripts).toEqual([]);
     expect(facts.onAttributes).toEqual([]);
     expect(facts.styleAttributes).toEqual([]);
     expect(facts.styleElementCount).toBe(0);
   });
 
-  it('loads only the module entry script, with no remote link or script', () => {
+  it('loads only the module entry script, and every src and href is same-origin or an allowed host', () => {
     expect(facts.scripts.map((s) => s.attrs['src'])).toEqual(['/src/main.ts']);
-    expect(facts.scripts[0]!.attrs['type']).toBe('module');
     for (const link of facts.links) expect(link['href'] ?? '').not.toMatch(/^([a-z][a-z0-9+.-]*:|\/\/)/i);
-  });
-
-  it('has lang, a non-empty title and exactly one h1', () => {
-    expect(facts.lang).toBeTruthy();
-    expect((facts.title ?? '').trim().length).toBeGreaterThan(0);
-    expect(facts.h1Count).toBe(1);
-  });
-
-  it('has the privacy note (1 to 140 characters) as visible text', () => {
-    const text = facts.textById['privacy-note'];
-    expect(text).toBeDefined();
-    expect(text!.length).toBeGreaterThanOrEqual(1);
-    expect(text!.length).toBeLessThanOrEqual(140);
-    expect(facts.visibleText).toContain(text!);
-  });
-
-  it('has the honesty note (1 to 160 characters) naming andete/disk-peek as visible text', () => {
-    const text = facts.textById['honesty-note'];
-    expect(text).toBeDefined();
-    expect(text!.length).toBeGreaterThanOrEqual(1);
-    expect(text!.length).toBeLessThanOrEqual(160);
-    expect(text).toContain('andete/disk-peek');
-    expect(facts.visibleText).toContain(text!);
-  });
-
-  it('has every id and class of the element contract', () => {
-    for (const id of [
-      'fx-host', 'app', 'drop-zone', 'pick-button', 'file-input', 'status',
-      'cancel-button', 'reopen-button', 'demo-slot', 'graveyard', 'preview-root',
-    ]) {
-      expect(doc.elements.filter((e) => e.attrs['id'] === id), `#${id}`).toHaveLength(1);
+    const allowed = new Set(['https://github.com/tsang326/exhume', 'https://github.com/andete/disk-peek']);
+    for (const el of doc.elements) {
+      const src = el.attrs['src'];
+      if (src !== undefined) expect(src, `${el.tag} src`).toMatch(/^\/(?!\/)/);
+      const href = el.attrs['href'];
+      if (href === undefined || href.startsWith('#')) continue;
+      if (el.tag === 'a' && /^[a-z][a-z0-9+.-]*:/i.test(href)) {
+        expect(allowed.has(href), `anchor ${href}`).toBe(true);
+      } else if (el.tag === 'use') {
+        expect(href).toMatch(/^#/);
+      } else {
+        expect(href, `${el.tag} href`).not.toMatch(/^([a-z][a-z0-9+.-]*:|\/\/)/i);
+      }
     }
-    expect(doc.elements.filter((e) => (e.attrs['class'] ?? '').split(/\s+/).includes('content'))).toHaveLength(1);
   });
 
-  it('has a visible picker button and a hidden file input', () => {
-    const pick = byId('pick-button');
-    expect(pick.tag).toBe('button');
-    expect(pick.attrs['hidden']).toBeUndefined();
-    expect(facts.textById['pick-button']).toBe('Choose a disk image');
-    const input = byId('file-input');
-    expect(input.tag).toBe('input');
-    expect(input.attrs['type']).toBe('file');
-    expect(input.attrs['hidden']).toBeDefined();
+  it('puts no file under public/fonts', () => {
+    expect(existsSync(new URL('public/fonts', root))).toBe(false);
   });
 
-  it('has the status region attributes', () => {
+  it('keeps the package.json dependency keys unchanged and has no runtime dependencies', () => {
+    const pkg = JSON.parse(readFileSync(new URL('package.json', root), 'utf8')) as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+    expect(Object.keys(pkg.dependencies ?? {})).toEqual([]);
+    expect(Object.keys(pkg.devDependencies ?? {}).sort()).toEqual(
+      ['@types/node', 'fast-check', 'happy-dom', 'typescript', 'vite', 'vitest'],
+    );
+  });
+
+  it('has no forbidden phrase in the visible text', () => {
+    expect(scanPhrasesInHtml('index.html', html)).toEqual([]);
+  });
+
+  it('has one same-origin SVG favicon link to a file that exists', () => {
+    const icons = doc.elements.filter((e) => e.tag === 'link' && e.attrs['rel'] === 'icon');
+    expect(icons).toHaveLength(1);
+    const href = icons[0]!.attrs['href'] ?? '';
+    expect(icons[0]!.attrs['type']).toBe('image/svg+xml');
+    expect(href).toMatch(/^\/(?!\/)/);
+    expect(href).not.toMatch(/^[a-z][a-z0-9+.-]*:/i);
+    expect(existsSync(new URL(href.slice(1), root))).toBe(true);
+  });
+
+  it('gives every external link rel="noopener noreferrer"', () => {
+    const external = doc.elements.filter((e) => e.tag === 'a' && /^https:/.test(e.attrs['href'] ?? ''));
+    expect(external.length).toBeGreaterThanOrEqual(3);
+    for (const a of external) expect(a.attrs['rel'], a.attrs['href']).toBe('noopener noreferrer');
+  });
+});
+
+describe('element contract (Req 2)', () => {
+  const contract = doc.comments.find((c) => /Element contract/i.test(c)) ?? '';
+
+  it('has the contract comment', () => {
+    expect(contract).not.toBe('');
+  });
+
+  it('has each retained and added id exactly once, and lists it in the contract comment', () => {
+    for (const id of [...RETAINED_IDS, ...ADDED_IDS]) {
+      expect(doc.elements.filter((e) => e.attrs['id'] === id), `#${id}`).toHaveLength(1);
+      expect(contract, `#${id} in contract`).toContain(`#${id}`);
+    }
+  });
+
+  it('has no retired id in the markup, records each as retired, and no code looks it up', () => {
+    const retiredLine = contract.slice(contract.indexOf('Retired'));
+    for (const id of RETIRED_IDS) {
+      expect(doc.elements.filter((e) => e.attrs['id'] === id), `#${id}`).toHaveLength(0);
+      expect(retiredLine, `#${id} retired`).toContain(id);
+      for (const s of sources) {
+        const code = stripTsComments(s.code);
+        const lookup = new RegExp(`getElementById\\(\\s*['"\`]${id}['"\`]|querySelector(?:All)?\\(\\s*['"\`]#${id}\\b|['"\`]#${id}['"\`]`);
+        expect(lookup.test(code), `${s.rel} looks up #${id}`).toBe(false);
+      }
+    }
+  });
+
+  it('keeps the status region attributes', () => {
     const status = byId('status');
     expect(status.attrs['role']).toBe('status');
     expect(status.attrs['aria-live']).toBe('polite');
     expect(status.attrs['aria-atomic']).toBe('true');
   });
 
-  it('hides cancel and reopen buttons at first', () => {
+  it('has a hidden file input without accept, and hidden cancel and reopen buttons', () => {
+    const input = byId('file-input');
+    expect(input.tag).toBe('input');
+    expect(input.attrs['type']).toBe('file');
+    expect(input.attrs['hidden']).toBeDefined();
+    expect(input.attrs['accept']).toBeUndefined();
     for (const id of ['cancel-button', 'reopen-button']) {
       expect(byId(id).tag).toBe('button');
       expect(byId(id).attrs['hidden']).toBeDefined();
     }
   });
 
-  it('keeps the demo slot empty and marked with its slot comment', () => {
-    expect(byId('demo-slot').children).toEqual([]);
-    expect(doc.comments.some((c) => /SLOT/.test(c) && /demo/i.test(c))).toBe(true);
-  });
-
-  it('puts the preview root beside #app, not inside it, and the drop zone and graveyard inside #app', () => {
-    const inside = (root: HtmlElement, id: string): boolean => {
-      const walk = (el: HtmlElement): boolean =>
-        el.children.some((c) => c.kind === 'element' && (c.attrs['id'] === id || walk(c)));
-      return walk(root);
-    };
-    const app = byId('app');
-    expect(inside(app, 'preview-root')).toBe(false);
-    expect(inside(app, 'drop-zone')).toBe(true);
-    expect(inside(app, 'graveyard')).toBe(true);
-    expect(byId('fx-host').attrs['aria-hidden']).toBe('true');
-    expect(byId('drop-zone').attrs['aria-label']).toBeTruthy();
-  });
-
-  it('has no forbidden phrase in the visible text', () => {
-    expect(scanPhrasesInHtml('index.html', html)).toEqual([]);
+  it('has no role="dialog", aria-modal or inert in the markup or the web sources', () => {
+    for (const el of doc.elements) {
+      expect(el.attrs['role']).not.toBe('dialog');
+      expect(el.attrs['aria-modal']).toBeUndefined();
+      expect(el.attrs['inert']).toBeUndefined();
+    }
+    for (const s of sources) {
+      const code = stripTsComments(s.code);
+      expect(/role['"]?\s*[:=,]\s*['"]dialog['"]|aria-modal|\binert\b/.test(code), s.rel).toBe(false);
+    }
   });
 });
 
-describe('index.html intro, title and description (ui-polish)', () => {
-  // Validates: Requirements 1.1-1.9, 2.1-2.5, 10.1, 10.2.
-  const readme = readFileSync(new URL('../../README.md', import.meta.url), 'utf8');
-
-  function descendants(el: HtmlElement): HtmlElement[] {
-    const out: HtmlElement[] = [];
-    const walk = (e: HtmlElement): void => {
-      for (const c of e.children) {
-        if (c.kind === 'element') {
-          out.push(c);
-          walk(c);
-        }
-      }
-    };
-    walk(el);
-    return out;
-  }
-
-  const metaDescriptions = doc.elements.filter(
-    (e) => e.tag === 'meta' && (e.attrs['name'] ?? '').toLowerCase() === 'description',
-  );
-
-  it('has the exact title', () => {
-    expect(facts.title).toBe('Exhume - read old floppy disks in your browser');
+describe('hero, nav, footer and metadata (Req 4, 11, 13.1)', () => {
+  it('has lang, one h1, one main, and a heading order without skipped levels', () => {
+    expect(facts.lang).toBeTruthy();
+    expect(facts.h1Count).toBe(1);
+    expect(doc.elements.filter((e) => e.tag === 'main')).toHaveLength(1);
+    let prev = 0;
+    for (const el of doc.elements) {
+      const m = /^h([1-6])$/.exec(el.tag);
+      if (m === null) continue;
+      const level = Number(m[1]);
+      expect(level, `<${el.tag}> after h${prev}`).toBeLessThanOrEqual(prev + 1);
+      prev = level;
+    }
   });
 
-  it('has exactly one meta description of 1 to 160 characters and no digit', () => {
-    expect(metaDescriptions).toHaveLength(1);
-    const content = metaDescriptions[0]!.attrs['content'] ?? '';
+  it('has the headline "Dig up lost files." with a decorative inline image', () => {
+    const h1 = byId('hero-heading');
+    expect(h1.tag).toBe('h1');
+    expect(norm(textContent(h1))).toBe('Dig up lost files.');
+    const imgs = descendants(h1).filter((e) => e.tag === 'img');
+    expect(imgs).toHaveLength(1);
+    expect(imgs[0]!.attrs['alt']).toBe('');
+    const words = descendants(h1).filter((e) => hasClass(e, 'w')).map((e) => norm(textContent(e)));
+    expect(words).toEqual(['Dig up', 'lost files.']);
+  });
+
+  it('has the supporting sentence, the open button, the demo link and no capability list in the hero', () => {
+    const hero = byId('drop-zone');
+    const say = descendants(hero).find((e) => hasClass(e, 'say'));
+    expect(say).toBeDefined();
+    const sentence = norm(textContent(say!));
+    expect(sentence).toMatch(/1980s DOS floppy images/);
+    expect(sentence).toMatch(/browser/);
+    expect(sentence).toMatch(/deleted files/);
+    expect(facts.textById['pick-button']).toBe('Open a disk image');
+    expect(byId('pick-button').tag).toBe('button');
+    const demo = byId('demo-link');
+    expect(norm(textContent(demo))).toBe('or try a demo disk');
+    expect(demo.attrs['href']).toBe('#yard');
+    expect(descendants(hero).filter((e) => e.tag === 'ul' || e.tag === 'ol' || e.tag === 'li')).toEqual([]);
+  });
+
+  it('has the extension line with all five extensions and the size limit', () => {
+    const exts = descendants(byId('drop-zone')).find((e) => hasClass(e, 'exts'));
+    expect(exts).toBeDefined();
+    const text = norm(textContent(exts!));
+    for (const ext of ['.img', '.ima', '.vfd', '.flp', '.dsk']) expect(text).toContain(ext);
+    expect(text).toContain('up to 2.88 MB');
+  });
+
+  it('has the privacy note inside the hero, 1 to 140 characters', () => {
+    const text = facts.textById['privacy-note'];
+    expect(text).toBe('Your files stay in this browser. Nothing is uploaded.');
+    expect(text!.length).toBeLessThanOrEqual(140);
+    expect(descendants(byId('drop-zone')).some((e) => e.attrs['id'] === 'privacy-note')).toBe(true);
+  });
+
+  it('has the nav with the wordmark and four anchors that resolve', () => {
+    const nav = doc.elements.find((e) => e.tag === 'header' && hasClass(e, 'nav'));
+    expect(nav).toBeDefined();
+    const anchors = descendants(nav!).filter((e) => e.tag === 'a');
+    expect(anchors.map((a) => norm(textContent(a)))).toEqual(['Exhume', 'Demo disks', 'How it works', 'Formats', 'GitHub']);
+    expect(norm(textContent(anchors[0]!))).toContain('Exhume');
+    for (const a of anchors) {
+      const href = a.attrs['href']!;
+      if (href.startsWith('#')) {
+        expect(doc.elements.some((e) => e.attrs['id'] === href.slice(1)), href).toBe(true);
+      }
+    }
+    const repo = byId('repo-link');
+    expect(repo.attrs['href']).toBe('https://github.com/tsang326/exhume');
+    expect(repo.attrs['aria-label']).toContain('GitHub');
+  });
+
+  it('has the exact title and one meta description of 1 to 160 characters', () => {
+    expect(facts.title).toBe('Exhume - read old floppy disks in your browser');
+    const metas = doc.elements.filter((e) => e.tag === 'meta' && (e.attrs['name'] ?? '').toLowerCase() === 'description');
+    expect(metas).toHaveLength(1);
+    const content = metas[0]!.attrs['content'] ?? '';
     expect(content.length).toBeGreaterThanOrEqual(1);
     expect(content.length).toBeLessThanOrEqual(160);
-    expect(content).not.toMatch(/\d/);
   });
 
-  it('has no REVENANT.OS in index.html, src/main.ts, src/style.css or non-test files under src/web', () => {
-    const files: URL[] = [
-      new URL('../../index.html', import.meta.url),
-      new URL('../main.ts', import.meta.url),
-      new URL('../style.css', import.meta.url),
-    ];
-    const webDir = new URL('./', import.meta.url);
-    for (const rel of readdirSync(webDir, { recursive: true, encoding: 'utf8' })) {
-      if (/\.(ts|css|html)$/.test(rel) && !/\.test\.ts$/.test(rel)) files.push(new URL(rel, webDir));
-    }
-    expect(files.length).toBeGreaterThan(3);
-    for (const f of files) expect(readFileSync(f, 'utf8'), f.pathname).not.toContain('REVENANT.OS');
+  it('finds every digit figure of the hero and the meta description in the README', () => {
+    const hero = norm(textContent(byId('drop-zone')));
+    const meta = doc.elements.find((e) => e.tag === 'meta' && e.attrs['name'] === 'description')!.attrs['content'] ?? '';
+    const figures = [...hero.matchAll(/\d+(?:\.\d+)?s?/g), ...meta.matchAll(/\d+(?:\.\d+)?s?/g)].map((m) => m[0]);
+    expect(figures.length).toBeGreaterThan(0);
+    for (const f of figures) expect(readme, f).toContain(f);
   });
 
-  it('keeps the CSP equal to EXPECTED_CSP', () => {
-    const parsed = parseCsp(facts.cspContent ?? '');
-    const actual: Record<string, readonly string[]> = {};
-    for (const d of parsed.directives) actual[d.name] = [...d.values].sort();
-    const expected: Record<string, readonly string[]> = {};
-    for (const [k, v] of Object.entries(EXPECTED_CSP)) expected[k] = [...v].sort();
-    expect(actual).toEqual(expected);
+  it('has the footer invitation, second open control, links, Kiroween text and photo credit', () => {
+    const foot = byId('foot');
+    const inside = descendants(foot);
+    expect(inside.some((e) => e.tag === 'h2' && norm(textContent(e)) === 'Found an old disk in a drawer?')).toBe(true);
+    expect(byId('pick-button-footer').tag).toBe('button');
+    const links = inside.filter((e) => e.tag === 'a');
+    const link = (name: string): HtmlElement | undefined => links.find((a) => norm(textContent(a)) === name);
+    expect(link('Source on GitHub')?.attrs['href']).toBe('https://github.com/tsang326/exhume');
+    expect(link('Prior art: disk-peek')?.attrs['href']).toBe('https://github.com/andete/disk-peek');
+    expect(link('Kiroween 2026')).toBeUndefined();
+    expect(norm(textContent(foot))).toContain('Kiroween 2026');
+    const credits = JSON.parse(readFileSync(new URL('docs/design/redesign/assets/credits.json', root), 'utf8')) as unknown;
+    const creditText = JSON.stringify(credits);
+    const footText = norm(textContent(foot));
+    expect(footText).toContain('“Floppy disk 2009 G1”');
+    expect(footText).toContain('George Chernilevsky');
+    expect(footText).toContain('public domain');
+    expect(footText).toContain('Wikimedia Commons');
+    expect(creditText).toContain('George Chernilevsky');
+    expect(footText).toContain('Instrument Serif');
+    expect(footText).toContain('Hanken Grotesk');
+    expect(footText).toContain('SIL Open Font License 1.1');
   });
 
-  it('puts the intro before the drop zone in document order', () => {
-    expect(byId('intro').order).toBeLessThan(byId('drop-zone').order);
+  it('has the honesty note naming andete/disk-peek, and no "first" claim', () => {
+    const text = facts.textById['honesty-note'];
+    expect(text).toContain('andete/disk-peek');
+    expect(text!.length).toBeLessThanOrEqual(160);
+    expect(facts.visibleText).toContain(text!);
   });
 
-  it('has a lead sentence naming old DOS floppy images and the browser', () => {
-    const lead = descendants(byId('intro')).find((e) => e.tag === 'p' && (e.attrs['class'] ?? '').split(/\s+/).includes('intro-lead'));
-    expect(lead).toBeDefined();
-    const text = textContent(lead!);
-    expect(text).toMatch(/DOS/);
-    expect(text).toMatch(/floppy/i);
-    expect(text).toMatch(/browser/i);
-  });
-
-  it('has five list items with the capability keywords', () => {
-    const items = descendants(byId('intro')).filter((e) => e.tag === 'li');
-    expect(items).toHaveLength(5);
-    const texts = items.map(textContent);
-    expect(texts[0]).toMatch(/WordStar/);
-    expect(texts[0]).toMatch(/Markdown/);
-    expect(texts[1]).toMatch(/dBase/);
-    expect(texts[1]).toMatch(/CSV/);
-    expect(texts[2]).toMatch(/PCX/);
-    expect(texts[2]).toMatch(/PNG/);
-    expect(texts[3]).toMatch(/text/i);
-    expect(texts[4]).toMatch(/deleted/i);
-  });
-
-  it('has the privacy note inside the intro', () => {
-    expect(descendants(byId('intro')).some((e) => e.attrs['id'] === 'privacy-note')).toBe(true);
-  });
-
-  it('has a repo link to the GitHub repository with GitHub in its accessible name', () => {
-    const link = byId('repo-link');
-    expect(link.tag).toBe('a');
-    expect(link.attrs['href']).toBe('https://github.com/tsang326/exhume');
-    expect(link.attrs['aria-label']).toContain('GitHub');
-  });
-
-  it('has no digit in the intro text', () => {
-    expect(facts.textById['intro']).toBeDefined();
-    expect(facts.textById['intro']).not.toMatch(/\d/);
-  });
-
-  it('backs each capability keyword with the README', () => {
-    for (const word of ['WordStar', 'Markdown', 'dBase', 'CSV', 'PCX', 'PNG']) {
-      expect(readme, word).toContain(word);
-      expect(facts.textById['intro'], word).toContain(word);
-    }
-  });
-
-  it('keeps the honesty note and the contract ids, including intro and repo-link', () => {
-    expect(facts.textById['honesty-note']).toContain('andete/disk-peek');
-    for (const id of [
-      'fx-host', 'app', 'drop-zone', 'pick-button', 'file-input', 'status', 'cancel-button',
-      'reopen-button', 'demo-slot', 'graveyard', 'preview-root', 'intro', 'repo-link',
-    ]) {
-      expect(doc.elements.filter((e) => e.attrs['id'] === id), `#${id}`).toHaveLength(1);
-    }
+  it('hides the buried name from assistive technology', () => {
+    const buried = doc.elements.find((e) => hasClass(e, 'buried'));
+    expect(buried?.attrs['aria-hidden']).toBe('true');
   });
 });
 
-describe('src/style.css', () => {
-  it('meets every contrast pair minimum', () => {
-    expect(readPairs(css).length).toBeGreaterThan(0);
-    expect(checkPairs(css)).toEqual([]);
-  });
+describe('fonts and palette (Req 3)', () => {
+  const fontFaces = parseCss(css).filter((r) => r.selector.trim() === '@font-face');
 
-  it('passes the layout rules (Req 12.17)', () => {
-    expect(checkLayout(css)).toEqual([]);
-  });
-
-  it('keeps .fx-* layers click-through, low in opacity and under .content, with the over-text check', () => {
-    expect(checkFxLayers(css)).toEqual([]);
-  });
-
-  it('has a background that covers the whole page (ui-polish, Req 3.1 to 3.6, 10.1)', () => {
-    expect(checkBackground(css)).toEqual([]);
-  });
-
-  it('spaces markdown preview paragraphs and lines (ui-polish, Req 6.2, 6.3, 10.1)', () => {
-    const top = parseCss(css).filter((r) => r.context.length === 0);
-    const declsOf = (selector: string) =>
-      top.filter((r) => r.selector.split(',').map((s) => s.trim()).includes(selector)).flatMap((r) => r.decls);
-    const last = (selector: string, prop: string): string | undefined =>
-      declsOf(selector).filter((d) => d.prop === prop).at(-1)?.value.trim();
-
-    // margin-bottom from the longhand or the 1 to 4 value `margin` shorthand; the later declaration wins.
-    const pDecls = declsOf('.preview-markdown p').filter((d) => d.prop === 'margin' || d.prop === 'margin-bottom');
-    const winner = pDecls.at(-1);
-    expect(winner, '.preview-markdown p margin').toBeDefined();
-    let bottom = winner!.value.trim();
-    if (winner!.prop === 'margin') {
-      const parts = bottom.split(/\s+/);
-      bottom = parts.length === 1 ? parts[0]! : parts.length === 2 ? parts[0]! : parts[2]!;
+  it('ships the two font files and their OFL texts, and no italic file', () => {
+    const dir = new URL('src/assets/fonts/', root);
+    const files = readdirSync(dir).sort();
+    expect(files).toEqual([
+      'OFL-hanken-grotesk.txt',
+      'OFL-instrument-serif.txt',
+      'hanken-grotesk-latin-wght-normal.woff2',
+      'instrument-serif-latin-400-normal.woff2',
+    ]);
+    expect(files.filter((f) => /italic/i.test(f))).toEqual([]);
+    for (const f of files.filter((n) => n.endsWith('.txt'))) {
+      expect(readFileSync(new URL(f, dir), 'utf8')).toMatch(/SIL OPEN FONT LICENSE/i);
     }
-    const m = /^(\d*\.?\d+)em$/.exec(bottom);
-    expect(m, `margin-bottom "${bottom}" in em`).not.toBeNull();
-    expect(Number(m![1])).toBeGreaterThanOrEqual(0.75);
-
-    const lh = last('.preview-markdown', 'line-height');
-    expect(lh, '.preview-markdown line-height').toBeDefined();
-    expect(/^\d*\.?\d+$/.test(lh!), `unitless line-height "${lh}"`).toBe(true);
-    expect(Number(lh)).toBeGreaterThanOrEqual(1.4);
   });
 
-  it('gives recovered, partial and lost three different state glyphs (ui-polish, Req 7.2, 7.4, 10.1)', () => {
-    const top = parseCss(css).filter((r) => r.context.length === 0);
-    const glyph = (state: string): string | undefined =>
-      top
-        .filter((r) => r.selector.split(',').map((s) => s.trim()).includes(`.grave--${state} .grave-state::before`))
-        .flatMap((r) => r.decls)
-        .filter((d) => d.prop === 'content')
-        .at(-1)
-        ?.value.trim();
-    const glyphs = ['recovered', 'partial', 'lost'].map((s) => glyph(s));
-    for (const g of glyphs) {
-      expect(g).toBeDefined();
-      expect(g).not.toBe('');
-      expect(g).not.toBe('none');
+  it('declares two @font-face rules with swap, normal style and woff2 sources', () => {
+    expect(fontFaces).toHaveLength(2);
+    const names = fontFaces.map((r) => r.decls.find((d) => d.prop === 'font-family')!.value.replace(/['"]/g, ''));
+    expect(names.sort()).toEqual(['Hanken Grotesk', 'Instrument Serif']);
+    for (const r of fontFaces) {
+      expect(r.decls.find((d) => d.prop === 'font-display')?.value).toBe('swap');
+      expect(r.decls.find((d) => d.prop === 'font-style')?.value ?? 'normal').toBe('normal');
+      expect(r.decls.find((d) => d.prop === 'src')?.value).toMatch(/\.\/assets\/fonts\/[\w.-]+\.woff2/);
     }
-    expect(new Set(glyphs).size).toBe(3);
+    expect(stripCssComments(css)).not.toMatch(/font-style\s*:\s*italic/i);
   });
 
-  it('makes the open-grave icon at least 5rem by 3.5rem (ui-polish, Req 7.1, 10.1)', () => {
-    const top = parseCss(css).filter((r) => r.context.length === 0);
-    const decls = top
-      .filter((r) => r.selector.split(',').map((s) => s.trim()).includes('.grave--open-grave .grave-art'))
-      .flatMap((r) => r.decls);
-    const rem = (prop: string): number => {
-      const v = decls.filter((d) => d.prop === prop).at(-1)?.value.trim();
-      const m = /^(\d*\.?\d+)rem$/.exec(v ?? '');
-      expect(m, `${prop} "${v}" in rem`).not.toBeNull();
-      return Number(m![1]);
+  it('defines the Palette_Tokens with the mockup values', () => {
+    const root0 = parseCss(css).filter((r) => r.selector.trim() === ':root').flatMap((r) => r.decls);
+    const token = (name: string): string | undefined => root0.filter((d) => d.prop === name).at(-1)?.value.toLowerCase();
+    const expected: Record<string, string> = {
+      '--bg': '#0b0f10',
+      '--surface': '#1b1915',
+      '--surface-2': '#26231d',
+      '--soil1': '#12110e',
+      '--soil2': '#16130f',
+      '--soil3': '#0e0c0a',
+      '--ink': '#e6e6e1',
+      '--muted': '#a9b3a6',
+      '--accent': '#ffbf5e',
+      '--field': '#e4e4df',
+      '--field-ink': '#121514',
+      '--field-muted': '#4c524d',
+      '--ok': '#9ad49c',
+      '--part': '#e8b65a',
+      '--lost': '#ee8b72',
+      '--alive': '#d4cdb9',
     };
-    expect(rem('width')).toBeGreaterThanOrEqual(5);
-    expect(rem('height')).toBeGreaterThanOrEqual(3.5);
+    for (const [name, value] of Object.entries(expected)) expect(token(name), name).toBe(value);
+    expect(token('--sans') ?? '').toContain('hanken grotesk');
+    expect(token('--serif') ?? '').toContain('instrument serif');
   });
 
-  it('declares the --pair-grave-art-ui pair and checks it (ui-polish, Req 7.1, 10.1)', () => {
-    const pair = readPairs(css).find((p) => JSON.stringify(p).includes('grave-art-ui'));
-    expect(pair, 'grave-art-ui pair read by readPairs').toBeDefined();
-    expect(css).toMatch(/--pair-grave-art-ui-fg:\s*#[0-9a-fA-F]{6}/);
-    expect(css).toMatch(/--pair-grave-art-ui-bg:\s*#[0-9a-fA-F]{6}/);
-    expect(checkPairs(css)).toEqual([]);
-    // A low-contrast replacement of the fg must be reported, so the pair really is checked.
-    const broken = css.replace(/--pair-grave-art-ui-fg:\s*#[0-9a-fA-F]{6}/, '--pair-grave-art-ui-fg: #151d1f');
-    expect(checkPairs(broken)).not.toEqual([]);
-  });
-
-  it('has rules for graveyard-guidance, graveyard-stats and grave-hint (ui-polish, Req 7.10, 10.1)', () => {
-    const cssText = stripCssComments(css);
-    for (const c of ['graveyard-guidance', 'graveyard-stats', 'grave-hint']) {
-      expect(new RegExp(`\\.${c}(?![A-Za-z0-9_-])`).test(cssText), `.${c}`).toBe(true);
+  it('declares every Contrast_Pair of the design, and all of them pass', () => {
+    const required = [
+      'body', 'body-soil', 'body-surface', 'body-surface2',
+      'muted', 'muted-soil', 'muted-soil2', 'muted-soil3', 'muted-surface', 'muted-surface2',
+      'accent', 'button',
+      'field', 'field-proof', 'field-muted', 'field-muted-proof', 'field-cut', 'field-accent',
+      'state-ok-soil', 'state-part-soil', 'state-lost-soil', 'state-alive-soil',
+      'state-ok-surface2', 'state-part-surface2', 'state-lost-surface2', 'state-alive-surface2',
+      'state-part-warn',
+      'hs-alive', 'hs-recovered', 'hs-partial', 'hs-lost', 'hs-lost-border-ui',
+      'hs-back', 'hs-back-recovered',
+      'seg-alive', 'seg-recovered', 'seg-partial', 'seg-lost',
+      'focus-ui-ground', 'focus-ui-panel', 'focus-ui-field', 'border-ui', 'buried-ui',
+    ];
+    const pairs = readPairs(css);
+    const ids = new Set(pairs.map((p) => p.id));
+    for (const id of required) expect(ids.has(id), `pair ${id} declared`).toBe(true);
+    for (const p of pairs) {
+      expect(p.ratio, `pair ${p.id} has literal hex colours`).not.toBeNull();
+      expect(p.ratio!, `pair ${p.id}`).toBeGreaterThanOrEqual(p.min);
     }
+    expect(checkPairs(css)).toEqual([]);
   });
 
-  it('keeps the narrow demo layout compact (ui-polish, Req 5.7, 5.8, 10.1)', () => {
-    expect(checkNarrowDemoLayout(css)).toEqual([]);
+  it('uses the serif and mono faces only where allowed', () => {
+    expect(checkFontFamilies(css)).toEqual([]);
+  });
+});
+
+describe('strata, motion and layout rules (Req 5.8, 6, 12, 13)', () => {
+  it('passes checkStrata over the stylesheet and the markup', () => {
+    expect(checkStrata(css, html)).toEqual([]);
   });
 
-  it('reports a bad narrow demo layout sample (ui-polish, Req 5.7, 5.8)', () => {
-    const good =
-      '@media (max-width: 600px){.demo-slot-list{grid-template-columns:1fr}' +
-      '.demo-slot-description{-webkit-line-clamp:2;line-clamp:2}.demo-slot-button{padding:0.5rem}}';
-    expect(checkNarrowDemoLayout(good)).toEqual([]);
-    expect(checkNarrowDemoLayout(good.replace('1fr', '1fr 1fr')).length).toBeGreaterThan(0);
-    expect(checkNarrowDemoLayout(good.replace('}}', ';display:none}}')).length).toBeGreaterThan(0);
-    expect(checkNarrowDemoLayout('.demo-slot-list{grid-template-columns:1fr}').length).toBeGreaterThan(0);
-  });
-
-  it('marks the pressed demo slot by border style and added words, not colour alone (ui-polish, Req 8.7, 10.1)', () => {
-    const top = parseCss(css).filter((r) => r.context.length === 0);
-    const declsOf = (selector: string) =>
-      top.filter((r) => r.selector.split(',').map((s) => s.trim()).includes(selector)).flatMap((r) => r.decls);
-    const pressed = declsOf(".demo-slot-button[aria-pressed='true']");
-    expect(pressed.filter((d) => d.prop === 'border-style' || d.prop === 'border-width').length).toBeGreaterThan(0);
-    expect(pressed.filter((d) => d.prop === 'border-style').at(-1)?.value.trim()).toBe('double');
-    const content = declsOf(".demo-slot-button[aria-pressed='true'] .demo-slot-title::after")
-      .filter((d) => d.prop === 'content')
-      .at(-1)
-      ?.value.trim();
-    expect(content).toBeDefined();
-    expect(content).not.toBe('');
-    expect(content).not.toBe('none');
-    expect(content).not.toMatch(/^(''|"")$/);
-    expect(content).toMatch(/[A-Za-z]{2,}/);
+  it('animates only opacity, transform and clip-path, with hidden starts only in from or under .js', () => {
+    expect(checkAnimatedProperties(css)).toEqual([]);
+    expect(checkHiddenStartStates(css)).toEqual([]);
   });
 
   it('has a reduced-motion block', () => {
     expect(checkReducedMotion(css)).toEqual([]);
   });
 
-  it('has no external or data: url() and no style-API text', () => {
+  it('keeps content interactive and never hides a headstone', () => {
+    expect(checkStonesVisible(css)).toEqual([]);
+    expect(checkContentInteractive(css)).toEqual([]);
+  });
+
+  it('fits six headstones and five gaps in one row at 761px and 1180px', () => {
+    expect(checkStoneRowFits(css)).toEqual([]);
+  });
+  it('narrow block: two rows of three, back row at 85% behind the front row, labels clear (Task 12)', () => {
+    expect(checkNarrowStoneDepth(css)).toEqual([]);
+    expect(checkStonesVisible(css)).toEqual([]);
+    const pairs = readPairs(css);
+    for (const id of ['hs-back', 'hs-back-recovered']) {
+      const p = pairs.find((x) => x.id === id);
+      expect(p?.ratio, `pair ${id}`).not.toBeNull();
+      expect(p!.ratio!, `pair ${id}`).toBeGreaterThanOrEqual(4.5);
+    }
+    const narrow = stripCssComments(css).slice(stripCssComments(css).indexOf('@media (max-width: 760px)'));
+    expect(narrow).toContain('var(--pair-hs-back-fg)');
+    expect(narrow).toContain('var(--pair-hs-back-bg)');
+    expect(narrow).toContain('var(--pair-hs-back-recovered-bg)');
+    expect(narrow).toMatch(/--back-scale:\s*0\.85/);
+  });
+  it('gives hit targets a min-height of at least 40px', () => {
+    expect(checkMinHeights(css)).toEqual([]);
+  });
+
+  it('has the one-column card list in the narrow block, and NARROW_QUERY equals the CSS narrow width', () => {
+    expect(checkNarrowQuery(css, NARROW_QUERY)).toEqual([]);
+    expect(checkNarrowCardList(css)).toEqual([]);
+  });
+
+  it('has the headstone row as a wrapping flex row with a dashed, sunk partial stone', () => {
+    const top = parseCss(css).filter((r) => r.context.length === 0);
+    const decls = (sel: string) =>
+      top.filter((r) => r.selector.split(',').map((s) => s.trim()).includes(sel)).flatMap((r) => r.decls);
+    const last = (sel: string, prop: string): string | undefined =>
+      decls(sel).filter((d) => d.prop === prop).at(-1)?.value.trim();
+    expect(last('.stoneline', 'display')).toBe('flex');
+    expect(last('.stoneline', 'flex-wrap')).toBe('wrap');
+    expect(last('.hs--partial', 'border')).toMatch(/dashed/);
+    const sunk = (sel: string): number => {
+      const v = last(sel, '--sink');
+      return v === undefined ? 0 : parseFloat(v);
+    };
+    expect(sunk('.stone-3')).toBeGreaterThan(0);
+    expect(last('.hs.hs--recovered', 'animation')).toBeDefined();
+  });
+
+  it('has no external or data: url(), no style-API text and no style attribute in the CSS', () => {
     expect(checkUrls(css)).toEqual([]);
     expect(findStyleApiUse(css)).toEqual([]);
+  });
+
+  it('gives alive, partial and lost rows three different stone shapes besides colour (Req 8.5)', () => {
+    const top = parseCss(css).filter((r) => r.context.length === 0);
+    const shape = (state: string): string =>
+      top
+        .filter((r) => r.selector.split(',').map((s) => s.trim()).includes(`.grave--${state} .grave-art`))
+        .flatMap((r) => r.decls)
+        .filter((d) => ['border', 'border-bottom', 'border-radius', 'clip-path', 'height'].includes(d.prop))
+        .map((d) => `${d.prop}:${d.value.replace(/var\([^)]*\)/g, 'c')}`)
+        .join(';');
+    const shapes = ['alive', 'partial', 'lost'].map(shape);
+    expect(shape('partial')).toMatch(/dashed/);
+    expect(shape('lost')).toMatch(/dashed/);
+    expect(shape('lost')).toMatch(/clip-path/);
+    expect(new Set(shapes).size).toBe(3);
   });
 
   it('styles every static class that the DOM modules create with h()', () => {
@@ -409,160 +530,37 @@ describe('src/style.css', () => {
     for (const f of readdirSync(dir)) {
       if (!f.endsWith('.ts') || f.endsWith('.test.ts')) continue;
       const src = readFileSync(new URL(f, dir), 'utf8');
-      // Plain string literals only; template literals (grave--state) are dynamic and skipped.
       for (const m of src.matchAll(/\bclass:\s*'([^']+)'/g)) {
         for (const c of m[1]!.split(/\s+/)) if (c !== '') used.add(c);
       }
     }
     expect(used.size).toBeGreaterThan(10);
     const cssText = stripCssComments(css);
-    // Hook-only classes: set for tests or future use, styled through a sibling class or parent.
-    const hookOnly = new Set<string>();
-    const missing = [...used].filter((c) => !hookOnly.has(c) && !new RegExp(`\\.${c}(?![A-Za-z0-9_-])`).test(cssText)).sort();
+    const missing = [...used].filter((c) => !new RegExp(`\\.${c}(?![A-Za-z0-9_-])`).test(cssText)).sort();
     expect(missing).toEqual([]);
   });
 });
 
-describe('source and dependency scans (ui-polish)', () => {
-  // Validates: Requirements 6.4, 7.8, 10.6, 10.7.
-  const webDir = new URL('./', import.meta.url);
-
-  /** Drops block comments and whole-line or trailing `//` comments (not inside `://`). */
-  function stripTsComments(src: string): string {
-    return src
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      .split('\n')
-      .map((line) => line.replace(/(^|[^:])\/\/.*$/, '$1'))
-      .join('\n');
-  }
-
-  const sources: { rel: string; code: string }[] = [];
-  for (const rel of readdirSync(webDir, { recursive: true, encoding: 'utf8' })) {
-    const norm = rel.split('\\').join('/');
-    if (!norm.endsWith('.ts') || norm.endsWith('.d.ts') || /\.test\.ts$/.test(norm)) continue;
-    sources.push({ rel: norm, code: stripTsComments(readFileSync(new URL(norm, webDir), 'utf8')) });
-  }
-
+describe('web source scans (Req 1.6, 1.8, 1.9)', () => {
   it('finds the non-test web sources', () => {
     expect(sources.length).toBeGreaterThan(10);
     expect(sources.some((s) => s.rel === 'demos.ts')).toBe(true);
   });
 
-  it('uses no innerHTML, outerHTML or insertAdjacentHTML in non-test web sources', () => {
-    const hits = sources.filter((s) => /\b(innerHTML|outerHTML|insertAdjacentHTML)\b/.test(s.code)).map((s) => s.rel);
+  it('uses no HTML sink in non-test web sources', () => {
+    const hits = sources.flatMap((s) => scanSinks(`src/web/${s.rel}`, s.code));
     expect(hits).toEqual([]);
   });
 
-  it('uses fetch only in demos.ts among non-test web sources', () => {
-    const hits = sources.filter((s) => /\bfetch\b/.test(s.code)).map((s) => s.rel);
+  it('uses fetch only in demos.ts', () => {
+    const hits = sources.filter((s) => /\bfetch\b/.test(stripTsComments(s.code))).map((s) => s.rel);
     expect(hits).toEqual(['demos.ts']);
   });
 
-  it('keeps the package.json dependency keys unchanged and has no runtime dependencies', () => {
-    const pkg = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')) as {
-      dependencies?: Record<string, string>;
-      devDependencies?: Record<string, string>;
-    };
-    expect(Object.keys(pkg.dependencies ?? {}).sort()).toEqual([]);
-    expect(Object.keys(pkg.devDependencies ?? {}).sort()).toEqual(
-      ['@types/node', 'fast-check', 'happy-dom', 'typescript', 'vite', 'vitest'],
-    );
-  });
-
-  it('the comment stripper hides comment-only mentions and keeps code', () => {
-    expect(/\bfetch\b/.test(stripTsComments('// fetch\n/* fetch */ const a = 1;'))).toBe(false);
-    expect(/\bfetch\b/.test(stripTsComments('const r = fetch(u);'))).toBe(true);
-    expect(/\binnerHTML\b/.test(stripTsComments('el.innerHTML = x; // ok'))).toBe(true);
-  });
-});
-
-describe('helper self-tests', () => {
-  const policy = Object.entries(EXPECTED_CSP)
-    .map(([k, v]) => `${k} ${v.join(' ')}`)
-    .join('; ');
-  const page = (...metas: string[]): string =>
-    `<!doctype html><html lang="en"><head>${metas.join('')}<title>t</title></head><body><h1>x</h1></body></html>`;
-  const meta = (content: string): string =>
-    `<meta http-equiv="Content-Security-Policy" content="${content}" />`;
-
-  it('accepts the expected policy', () => {
-    expect(checkCsp(policy)).toEqual([]);
-  });
-
-  it('reports unsafe-inline, data: and a wildcard', () => {
-    expect(checkCsp(policy.replace("style-src 'self'", "style-src 'self' 'unsafe-inline'")).map((p) => p.kind)).toContain('unsafe');
-    expect(checkCsp(policy.replace('blob:', 'blob: data:')).map((p) => p.kind)).toContain('data');
-    expect(checkCsp(policy.replace("connect-src 'self'", 'connect-src *')).map((p) => p.kind)).toContain('wildcard');
-  });
-
-  it('reports a second CSP meta', () => {
-    expect(scanHtml(page(meta(policy), meta(policy))).cspMetaCount).toBe(2);
-  });
-
-  it('reports a CSP meta placed after a script', () => {
-    const late = '<script src="/a.js"></script>' + meta(policy);
-    expect(scanHtml(page(late)).cspBeforeResources).toBe(false);
-  });
-
-  it('reports inline script, on* and style attributes and style elements', () => {
-    const f = scanHtml(
-      '<html lang="en"><head><script>alert(1)</script><style>a{}</style></head>' +
-        '<body onload="x()"><p style="color:red">p</p></body></html>',
-    );
-    expect(f.inlineScripts).toHaveLength(1);
-    expect(f.onAttributes).toEqual([{ tag: 'body', name: 'onload' }]);
-    expect(f.styleAttributes).toEqual([{ tag: 'p' }]);
-    expect(f.styleElementCount).toBe(1);
-  });
-
-  it('reports a forbidden phrase in visible text but not in a comment', () => {
-    expect(scanPhrasesInHtml('x.html', '<p>The first browser to do this</p>')).not.toEqual([]);
-    expect(scanPhrasesInHtml('x.html', '<!-- first browser --><p>ok</p>')).toEqual([]);
-  });
-
-  it('reports a low-contrast pair and accepts a high-contrast one', () => {
-    const low = ':root{--pair-a-fg:#777777;--pair-a-bg:#808080;}';
-    expect(checkPairs(low)).not.toEqual([]);
-    const high = ':root{--pair-a-fg:#ffffff;--pair-a-bg:#000000;}';
-    expect(checkPairs(high)).toEqual([]);
-  });
-
-  it('reports an .fx-* rule without pointer-events: none', () => {
-    const bad = '.content{z-index:10}.fx-glow{z-index:1;opacity:0.4}';
-    expect(checkFxLayers(bad).some((p) => /pointer-events/.test(p.message))).toBe(true);
-    const good = '.content{z-index:10}.fx-glow{z-index:1;opacity:0.4;pointer-events:none}';
-    expect(checkFxLayers(good)).toEqual([]);
-  });
-
-  it('reports a fixed page-level width, a missing reduced-motion block and an external url', () => {
-    expect(checkLayout('body{width:900px}').some((p) => /width/.test(p.message))).toBe(true);
-    expect(checkReducedMotion('a{color:red}')).not.toEqual([]);
-    expect(checkUrls('a{background:url(https://x.test/a.png)}')).not.toEqual([]);
-    expect(checkUrls('a{background:url(data:image/png;base64,AA)}')).not.toEqual([]);
-  });
-
-  it('reports a viewport-tall gradient on #fx-host and a missing html background', () => {
-    const good =
-      ':root{--pair-body-bg:#0b0f10}html{background:var(--pair-body-bg)}' +
-      'body{position:relative;min-height:100dvh}' +
-      'body::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;' +
-      'background:radial-gradient(ellipse 900px 600px at 50% 0,rgba(1,2,3,0.4),transparent 70%)}' +
-      '#fx-host{position:fixed;pointer-events:none}.content{position:relative;z-index:10}';
-    expect(checkBackground(good)).toEqual([]);
-
-    const tall = good.replace(
-      '#fx-host{',
-      '#fx-host{height:100vh;background:radial-gradient(ellipse 100vw 100vh at 50% 0,red,transparent);',
-    );
-    expect(checkBackground(tall).some((p) => /#fx-host/.test(p.message))).toBe(true);
-
-    const noHtml = good.replace('html{background:var(--pair-body-bg)}', '');
-    expect(checkBackground(noHtml).some((p) => /html/.test(p.message))).toBe(true);
-  });
-
-  it('reads at-rule context for reduced motion', () => {
-    const ok = '@media (prefers-reduced-motion: reduce){*{animation-duration:0s;transition-duration:0s}}';
-    expect(parseCss(ok)[0]!.context[0]).toMatch(/prefers-reduced-motion/);
-    expect(checkReducedMotion(ok)).toEqual([]);
+  it('references no retired effects, focus-trap or focus-order module', () => {
+    for (const s of sources) {
+      expect(/effects-math|\/effects['"]|focus-trap|focus-order/.test(stripTsComments(s.code)), s.rel).toBe(false);
+    }
+    expect(sources.filter((s) => s.rel.includes('effects') || s.rel.includes('focus-'))).toEqual([]);
   });
 });

@@ -10,7 +10,7 @@ The page reads 1980s-era DOS floppy images (FAT12) with the extensions `.img`, `
 160 KB up to 2.88 MB. It is one page: a hero where you drop or pick a disk, a graveyard of headstones and file rows
 below it, an inline preview beside the list, and demo disk cards you can open with one click.
 
-Also ships as an MCP server / Kiro Power and a Kiro Crew app, so an agent can open a floppy image and exhume files
+Also ships as an MCP server / Kiro Power and a Kiro Crew app ([Exhume Crew](https://github.com/tsang326/exhume-crew)), so an agent can open a floppy image and exhume files
 into your project.
 
 Prior art: [disk-peek](https://github.com/andete/disk-peek) already browses FAT12 images and recovers deleted
@@ -18,8 +18,11 @@ entries in the browser.
 
 Kiroween 2026, Resurrection category. Built with [Kiro](https://kiro.dev) (see `/.kiro` and `docs/KIRO_LOG.md`).
 
+Source: https://github.com/tsang326/exhume
+
 ## Run
 ```bash
+git clone https://github.com/tsang326/exhume.git && cd exhume
 npm install
 npm run dev      # http://localhost:5173
 npm test

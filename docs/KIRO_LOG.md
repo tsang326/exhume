@@ -146,3 +146,10 @@ what had to be fixed by hand. Be honest — the write-up is built from this.
 ## 2026-11-11 — page-redesign (spec 11, owner fixes 10-14)
 - Kiro fixed the five problems from my screenshot pass: grain overlay restored at 0.22 after darkening the paper accent (worst pair 4.54:1), six stones in one row from 761 to 1180 px, a back row and a front row on phones, "Four files" with a checkBar guard, and an SVG favicon.
 - By hand: re-ran everything (typecheck, `npm test` 1899 passed / 1 skipped, `test:dom` 222/222, build, `make:demos --check`, IOC scan clean) and the owner checks in headless Chrome at 1440x900, 768x1024 and 390x844: no horizontal scroll, no console errors, auto-open shows CHAPTER1.WS without focus or scroll, Tab order nav → Open → demo link → six stones → cards → rows → preview → footer, and with reduced motion no animation runs and nothing stays hidden.
+
+## 2026-11-16 — outside Kiro: Lotus 1-2-3, dBase IV, original-bytes copies, preview flash
+- Not written in Kiro. This entry exists so the write-up can say so plainly.
+- Why: while recording the demo on a real disk (Understanding dBASE IV, disk 1, 1989, from the Internet Archive), 47 of its 86 files came back with no converter. The demo date was close, so I wrote the fix myself with an AI coding assistant instead of running a new Kiro spec.
+- What, by hand: `src/core/formats/lotus.ts` and its tests (Lotus 1-2-3 `.WKS`/`.WK1` to CSV: cell formats, 1-2-3 serial dates, saved formula values, sheet limits); dBase IV memo tables (version byte `0x8B`); dBase source extensions read as text; the MCP `exhume` tool copying a file with no converter as `NAME.EXT.bin`; and the preview paper no longer fading out and back in when switching files (commit `51bc798`). On that disk, 52 of 86 files now convert and the other 34 are copied as original bytes.
+- Specs were amended in place to match the code (format-resurrection R2 and new R15 with task 18, plain-text extension set, mcp-server R9.14 with task 18). Kiro did not write these amendments.
+- Checked: `npm test` 1922 passed / 1 skipped, `test:fuzz`, `test:dom` 223/223, typecheck, build, IOC scan clean. Merged as PR #9.

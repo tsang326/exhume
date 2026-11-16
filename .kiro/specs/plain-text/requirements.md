@@ -24,7 +24,7 @@ Out of scope: other formats (Word, WordPerfect, Lotus), hooks, the Crew app, dep
 - **Conversion_Warning**: A structured entry in the `warnings` array of a Conversion_Result with a machine-readable `code` and a fixed-template `message` that holds numbers only and never holds text taken from Input_Bytes.
 - **Plain_Text_Output**: The `output` string of a successful Plain_Text_Converter result. Its `mime` is `text/plain` and its `extension` is `.txt`.
 - **Text_Result**: The result type of the Plain_Text_Converter: a successful Conversion_Result with a string `output`, mime `text/plain` and extension `.txt`, or a failure.
-- **Text_Extension_Set**: The file name extensions `TXT`, `BAT`, `ASC`, `LOG`, `NFO`, `DIZ`, `1ST` and `ME` (the last for `READ.ME`), compared with ASCII case folding on the text after the last dot.
+- **Text_Extension_Set**: The file name extensions `TXT`, `BAT`, `ASC`, `LOG`, `NFO`, `DIZ`, `1ST` and `ME` (the last for `READ.ME`), and the dBase source extensions `PRG`, `FMT`, `QBE`, `FRG`, `LBG` and `UPD` (a `.QBE` keeps binary design data after its 0x1A end-of-file byte, where the text stops), compared with ASCII case folding on the text after the last dot.
 - **Text_Content_Bytes**: The bytes `0x20` to `0x7E`, TAB (`0x09`), LF (`0x0A`), FF (`0x0C`), CR (`0x0D`) and the DOS end-of-file byte `0x1A`.
 - **EOF_Byte**: The DOS end-of-file byte `0x1A`.
 - **Control_Byte**: A byte below `0x20` that is not TAB, LF, FF, CR or the EOF_Byte, or the byte `0x7F`.

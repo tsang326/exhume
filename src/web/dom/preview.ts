@@ -110,6 +110,8 @@ export function createPreviewPanel(root: HTMLElement, deps: PreviewDeps): Previe
   }
 
   function show(model: PreviewModel): void {
+    // Swapping one file for another keeps the paper on screen; only the first show fades in.
+    const swap = showing;
     releaseUrls();
     clear(root);
     const owned: string[] = [];
@@ -131,7 +133,7 @@ export function createPreviewPanel(root: HTMLElement, deps: PreviewDeps): Previe
 
     const bodyEls = buildBody(model, owned);
     if (bodyEls.length > 0) {
-      const paper = h('div', { class: 'paper' });
+      const paper = h('div', swap ? { class: 'paper', 'data-swap': '' } : { class: 'paper' });
       for (const el of bodyEls) paper.appendChild(el);
       root.appendChild(paper);
     }

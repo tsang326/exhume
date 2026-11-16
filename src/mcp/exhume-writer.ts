@@ -5,7 +5,7 @@ import type { Outcome } from './errors';
 import { errnoCode } from './fs-layer';
 import type { FileLayer, FileStat } from './fs-layer';
 import type { Prepared } from './grave-source';
-import { MAX_EXHUME_NAME_CHARS, MAX_SUFFIX, MAX_WRITE_CALLS } from './limits';
+import { MAX_EXHUME_NAME_CHARS, MAX_ORIGINAL_EXT_CHARS, MAX_SUFFIX, MAX_WRITE_CALLS } from './limits';
 
 const EXHUMED_DIR = 'exhumed';
 const SLASH = '/';
@@ -26,7 +26,7 @@ function isSafeChar(ch: string): boolean {
 }
 
 /** Pure. The safe base name (no suffix, no extension) for a Grave path. */
-export function exhumeBase(gravePath: string, extension: '.md' | '.csv' | '.txt' | '.png'): string {
+export function exhumeBase(gravePath: string, extension: string): string {
   let seg = gravePath.slice(gravePath.lastIndexOf(SLASH) + 1);
   const dot = seg.lastIndexOf(DOT);
   if (dot > 0) seg = seg.slice(0, dot);
@@ -111,10 +111,51 @@ function writeAll(fs: FileLayer, fd: number, data: Uint8Array): void {
   }
 }
 
+const ORIGINAL_SUFFIX = '.bin';
+
+/**
+ * Pure. The extension for an original-bytes copy: the grave's own extension made safe, then `.bin`,
+ * so `/BIGORD.MDX` becomes `BIGORD.MDX.bin` and no copy is ever named as something a system would run.
+ */
+export function originalExtension(gravePath: string): string {
+  const seg = gravePath.slice(gravePath.lastIndexOf(SLASH) + 1);
+  const dot = seg.lastIndexOf(DOT);
+  if (dot <= 0) return ORIGINAL_SUFFIX;
+  let ext = '';
+  for (const ch of seg.slice(dot + 1, dot + 1 + MAX_ORIGINAL_EXT_CHARS)) {
+    ext += isSafeChar(ch) && ch !== DOT ? ch : UNDERSCORE;
+  }
+  return ext.length === 0 ? ORIGINAL_SUFFIX : DOT + ext + ORIGINAL_SUFFIX;
+}
+
+/** Writes the converted output of a grave. */
 export function writeExhumed(
   fs: FileLayer,
   root: string,
   p: Prepared,
+): Outcome<{ relPath: string; bytes: number }> {
+  const conversion = p.conversion;
+  const data: Uint8Array =
+    typeof conversion.output === 'string' ? Buffer.from(conversion.output, 'utf8') : conversion.output;
+  return writeExhumedBytes(fs, root, p.grave.path, conversion.extension, data);
+}
+
+/** Writes the grave's bytes unchanged, for a file that no converter matches. */
+export function writeOriginal(
+  fs: FileLayer,
+  root: string,
+  gravePath: string,
+  bytes: Uint8Array,
+): Outcome<{ relPath: string; bytes: number }> {
+  return writeExhumedBytes(fs, root, gravePath, originalExtension(gravePath), bytes);
+}
+
+function writeExhumedBytes(
+  fs: FileLayer,
+  root: string,
+  gravePath: string,
+  extension: string,
+  data: Uint8Array,
 ): Outcome<{ relPath: string; bytes: number }> {
   const failed: Outcome<{ relPath: string; bytes: number }> = {
     ok: false,
@@ -124,11 +165,7 @@ export function writeExhumed(
   if (!dirOutcome.ok) return failed;
   const dir = dirOutcome.value;
 
-  const conversion = p.conversion;
-  const extension = conversion.extension;
-  const base = exhumeBase(p.grave.path, extension);
-  const data: Uint8Array =
-    typeof conversion.output === 'string' ? Buffer.from(conversion.output, 'utf8') : conversion.output;
+  const base = exhumeBase(gravePath, extension);
 
   for (let n = 0; n <= MAX_SUFFIX; n += 1) {
     const name = exhumeName(base, n, extension);

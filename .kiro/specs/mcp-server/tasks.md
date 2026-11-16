@@ -349,6 +349,13 @@ All code is TypeScript under `strict`, with `erasableSyntaxOnly`, no `any`, no S
   - Run `git diff 4d7f5e7 -- .gitignore`: the only added line is `exhumed/`.
   - Ensure all tests pass, ask the user if questions arise.
 
+- [x] 18. Copy files with no converter as original bytes
+  - [x] 18.1 Split `prepareGrave` into `readGraveSource` and `convertGrave` in `grave-source.ts`; add `writeOriginal` and `originalExtension` to `exhume-writer.ts`; in `tools/exhume.ts`, write the original bytes on `NO_CONVERTER`; add `MAX_ORIGINAL_EXT_CHARS` to `limits.ts`; update the `exhume` description, the tool snapshot and the README
+    - _Requirements: 9.14_
+  - [x] 18.2 Tests in `src/mcp/exhume.test.ts`: byte-for-byte copy, `.MDX.bin`, `.EXE.bin`, no-extension `.bin`, the collision suffix, and `CONVERSION_FAILED` still writing nothing
+    - _Requirements: 9.14_
+  - [x] 18.3 Rebuild `power/server/exhume-mcp.mjs` with `npm run build:mcp`
+
 - [~] 17. MANUAL (for the user only, NOT executable by the agent): install and verify the Power in Kiro
   - The coding agent must not attempt this task. It cannot be completed from the repository.
   - Run `npm run build:mcp` yourself if the committed `power/server/exhume-mcp.mjs` is stale, then in Kiro open the Powers panel, choose "Add power from Local Path" and select the `power/` folder. Also connect `.kiro/settings/mcp.json` for the workspace server.

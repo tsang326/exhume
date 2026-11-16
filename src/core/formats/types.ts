@@ -15,6 +15,7 @@ export const ConversionWarningCode = {
   MemoNotAvailable: 'memo-not-available',
   PcxDataTruncated: 'pcx-data-truncated',
   PcxPaletteMissing: 'pcx-palette-missing',
+  SheetTruncated: 'sheet-truncated',
 } as const;
 export type ConversionWarningCode =
   (typeof ConversionWarningCode)[keyof typeof ConversionWarningCode];
@@ -57,7 +58,7 @@ export interface RgbaImage {
   rgba: Uint8Array;
 }
 
-export type DetectedFormat = 'wordstar' | 'dbase' | 'pcx' | 'text' | 'unknown';
+export type DetectedFormat = 'wordstar' | 'dbase' | 'pcx' | 'lotus' | 'text' | 'unknown';
 export type DetectSource = 'content' | 'extension' | 'none';
 export interface DetectResult {
   format: DetectedFormat;

@@ -13,6 +13,8 @@ export const MAX_TEXT_OUTPUT_BYTES = MAX_MARKDOWN_OUTPUT_BYTES; // 8,388,608 byt
 export const MAX_DBF_FIELDS = 128;
 export const MAX_DBF_RECORDS = 100_000;
 export const MAX_CSV_OUTPUT_BYTES = 16 * MIB; // 16,777,216
+export const MAX_SHEET_ROWS = 8192; // rows of a Lotus 1-2-3 release 2 worksheet
+export const MAX_SHEET_COLS = 256; // columns A to IV
 export const MAX_IMAGE_DIMENSION = 4096;
 export const MAX_IMAGE_PIXELS = 2048 * 2048; // 4,194,304
 export const MAX_PCX_BYTES_PER_LINE = 4096;
@@ -66,6 +68,8 @@ export type LimitName =
   | 'MAX_DBF_FIELDS'
   | 'MAX_DBF_RECORDS'
   | 'MAX_CSV_OUTPUT_BYTES'
+  | 'MAX_SHEET_ROWS'
+  | 'MAX_SHEET_COLS'
   | 'MAX_IMAGE_DIMENSION'
   | 'MAX_IMAGE_PIXELS'
   | 'MAX_PCX_BYTES_PER_LINE'

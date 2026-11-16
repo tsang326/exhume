@@ -78,7 +78,7 @@ export function parseDbfHeader(input: Uint8Array, collector: WarningCollector): 
   if (input.length < DBF_FIXED_HEADER_BYTES) return invalid(2);
 
   const version = input[0] as number;
-  if (version !== 0x03 && version !== 0x83) {
+  if (version !== 0x03 && version !== 0x83 && version !== 0x8b) {
     return { ok: false, error: fill(TEMPLATES.errDbfVersion, version) };
   }
 

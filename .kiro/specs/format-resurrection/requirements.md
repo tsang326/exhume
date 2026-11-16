@@ -99,18 +99,19 @@ Out of scope: the web page, the MCP server, the demo disk generator script, and 
 
 #### Acceptance Criteria
 
-1. THE Format_Detector SHALL accept Input_Bytes and an optional file name string, and SHALL return `{ format, source }` where `format` is one of `wordstar`, `dbase`, `pcx` or `unknown`, and `source` is one of `content`, `extension` or `none`.
+1. THE Format_Detector SHALL accept Input_Bytes and an optional file name string, and SHALL return `{ format, source }` where `format` is one of `wordstar`, `dbase`, `pcx`, `lotus` or `unknown`, and `source` is one of `content`, `extension` or `none`.
 2. THE Format_Detector SHALL examine at most the first `DETECT_SAMPLE_BYTES` bytes of the Input_Bytes, plus the Input_Bytes length.
 3. WHEN the Input_Bytes hold at least 4 bytes, the first byte is `0x0A`, the version byte (byte offset 1) is 0, 2, 3, 4 or 5, the encoding byte (byte offset 2) is 1 and the bits-per-pixel byte (byte offset 3) is 1, 2, 4 or 8, THE Format_Detector SHALL return `{ format: 'pcx', source: 'content' }`.
-4. WHEN the Input_Bytes hold at least 12 bytes, the first byte is `0x03` or `0x83`, the header length (unsigned 16-bit little-endian at byte offset 8) is from 65 to 4,129, the record length (unsigned 16-bit little-endian at byte offset 10) is at least 2, and the header length is less than the Input_Bytes length, THE Format_Detector SHALL return `{ format: 'dbase', source: 'content' }`.
-5. WHEN criteria 3 and 4 do not match and the sample holds at least one Soft_Return, or at least one line that is a Dot_Command, or at least one Style_Toggle byte together with at least one Hard_Return, THE Format_Detector SHALL return `{ format: 'wordstar', source: 'content' }`.
-6. IF content detection finds no format and a file name is given, THEN THE Format_Detector SHALL compare the file name extension, ignoring case, against `.WS`, `.WS4`, `.WS5`, `.WS6`, `.WS7` and `.WSD` for `wordstar`, `.DBF` for `dbase`, and `.PCX` for `pcx`, and SHALL return the matching format with `source: 'extension'`. The extension is the text after the last `.` in the file name, and a file name with no `.` has no extension.
+4. WHEN the Input_Bytes hold at least 12 bytes, the first byte is `0x03`, `0x83` or `0x8B` (dBase IV with memo), the header length (unsigned 16-bit little-endian at byte offset 8) is from 65 to 4,129, the record length (unsigned 16-bit little-endian at byte offset 10) is at least 2, and the header length is less than the Input_Bytes length, THE Format_Detector SHALL return `{ format: 'dbase', source: 'content' }`.
+5. WHEN criteria 3, 4 and 13 do not match and the sample holds at least one Soft_Return, or at least one line that is a Dot_Command, or at least one Style_Toggle byte together with at least one Hard_Return, THE Format_Detector SHALL return `{ format: 'wordstar', source: 'content' }`.
+6. IF content detection finds no format and a file name is given, THEN THE Format_Detector SHALL compare the file name extension, ignoring case, against `.WS`, `.WS4`, `.WS5`, `.WS6`, `.WS7` and `.WSD` for `wordstar`, `.DBF` for `dbase`, `.PCX` for `pcx`, and `.WK1` and `.WKS` for `lotus`, and SHALL return the matching format with `source: 'extension'`. The extension is the text after the last `.` in the file name, and a file name with no `.` has no extension.
 7. IF content detection finds a format and the file name extension names a different format, THEN THE Format_Detector SHALL return the format found from the content.
 8. IF no content rule and no extension rule matches, THEN THE Format_Detector SHALL return `{ format: 'unknown', source: 'none' }`.
 9. IF the Input_Bytes are empty or shorter than the bytes a content rule needs, THEN THE Format_Detector SHALL treat that content rule as not matching, SHALL NOT throw an exception, and SHALL continue with criteria 6 and 8.
 10. IF the file name argument is absent, is not a string, or is longer than 255 characters, THEN THE Format_Detector SHALL ignore the file name and SHALL decide from the content alone.
 11. WHEN `convertAuto` receives Input_Bytes whose detected format is `unknown`, THE `convertAuto` function SHALL return a failure result with `ok: false`, the error `no converter for this format`, and an empty `warnings` array.
 12. THE Format_Detector SHALL use the file name for the extension comparison in criterion 6 and for nothing else, so that a hostile file name cannot change behavior in any other way.
+13. WHEN criteria 3 and 4 do not match and the Input_Bytes hold at least 6 bytes that are `00 00 02 00` followed by the version `0x0404` (1-2-3 release 1A, `.WKS`) or `0x0406` (release 2, `.WK1`) as an unsigned 16-bit little-endian value, THE Format_Detector SHALL return `{ format: 'lotus', source: 'content' }`. `.WK1` and `.WKS` are Known_Binary_Extensions, so the WordStar content rule never claims a worksheet.
 
 ### Requirement 3: WordStar text decoding
 
@@ -176,14 +177,14 @@ Out of scope: the web page, the MCP server, the demo disk generator script, and 
 1. WHEN the DBase_Converter reads Input_Bytes of at least 32 bytes, THE DBase_Converter SHALL read from the DBF_Header the version byte, the 32-bit little-endian record count at offset 4, the 16-bit little-endian header length at offset 8, the 16-bit little-endian record length at offset 10, and one 32-byte field descriptor from offset 32 onward until the terminator byte `0x0D`.
 2. THE DBase_Converter SHALL read from each field descriptor the name (bytes 0 to 10, ended at the first `0x00` byte, or after 11 bytes if no `0x00` byte is present), the type letter (byte 11), the length (byte 16) and the decimal count (byte 17).
 3. THE DBase_Converter SHALL accept a table only when all of these hold, numbered 1 to 5 in the order listed:
-   1. the version byte is `0x03` or `0x83`;
+   1. the version byte is `0x03`, `0x83` or `0x8B`;
    2. the header length is at least 65 and at most 4,129 and at most the Input_Bytes length;
    3. the terminator byte `0x0D` is found at an offset below the header length, directly after at least 1 and at most `MAX_DBF_FIELDS` whole 32-byte descriptors;
    4. every field length is from 1 to 255;
    5. the record length is at least 1 plus the sum of all field lengths.
 4. IF the Input_Bytes length is below 32 bytes, THEN THE DBase_Converter SHALL return a failure result with `ok: false` and the error `dBase header invalid` with failed condition number 2, and SHALL read no further bytes.
-5. IF the version byte is not `0x03` or `0x83`, THEN THE DBase_Converter SHALL return a failure result with `ok: false` and the error `unsupported dBase version` and the version number, and SHALL not evaluate conditions 2 to 5 of criterion 3.
-6. IF the version byte is `0x03` or `0x83` and the header fails any of conditions 2 to 5 in criterion 3, THEN THE DBase_Converter SHALL return a failure result with `ok: false` and the error `dBase header invalid` and the number of the lowest-numbered failed condition.
+5. IF the version byte is not `0x03`, `0x83` or `0x8B`, THEN THE DBase_Converter SHALL return a failure result with `ok: false` and the error `unsupported dBase version` and the version number, and SHALL not evaluate conditions 2 to 5 of criterion 3.
+6. IF the version byte is `0x03`, `0x83` or `0x8B` and the header fails any of conditions 2 to 5 in criterion 3, THEN THE DBase_Converter SHALL return a failure result with `ok: false` and the error `dBase header invalid` and the number of the lowest-numbered failed condition.
 7. IF the record length is greater than 1 plus the sum of all field lengths, THEN THE DBase_Converter SHALL read each record with the declared record length as the stride, and SHALL add exactly one Conversion_Warning with code `record-length-mismatch`.
 8. IF a field type letter is not one of `C`, `D`, `F`, `L`, `M` or `N`, THEN THE DBase_Converter SHALL treat the field as type `C` and SHALL add one Conversion_Warning with code `field-type-unknown` that holds the 1-based field number, once for each such field.
 9. THE DBase_Converter SHALL decode field names with code page 437 using the single CP437 table that the FAT12 core already holds, and SHALL define no second copy of that table.
@@ -378,3 +379,20 @@ Out of scope: the web page, the MCP server, the demo disk generator script, and 
 14. THE test suite SHALL exclude the `exhumed/` folder from every glob it uses.
 15. IF a property run fails, THEN THE test suite SHALL report the fast-check seed and the shrunk counterexample so that the failing run can be reproduced with the same seed.
 16. THE test suite SHALL include a test that recomputes `MAX_PNG_BYTES` from first principles, using a pixel cap of 4,194,304, a dimension cap of 4,096, a stored block size of 65,535, and the overhead constants (8, 12, 13, 5 and 6) written out as literals in the test file and not imported from `limits.ts`, and SHALL assert that the result equals the exported `MAX_PNG_BYTES` (which is 16,782,660). The same test SHALL encode a 1024 by 4096 RGBA_Image and assert that the PNG_File length equals `MAX_PNG_BYTES` exactly, and SHALL encode a 4096 by 1024 and a 2048 by 2048 RGBA_Image and assert that each PNG_File length is at most `MAX_PNG_BYTES`.
+
+### Requirement 15: Lotus 1-2-3 worksheets to CSV
+
+**User Story:** As a user, I want an old 1-2-3 worksheet from the same disk as my dBase tables to open as a table, so that the figures in it are readable without a copy of 1-2-3.
+
+#### Acceptance Criteria
+
+1. THE Lotus_Converter (`convertLotus`) SHALL accept Input_Bytes and SHALL return a CSV result (`text/csv`, `.csv`) or a failure result, without throwing, for any input.
+2. IF the Input_Bytes do not start with a BOF record (opcode 0, length 2), THEN THE Lotus_Converter SHALL fail with `Lotus 1-2-3 header invalid`; IF the BOF version is not `0x0404` or `0x0406`, THEN it SHALL fail with `unsupported Lotus 1-2-3 version` and the version number.
+3. THE Lotus_Converter SHALL read the record stream (opcode and length as unsigned 16-bit little-endian, then the body) in one pass until the EOF record (opcode 1), and SHALL take cell values from INTEGER (13), NUMBER (14), LABEL (15) and FORMULA (16) records, and from a STRING record (51) that follows a formula with a text result. Every other record SHALL be skipped. Formulas SHALL NOT be evaluated: the value saved with the formula is written.
+4. THE Lotus_Converter SHALL place each cell at its row and column, SHALL write rows 0 to the last used row and columns 0 to the last used column, with empty cells empty, and SHALL skip with one `limit-exceeded` warning any cell at a row of `MAX_SHEET_ROWS` (8,192) or more or a column of `MAX_SHEET_COLS` (256) or more.
+5. THE Lotus_Converter SHALL write a number as its cell format shows it, without symbols or thousands separators: fixed, currency and comma formats with their number of decimals; the special date formats (sub-types 2, 3, 4, 9, 10) as an ISO date, counting serial day 1 as 1900-01-01 and skipping 1-2-3's non-existent 1900-02-29 (serial 60), for serials 1 to 73,050; the special time formats (7, 8) as `HH:MM:SS`; every other number with at most 15 significant digits. A value that is not finite SHALL be written empty.
+6. THE Lotus_Converter SHALL write a label without its alignment prefix (`'`, `"`, `^`, `\` or `|`), up to its first NUL byte, decoded as CP437 with control bytes replaced by `_`, and SHALL apply the formula guard of Requirement 8 to labels and text results only.
+7. IF the stream ends before an EOF record, THEN THE Lotus_Converter SHALL keep the cells it read and add one `sheet-truncated` warning (`worksheet ended before its end record`).
+8. THE Lotus_Converter SHALL stop after the last whole row that fits within `MAX_CSV_OUTPUT_BYTES` and add one `output-capped` warning.
+9. THE test suite SHALL include examples built from the published record layout (labels, integers, currency numbers, a date formula, a formula with a text result, the formula guard), the serial-date edges of criterion 5, each failure of criterion 2, a truncated stream, the sheet limits and the output cap, and a hostile property (random bytes after a valid BOF, and valid sheets with random bytes changed) that checks no throw, the time budget, an unchanged input and the result contract of Requirement 1.
+

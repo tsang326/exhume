@@ -251,7 +251,7 @@ describe('dBase header acceptance matches the oracle', () => {
   it('reports the version error before any other condition', () => {
     fc.assert(
       fc.property(
-        fc.integer({ min: 0, max: 255 }).filter((v) => v !== 0x03 && v !== 0x83),
+        fc.integer({ min: 0, max: 255 }).filter((v) => v !== 0x03 && v !== 0x83 && v !== 0x8b),
         fc.constantFrom(0, 31, 64, 4130, 65535),
         fc.uint8Array({ minLength: 32, maxLength: 100 }),
         (version, hl, rest) => {

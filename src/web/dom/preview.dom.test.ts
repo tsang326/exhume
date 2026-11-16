@@ -154,6 +154,16 @@ describe('createPreviewPanel (happy-dom)', () => {
     expect(panel.headingElement().textContent).toBe('Second');
   });
 
+  it('fades the paper in only on the first show, not when swapping files', () => {
+    panel.show(mdModel());
+    expect(root.querySelector('.paper')?.hasAttribute('data-swap')).toBe(false);
+    panel.show(mdModel({ title: 'Second' }));
+    expect(root.querySelector('.paper')?.hasAttribute('data-swap')).toBe(true);
+    panel.clear();
+    panel.show(mdModel({ title: 'Third' }));
+    expect(root.querySelector('.paper')?.hasAttribute('data-swap')).toBe(false);
+  });
+
   it('renders markdown on the paper field without leaking markup', () => {
     panel.show(mdModel());
     const region = root.querySelector('.paper .preview-markdown') as HTMLElement;

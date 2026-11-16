@@ -65,3 +65,4 @@ export const CP_LOW_SURROGATE_MAX = 0xdfff;
 
 /** Upper bound on the number of path segments of the Home_Directory realpath that the identity test walks. */
 export const MAX_HOME_SEGMENTS = 64;
+export const MAX_ORIGINAL_EXT_CHARS = 8; // extension characters kept in an original-bytes copy name

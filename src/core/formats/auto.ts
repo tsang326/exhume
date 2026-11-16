@@ -1,4 +1,5 @@
 import { convertDBase } from './dbase';
+import { convertLotus } from './lotus';
 import { detectFormat } from './detect';
 import { assertUint8Array } from './guard';
 import { convertPcx } from './pcx';
@@ -18,6 +19,8 @@ export function convertAuto(input: Uint8Array, fileName?: unknown): ConversionRe
       return convertDBase(input);
     case 'pcx':
       return convertPcx(input);
+    case 'lotus':
+      return convertLotus(input);
     case 'text':
       return convertPlainText(input);
     default:

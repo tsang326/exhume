@@ -3,7 +3,7 @@
 Your old disks aren't dead. They're buried.
 
 Drop a DOS floppy image into the page and its files appear as a graveyard. Deleted files are open graves you can
-dig up. WordStar documents rise as Markdown, dBase tables as CSV, PCX pictures as PNG, plain text files as `.txt` text. Everything runs in your
+dig up. WordStar documents rise as Markdown, dBase III and IV tables and Lotus 1-2-3 worksheets as CSV, PCX pictures as PNG, plain text files as `.txt` text, dBase program sources included. Everything runs in your
 browser; nothing is uploaded.
 
 The page reads 1980s-era DOS floppy images (FAT12) with the extensions `.img`, `.ima`, `.vfd`, `.flp` and `.dsk`, from
@@ -74,8 +74,9 @@ it rejects the home folder as `workspace`. See "Manual check of the Power (owner
   `lost`), size and date.
 - `read_grave`: convert one file and return a preview (Markdown, CSV or plain text, or PNG dimensions). Takes `image`, `path`
   and an optional integer `id` from the `open_disk` listing, for when two entries share a path.
-- `exhume`: convert one file and write the full result into the `exhumed/` folder of the workspace. It never
-  overwrites an existing file.
+- `exhume`: convert one file and write the full result into the `exhumed/` folder of the workspace. A file in a
+  format with no converter (an index, a compiled program) is copied byte for byte as `NAME.EXT.bin`, so the copy is
+  never named as something a system would run. It never overwrites an existing file.
 - `explain_state`: return a fixed explanation of one state.
 
 `exhumed/` is the only place the server writes. It is git-ignored.

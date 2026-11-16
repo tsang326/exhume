@@ -3,6 +3,7 @@
 export { convertWordStar } from './wordstar';
 export { convertDBase } from './dbase';
 export { convertPcx } from './pcx';
+export { convertLotus } from './lotus';
 export { convertPlainText } from './plaintext';
 export { encodePng } from './png';
 export { detectFormat } from './detect';

@@ -127,13 +127,13 @@ export function expectedFormulaGuard(text: string): string {
 // Detector
 // ---------------------------------------------------------------------------
 
-export type OracleFormat = 'wordstar' | 'dbase' | 'pcx' | 'unknown';
+export type OracleFormat = 'wordstar' | 'dbase' | 'pcx' | 'lotus' | 'unknown';
 
 function isLetterByte(b: number): boolean {
   return (b >= 0x41 && b <= 0x5a) || (b >= 0x61 && b <= 0x7a);
 }
 
-/** Content rules only, in the order PCX, dBase, WordStar (Requirement 2.3 to 2.5). */
+/** Content rules only, in the order PCX, dBase, Lotus, WordStar (Requirement 2.3 to 2.5). */
 export function detectOracle(bytes: Uint8Array): OracleFormat {
   const sample = bytes.subarray(0, 4096);
   const n = sample.length;
@@ -142,12 +142,17 @@ export function detectOracle(bytes: Uint8Array): OracleFormat {
     return 'pcx';
   }
 
-  if (n >= 12 && (sample[0] === 0x03 || sample[0] === 0x83)) {
+  if (n >= 12 && [0x03, 0x83, 0x8b].includes(sample[0])) {
     const headerLength = sample[8] + sample[9] * 256;
     const recordLength = sample[10] + sample[11] * 256;
     if (headerLength >= 65 && headerLength <= 4129 && recordLength >= 2 && headerLength < bytes.length) {
       return 'dbase';
     }
+  }
+
+  if (n >= 6 && sample[0] === 0 && sample[1] === 0 && sample[2] === 2 && sample[3] === 0) {
+    const version = sample[4] + sample[5] * 256;
+    if (version === 0x0404 || version === 0x0406) return 'lotus';
   }
 
   // Independent model: gate on the low-7 view, then line-based traits.
@@ -194,7 +199,7 @@ export type DbfHeaderVerdict =
 export function dbfHeaderOracle(bytes: Uint8Array): DbfHeaderVerdict {
   if (bytes.length < 32) return { accepted: false, kind: 'invalid', condition: 2 };
   const version = bytes[0];
-  if (version !== 0x03 && version !== 0x83) return { accepted: false, kind: 'version', version };
+  if (![0x03, 0x83, 0x8b].includes(version)) return { accepted: false, kind: 'version', version };
 
   const headerLength = bytes[8] + bytes[9] * 256;
   const recordLength = bytes[10] + bytes[11] * 256;
@@ -610,7 +615,7 @@ export function isTextSampleOracle(bytes: Uint8Array): boolean {
   return sample.every((b) => [0x09, 0x0a, 0x0c, 0x0d, 0x1a].includes(b) || (b >= 0x20 && b <= 0x7e));
 }
 
-const TEXT_EXTENSIONS: readonly string[] = ['TXT', 'BAT', 'ASC', 'LOG', 'NFO', 'DIZ', '1ST', 'ME'];
+const TEXT_EXTENSIONS: readonly string[] = ['TXT', 'BAT', 'ASC', 'LOG', 'NFO', 'DIZ', '1ST', 'ME', 'PRG', 'FMT', 'QBE', 'FRG', 'LBG', 'UPD'];
 const EXTENSION_FORMATS: Readonly<Record<string, OracleFormat | 'text'>> = {
   WS: 'wordstar',
   WS4: 'wordstar',
@@ -620,10 +625,12 @@ const EXTENSION_FORMATS: Readonly<Record<string, OracleFormat | 'text'>> = {
   WSD: 'wordstar',
   DBF: 'dbase',
   PCX: 'pcx',
+  WKS: 'lotus',
+  WK1: 'lotus',
 };
 
 const BINARY_EXTENSIONS: readonly string[] = [
-  'COM', 'EXE', 'SYS', 'OVR', 'BIN', 'DLL', 'DRV', 'BGI', 'CHR', 'FON', 'CPI', 'NDX', 'NTX', 'MDX', 'DBF', 'ZIP', 'ARC', 'LZH',
+  'COM', 'EXE', 'SYS', 'OVR', 'BIN', 'DLL', 'DRV', 'BGI', 'CHR', 'FON', 'CPI', 'NDX', 'NTX', 'MDX', 'WKS', 'WK1', 'DBF', 'ZIP', 'ARC', 'LZH',
 ];
 
 /** Own copy of the closed Known_Binary_Extension list; digits-only extensions count too. */

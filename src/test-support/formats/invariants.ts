@@ -37,6 +37,7 @@ const WARNING_CODES: ReadonlySet<string> = new Set([
   'memo-not-available',
   'pcx-data-truncated',
   'pcx-palette-missing',
+  'sheet-truncated',
 ]);
 
 const MAX_MESSAGE = 200;

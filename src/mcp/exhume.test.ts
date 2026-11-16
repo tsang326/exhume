@@ -109,6 +109,34 @@ describe('exhume tool', () => {
     expect(readFileSync(join(w.root, 'exhumed', 'README.txt'), 'utf8')).toBe('Hello floppy\nline two\n');
   });
 
+  it('copies a file with no converter byte for byte as <NAME>.<EXT>.bin, never as something runnable', () => {
+    const raw = Uint8Array.of(2, 0x58, 0x0c, 0x0d, 0, 0xfe, 0x80, 1, 0, 0);
+    const { w, server } = setup([
+      { name: 'BIGORD.MDX', content: raw },
+      { name: 'GAME.EXE', content: Uint8Array.of(0x4d, 0x5a, 0, 1, 0, 0xff) },
+      { name: 'BLOB', content: Uint8Array.of(0, 1, 2, 0xff) },
+    ]);
+    const r = callTool(server, 'exhume', { image: 'disk.img', path: '/BIGORD.MDX' });
+    expect(r.isError).toBe(false);
+    const out = r.output as Record<string, unknown>;
+    expect(Object.keys(out).sort()).toEqual(['untrusted', 'notice', 'path', 'bytes', 'format', 'mime', 'id', 'state'].sort());
+    expect(out).toMatchObject({ path: 'exhumed/BIGORD.MDX.bin', bytes: raw.length, format: 'original', mime: 'application/octet-stream' });
+    expect(new Uint8Array(readFileSync(join(w.root, 'exhumed', 'BIGORD.MDX.bin')))).toEqual(raw);
+    expect((callTool(server, 'exhume', { image: 'disk.img', path: '/GAME.EXE' }).output as Record<string, unknown>).path).toBe('exhumed/GAME.EXE.bin');
+    expect((callTool(server, 'exhume', { image: 'disk.img', path: '/BLOB' }).output as Record<string, unknown>).path).toBe('exhumed/BLOB.bin');
+    // A second call never overwrites the first copy.
+    expect((callTool(server, 'exhume', { image: 'disk.img', path: '/BIGORD.MDX' }).output as Record<string, unknown>).path).toBe('exhumed/BIGORD-1.MDX.bin');
+    expect(exhumedFiles(w)).toEqual(['BIGORD-1.MDX.bin', 'BIGORD.MDX.bin', 'BLOB.bin', 'GAME.EXE.bin']);
+  });
+
+  it('still reports CONVERSION_FAILED, and writes nothing, for a known format that does not convert', () => {
+    const { w, server } = setup([{ name: 'BROKEN.DBF', content: Uint8Array.of(0x03, 1, 2, 3) }]);
+    const r = callTool(server, 'exhume', { image: 'disk.img', path: '/BROKEN.DBF' });
+    expect(r.isError).toBe(true);
+    expect(errorOf(r.output)).toBe('CONVERSION_FAILED');
+    expect(exhumedFiles(w)).toEqual([]);
+  });
+
   it('gives EXHUME_FAILED when exhumed is a symlink', () => {
     const { w, server } = setup(NOTES);
     const outside = space();

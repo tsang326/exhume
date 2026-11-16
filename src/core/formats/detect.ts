@@ -12,6 +12,10 @@ const PCX_MAGIC = 0x0a;
 const DBF_MIN_BYTES = 12;
 const DBF_VERSION_3 = 0x03;
 const DBF_VERSION_3_MEMO = 0x83;
+const DBF_VERSION_4_MEMO = 0x8b;
+const LOTUS_MIN_BYTES = 6;
+const LOTUS_VERSION_WKS = 0x0404;
+const LOTUS_VERSION_WK1 = 0x0406;
 const DBF_MIN_RECORD_BYTES = 2;
 const BYTE_SHIFT = 8;
 const SOFT_CR = 0x8d;
@@ -46,7 +50,7 @@ function isPcx(s: Uint8Array): boolean {
 
 function isDbase(s: Uint8Array, totalLength: number): boolean {
   if (s.length < DBF_MIN_BYTES) return false;
-  if (s[0] !== DBF_VERSION_3 && s[0] !== DBF_VERSION_3_MEMO) return false;
+  if (s[0] !== DBF_VERSION_3 && s[0] !== DBF_VERSION_3_MEMO && s[0] !== DBF_VERSION_4_MEMO) return false;
   const headerLength = s[8] + s[9] * (1 << BYTE_SHIFT);
   const recordLength = s[10] + s[11] * (1 << BYTE_SHIFT);
   return (
@@ -55,6 +59,14 @@ function isDbase(s: Uint8Array, totalLength: number): boolean {
     recordLength >= DBF_MIN_RECORD_BYTES &&
     headerLength < totalLength
   );
+}
+
+/** A BOF record of length 2 that names release 1A (WKS) or release 2 (WK1). */
+function isLotus(s: Uint8Array): boolean {
+  if (s.length < LOTUS_MIN_BYTES) return false;
+  if (s[0] !== 0 || s[1] !== 0 || s[2] !== 2 || s[3] !== 0) return false;
+  const version = s[4] + s[5] * (1 << BYTE_SHIFT);
+  return version === LOTUS_VERSION_WKS || version === LOTUS_VERSION_WK1;
 }
 
 function isTextLow(low: number): boolean {
@@ -169,6 +181,8 @@ function hasKnownBinaryExtension(fileName: unknown): boolean {
     case 'NDX':
     case 'NTX':
     case 'MDX':
+    case 'WKS':
+    case 'WK1':
     case 'DBF':
     case 'ZIP':
     case 'ARC':
@@ -200,6 +214,9 @@ function formatFromExtension(fileName: string): DetectResult['format'] {
       return 'dbase';
     case 'PCX':
       return 'pcx';
+    case 'WKS':
+    case 'WK1':
+      return 'lotus';
     case 'TXT':
     case 'BAT':
     case 'ASC':
@@ -208,6 +225,12 @@ function formatFromExtension(fileName: string): DetectResult['format'] {
     case 'DIZ':
     case '1ST':
     case 'ME':
+    case 'PRG':
+    case 'FMT':
+    case 'QBE':
+    case 'FRG':
+    case 'LBG':
+    case 'UPD':
       return 'text';
     default:
       return 'unknown';
@@ -220,6 +243,7 @@ export function detectFormat(input: Uint8Array, fileName?: unknown): DetectResul
 
   if (isPcx(sample)) return { format: 'pcx', source: 'content' };
   if (isDbase(sample, input.length)) return { format: 'dbase', source: 'content' };
+  if (isLotus(sample)) return { format: 'lotus', source: 'content' };
   if (!hasKnownBinaryExtension(fileName) && isWordStar(sample)) return { format: 'wordstar', source: 'content' };
 
   if (typeof fileName === 'string' && fileName.length <= MAX_FILE_NAME_CHARS) {

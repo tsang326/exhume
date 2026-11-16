@@ -60,7 +60,14 @@ export function findGrave(report: DiskReport, path: string, id: number | undefin
   return g;
 }
 
-export function prepareGrave(ctx: ToolContext, args: GraveArgs): Outcome<Prepared> {
+export interface GraveBytes {
+  grave: Grave;
+  bytes: Uint8Array;
+  readWarnings: Warning[];
+}
+
+/** Image -> disk -> grave -> bytes, with no conversion. */
+export function readGraveSource(ctx: ToolContext, args: GraveArgs): Outcome<GraveBytes> {
   const image = loadImage(ctx.fs, ctx.root, args.image);
   if (!image.ok) return image;
 
@@ -73,12 +80,21 @@ export function prepareGrave(ctx: ToolContext, args: GraveArgs): Outcome<Prepare
 
   const read = handle.readBytes(grave);
   if (!read.ok) return { ok: false, code: 'GRAVE_NOT_READABLE' };
+  return { ok: true, value: { grave, bytes: read.bytes, readWarnings: read.warnings } };
+}
 
-  const name = lastSegment(grave.path);
-  const conversion = convertAuto(read.bytes, name);
+/** Converts the bytes of a grave; NO_CONVERTER when no format matches, CONVERSION_FAILED otherwise. */
+export function convertGrave(source: GraveBytes): Outcome<Prepared> {
+  const name = lastSegment(source.grave.path);
+  const conversion = convertAuto(source.bytes, name);
   if (!conversion.ok) {
-    const format = detectFormat(read.bytes, name).format;
+    const format = detectFormat(source.bytes, name).format;
     return { ok: false, code: format === 'unknown' ? 'NO_CONVERTER' : 'CONVERSION_FAILED' };
   }
-  return { ok: true, value: { grave, conversion, readWarnings: read.warnings } };
+  return { ok: true, value: { grave: source.grave, conversion, readWarnings: source.readWarnings } };
+}
+
+export function prepareGrave(ctx: ToolContext, args: GraveArgs): Outcome<Prepared> {
+  const source = readGraveSource(ctx, args);
+  return source.ok ? convertGrave(source.value) : source;
 }

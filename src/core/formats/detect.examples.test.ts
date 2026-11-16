@@ -15,7 +15,7 @@ const dbf = writeDbf({
 const pcx = encodePcx({ mode: 'mono', width: 8, height: 1, indices: new Uint8Array(8) });
 const plain = new Uint8Array([0x68, 0x69, 0x01]); // "hi" plus a control byte: matches no content rule
 const hi = new Uint8Array([0x68, 0x69]); // "hi": text by content only
-const TEXT_EXTENSIONS = ['TXT', 'BAT', 'ASC', 'LOG', 'NFO', 'DIZ', '1ST', 'ME'];
+const TEXT_EXTENSIONS = ['TXT', 'BAT', 'ASC', 'LOG', 'NFO', 'DIZ', '1ST', 'ME', 'PRG', 'FMT', 'QBE', 'FRG', 'LBG', 'UPD'];
 
 describe('detectFormat content', () => {
   it('detects each format from content', () => {

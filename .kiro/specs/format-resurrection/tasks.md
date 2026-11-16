@@ -410,6 +410,14 @@ Every task in this plan is required, including all test and property sub-tasks. 
 - [x] 17. Final checkpoint - Ensure all tests pass
   - Run `npm test`, `npm run test:fuzz` and `npm run typecheck`. Ensure all tests pass, ask the user if questions arise.
 
+- [x] 18. dBase IV tables and Lotus 1-2-3 worksheets (added after testing on a real 1989 dBase IV sample disk)
+  - [x] 18.1 Accept the dBase IV memo version byte `0x8B` in `detect.ts` and `dbase-header.ts`, and in the test oracles
+    - _Requirements: 2.4, 6.3, 6.5_
+  - [x] 18.2 Write `src/core/formats/lotus.ts` (`convertLotus`), the `lotus` detection rule, the `.WK1`/`.WKS` extensions, `MAX_SHEET_ROWS`, `MAX_SHEET_COLS`, the `sheet-truncated` warning and the two error templates; route `lotus` in `convertAuto`
+    - _Requirements: 2.1, 2.6, 2.13, 15.1 to 15.8_
+  - [x] 18.3 Write `src/core/formats/lotus.test.ts`
+    - _Requirements: 15.9_
+
 ## Notes
 
 - No task in this plan is optional. The full suite of unit, property, hostile and timing tests is required.
@@ -433,7 +441,8 @@ Every task in this plan is required, including all test and property sub-tasks. 
     { "id": 5, "tasks": ["5.2", "5.4", "5.6", "7.2", "7.5", "8.3", "8.4", "8.7", "8.8", "8.11", "10.4", "10.6", "12.5"] },
     { "id": 6, "tasks": ["5.3", "5.5", "7.3", "8.5", "8.9", "10.5", "10.7", "10.8", "10.10", "10.12", "10.14", "12.6", "12.7", "12.8", "12.9", "13.1"] },
     { "id": 7, "tasks": ["7.4", "8.6", "8.10", "10.9", "10.11", "10.13", "10.15", "12.10", "13.2", "13.3", "13.5", "14.1", "15.1", "15.2", "16.1", "16.2"] },
-    { "id": 8, "tasks": ["13.4"] }
+    { "id": 8, "tasks": ["13.4"] },
+    { "id": 9, "tasks": ["18.1", "18.2", "18.3"] }
   ]
 }
 ```
